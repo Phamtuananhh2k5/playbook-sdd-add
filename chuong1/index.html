@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chương 1</title>
+  <style>
+    :root { --bg: #f2f7ff; --panel: #ffffff; --text: #11233b; --muted: #5c6d86; --accent: #0b7a75; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", "Noto Sans", sans-serif; color: var(--text); background: radial-gradient(circle at 10% 10%, #eaf8ef, transparent 40%), radial-gradient(circle at 90% 20%, #fff4df, transparent 35%), var(--bg); min-height: 100vh; display: flex; flex-direction: column; }
+    .top { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--panel); border-bottom: 1px solid rgba(17, 35, 59, 0.12); }
+    .title { font-weight: 700; }
+    .actions a { color: var(--accent); text-decoration: none; font-weight: 600; margin-left: 12px; }
+    .frame-wrap { flex: 1; padding: 10px; }
+    iframe { width: 100%; height: calc(100vh - 86px); border: 0; border-radius: 12px; background: #fff; box-shadow: 0 8px 24px rgba(16, 37, 64, 0.14); }
+    .note { padding: 0 16px 14px; color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="title">Chương 1</div>
+    <div class="actions">
+      <a href="/">Trang chủ</a>
+      <a href="https://linhndm.io.vn/1/index.docx" target="_blank" rel="noopener">Mở file gốc</a>
+    </div>
+  </header>
+  <div class="frame-wrap">
+    <iframe src="https://view.officeapps.live.com/op/embed.aspx?src=https%3A%2F%2Flinhndm.io.vn%2F1%2Findex.docx" title="Chương 1"></iframe>
+  </div>
+  <div class="note">Nếu khung xem không tải được, dùng nút "Mở file gốc".</div>
+</body>
+</html>
