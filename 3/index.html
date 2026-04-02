@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chương 3 — Hệ Sinh Thái Công Cụ AI Coding</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#011500;
+  --accent:#00ff55;
+  --text:#ffffff;
+  --sub:#ccffcc;
+  --muted:#7de87d;
+  --cb:rgba(0,255,65,0.5);
+  --cbg:rgba(0,255,65,0.09);
+  --thbg:rgba(0,255,65,0.18);
+}
+body{
+  background:#011500;
+  background:radial-gradient(ellipse at 50% 0%,#022800,#011500,#010f00);
+  color:var(--text);
+  font-family:'Josefin Sans',sans-serif;
+  overflow:hidden;
+  height:100vh;width:100vw;
+  user-select:none;
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
+}
+#mc{position:fixed;top:0;left:0;width:100%;height:100%;opacity:.09;pointer-events:none;z-index:0}
+.scanlines{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)}
+#pb{position:fixed;top:0;left:0;height:3px;background:var(--accent);box-shadow:0 0 8px var(--accent);z-index:100;transition:width .3s}
+.ss{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2}
+.slide{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .4s;
+  padding:10px 40px 52px;
+}
+.slide.active{opacity:1;pointer-events:all}
+.si{
+  width:100%;max-width:1800px;
+  max-height:92vh;
+  overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;scrollbar-color:var(--accent) transparent;
+}
+.si::-webkit-scrollbar{width:4px}
+.si::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+
+/* Typography */
+.slide-tag{font-size:clamp(11px,1.1vw,14px);font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;text-align:center}
+h1.mt{font-family:'Cormorant Garamond',serif;font-size:clamp(44px,6.5vw,80px);font-weight:700;color:var(--accent);text-shadow:0 0 30px rgba(0,255,85,.4);line-height:1.1;text-align:center}
+h2.st{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,4.5vw,60px);font-weight:700;color:var(--accent);text-shadow:0 0 20px rgba(0,255,85,.3);line-height:1.15;text-align:center;margin-bottom:18px}
+h2.ct{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,3.2vw,46px);font-weight:600;color:var(--accent);text-shadow:0 0 15px rgba(0,255,85,.25);line-height:1.2;text-align:center;margin-bottom:20px}
+h3.subt{font-family:'Josefin Sans',sans-serif;font-size:clamp(15px,1.7vw,20px);font-weight:700;color:var(--accent);letter-spacing:.05em;margin-bottom:10px;margin-top:4px}
+p.bt{font-size:clamp(18px,1.9vw,25px);color:var(--sub);line-height:1.7;margin-bottom:14px}
+p.subt-it{font-family:'Cormorant Garamond',serif;font-size:clamp(18px,2vw,26px);font-style:italic;color:var(--muted);text-align:center;margin-bottom:28px}
+
+/* Highlights */
+.hl{color:#00ff55;font-weight:700}
+.hl-r{color:#ff7070;font-weight:700}
+.hl-o{color:#ffc844;font-weight:700}
+.hl-b{color:#55ccff;font-weight:700}
+
+/* Card */
+.card{background:var(--cbg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:18px 22px;margin-bottom:14px}
+.card-title{font-size:clamp(12px,1.3vw,16px);font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px}
+
+/* Two-col */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px}
+
+/* Bullet list */
+.bl{list-style:none;font-size:clamp(16px,1.75vw,22px);color:var(--sub);line-height:1.65}
+.bl li{padding:3px 0 3px 22px;position:relative}
+.bl li::before{content:'▸';color:var(--accent);position:absolute;left:0;font-size:.9em}
+
+/* Blockquote */
+blockquote.mq{border-left:3px solid var(--accent);background:rgba(0,255,65,.06);padding:14px 18px;margin:14px 0;border-radius:0 8px 8px 0;font-family:'Cormorant Garamond',serif;font-size:clamp(17px,1.8vw,24px);font-style:italic;color:var(--sub);line-height:1.6}
+
+/* Big quote */
+.bq{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,3.2vw,44px);font-style:italic;color:var(--accent);text-align:center;text-shadow:0 0 20px rgba(0,255,85,.3);line-height:1.4;padding:20px}
+
+/* Table */
+table.mt{width:100%;border-collapse:collapse;font-size:clamp(14px,1.45vw,18px);margin-bottom:14px}
+table.mt th{background:var(--thbg);color:var(--accent);padding:9px 12px;text-align:left;font-weight:700;letter-spacing:.06em;border:1px solid rgba(0,255,65,.3)}
+table.mt td{padding:8px 12px;border:1px solid rgba(0,255,65,.2);color:var(--sub);vertical-align:top;line-height:1.5}
+table.mt tr:nth-child(even) td{background:rgba(0,255,65,.03)}
+
+/* Alert */
+.ab{border-radius:6px;padding:12px 16px;margin:12px 0;font-size:clamp(15px,1.6vw,19px);line-height:1.6;border-left:4px solid}
+.ab .at{font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;font-size:.85em}
+.ab.info{background:rgba(0,255,65,.08);border-color:var(--accent);color:var(--sub)}
+.ab.info .at{color:var(--accent)}
+.ab.warn{background:rgba(255,200,68,.08);border-color:#ffc844;color:#ffe08a}
+.ab.warn .at{color:#ffc844}
+.ab.danger{background:rgba(255,112,112,.08);border-color:#ff7070;color:#ffaaaa}
+.ab.danger .at{color:#ff7070}
+.ab.tip{background:rgba(85,204,255,.08);border-color:#55ccff;color:#aadeee}
+.ab.tip .at{color:#55ccff}
+
+/* Data grid */
+.dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;margin:14px 0}
+.dp{background:var(--cbg);border:1px solid var(--cb);border-radius:8px;padding:14px;text-align:center}
+.dp .dn{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,2.8vw,42px);font-weight:700;color:var(--accent);display:block;line-height:1;margin-bottom:5px}
+.dp .dl{font-size:clamp(11px,1.1vw,13px);color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+
+/* TOC grid */
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.ti{background:var(--cbg);border:1px solid var(--cb);border-radius:8px;padding:18px 22px;cursor:pointer;transition:background .2s}
+.ti:hover{background:rgba(0,255,65,.15)}
+.ti .tn{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,2.8vw,40px);font-weight:700;color:var(--accent);opacity:.5;line-height:1;display:block;margin-bottom:5px}
+.ti .tt{font-size:clamp(13px,1.35vw,17px);font-weight:700;color:var(--accent);letter-spacing:.05em;margin-bottom:3px}
+.ti .td{font-size:clamp(11px,1.1vw,13px);color:var(--muted);line-height:1.5}
+
+/* Section header */
+.sh{position:relative;text-align:center}
+.sh-bg{position:absolute;font-family:'Cormorant Garamond',serif;font-size:clamp(110px,16vw,220px);font-weight:700;color:rgba(0,255,65,.05);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;line-height:1;white-space:nowrap}
+.sh-c{position:relative;z-index:1}
+.sh-label{font-size:clamp(11px,1.15vw,14px);font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+.sh-desc{font-size:clamp(14px,1.6vw,19px);color:var(--muted);max-width:680px;margin:0 auto;line-height:1.7;margin-top:14px}
+
+/* Title slide */
+.ts{text-align:center}
+.ts .cl{font-size:clamp(11px,1.2vw,15px);letter-spacing:.35em;text-transform:uppercase;color:var(--muted);margin-bottom:22px}
+.ts .ft{font-size:clamp(11px,1.1vw,13px);color:var(--muted);letter-spacing:.1em;margin-top:28px;opacity:.7}
+
+/* Code block */
+.cb{background:rgba(0,20,0,.8);border:1px solid rgba(0,255,65,.2);border-radius:6px;padding:14px 18px;font-family:'Courier New',monospace;font-size:clamp(11px,1.15vw,14px);color:#a0e8a0;line-height:1.6;margin:12px 0;overflow-x:auto;white-space:pre}
+
+/* Nav */
+#nav{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:18px;z-index:200;background:rgba(1,21,0,.88);border:1px solid rgba(0,255,65,.3);border-radius:50px;padding:9px 22px;backdrop-filter:blur(8px)}
+#nav button{background:none;border:1px solid rgba(0,255,65,.4);color:var(--accent);font-family:'Josefin Sans',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;padding:5px 16px;border-radius:20px;cursor:pointer;transition:all .2s}
+#nav button:hover{background:rgba(0,255,65,.15);border-color:var(--accent)}
+#ctr{font-size:12px;color:var(--muted);letter-spacing:.1em;min-width:65px;text-align:center}
+
+/* Section keys */
+#kh{position:fixed;top:18px;right:22px;z-index:200;display:flex;gap:6px}
+.kb{background:rgba(0,255,65,.1);border:1px solid rgba(0,255,65,.3);color:var(--muted);font-family:'Josefin Sans',sans-serif;font-size:10px;font-weight:700;padding:4px 9px;border-radius:4px;cursor:pointer;letter-spacing:.05em;transition:all .2s}
+.kb:hover{background:rgba(0,255,65,.2);color:var(--accent)}
+
+/* Responsive */
+@media(max-width:768px){
+  .slide{padding:36px 20px 80px}
+  .two-col,.tg{grid-template-columns:1fr}
+  .dg{grid-template-columns:1fr 1fr}
+  #kh{display:none}
+  .sh-bg{font-size:90px}
+}
+#author{position:fixed;bottom:10px;left:20px;z-index:200;font-family:'Josefin Sans',sans-serif;
+  font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(0,255,85,.35);
+  pointer-events:none;user-select:none}
+</style>
+</head>
+<body>
+
+<canvas id="mc"></canvas>
+<div class="scanlines"></div>
+<div id="pb"></div>
+<div id="author">LinhNDM &mdash; Nguyễn Đình Mạnh Linh</div>
+
+<div id="kh">
+  <span class="kb" onclick="jmp(1)">§3.1</span>
+  <span class="kb" onclick="jmp(2)">§3.2</span>
+  <span class="kb" onclick="jmp(3)">§3.3</span>
+  <span class="kb" onclick="jmp(4)">§3.4</span>
+</div>
+
+<div class="ss" id="ss">
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 1 · TITLE
+══════════════════════════════════════════════════════════ -->
+<div class="slide active" data-idx="1">
+<div class="si">
+  <div class="ts">
+    <p class="cl">Phần I · Nền Tảng · Chương 3</p>
+    <h1 class="mt">Hệ Sinh Thái Công Cụ AI Coding</h1>
+    <p class="subt-it">Bản Đồ Toàn Cảnh</p>
+    <p class="bt" style="text-align:center;max-width:680px;margin:0 auto;">
+      Nguyên lý hoạt động · Phân loại đa chiều<br>và chiến lược chọn tool cho đồ án
+    </p>
+    <p class="ft">Playbook SDD &amp; ADD</p>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 2 · GIỚI THIỆU
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="2">
+<div class="si">
+  <p class="slide-tag">Chương 3 — Giới Thiệu</p>
+  <h2 class="ct">Mục Tiêu Chương Này</h2>
+  <div class="card">
+    <ul class="bl">
+      <li>Hiểu nguyên lý hoạt động của <span class="hl">3 triết lý thiết kế</span> AI coding tools — không chỉ tính năng hiện tại</li>
+      <li>Phân biệt <span class="hl">Model-Locked vs Model-Agnostic</span> và tác động đến chi phí, bảo mật, linh hoạt</li>
+      <li>Đánh giá chi tiết <span class="hl">6+ tools</span> với bảng Snapshot thống nhất</li>
+      <li>Sử dụng <span class="hl">Decision Matrix</span> để chọn tool phù hợp cho từng bối cảnh</li>
+      <li>Hiểu về <span class="hl">Data Privacy, Local LLM</span>, và Enterprise compliance</li>
+      <li>Xây dựng <span class="hl">chiến lược multi-tool</span> cho nhóm sinh viên</li>
+    </ul>
+  </div>
+  <div class="ab warn">
+    <div class="at">⚠ Lưu Ý Về Tính Thời Sự</div>
+    Công nghệ AI coding thay đổi rất nhanh. Chương này tập trung vào <span class="hl-o">NGUYÊN LÝ</span> hoạt động và <span class="hl-o">TRIẾT LÝ</span> thiết kế — những thứ thay đổi chậm hơn. Giá cả và tính năng chi tiết có thể đã thay đổi, nhưng cách phân loại và nguyên lý so sánh vẫn áp dụng được.
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 3 · MỤC LỤC
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="3">
+<div class="si">
+  <p class="slide-tag">Chương 3 — Mục Lục</p>
+  <h2 class="ct">Nội Dung Chương 3</h2>
+  <div class="tg">
+    <div class="ti" onclick="jmp(1)">
+      <span class="tn">3.1</span>
+      <div class="tt">Phân Loại Theo Nguyên Lý</div>
+      <div class="td">3 triết lý tích hợp · Model-Locked vs Agnostic · RAG vs Long Context</div>
+    </div>
+    <div class="ti" onclick="jmp(2)">
+      <span class="tn">3.2</span>
+      <div class="tt">Đánh Giá Chi Tiết Từng Tool</div>
+      <div class="td">Claude Code · Cursor · Copilot · Codex CLI · Kiro · Cline · Aider</div>
+    </div>
+    <div class="ti" onclick="jmp(3)">
+      <span class="tn">3.3</span>
+      <div class="tt">Bảng Quyết Định Chọn Tool</div>
+      <div class="td">Decision Matrix 6 chiều · Data Privacy · Phân tích chi phí TCO</div>
+    </div>
+    <div class="ti" onclick="jmp(4)">
+      <span class="tn">3.4</span>
+      <div class="tt">Chiến Lược Multi-Tool</div>
+      <div class="td">Cursor + Claude Code · Combo $0 · Khuyến nghị nhóm 5 SV</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 4 · SECTION HEADER 3.1
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="4" data-section="1">
+<div class="si">
+  <div class="sh">
+    <div class="sh-bg">3.1</div>
+    <div class="sh-c">
+      <p class="sh-label">Phần 3.1</p>
+      <h2 class="st">Phân Loại AI Coding Tools<br>Theo Nguyên Lý Hoạt Động</h2>
+      <p class="sh-desc">Toàn bộ hệ sinh thái AI coding chỉ có <span class="hl">3 triết lý thiết kế cơ bản</span>.<br>Mọi tool là một biến thể của 1 trong 3 triết lý này.<br>Hiểu được điều này, bạn sẽ không bao giờ bị "lạc" khi tool mới xuất hiện.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 5 · IDE-NATIVE
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="5">
+<div class="si">
+  <p class="slide-tag">3.1.1 — Trục 1: Triết Lý Tích Hợp</p>
+  <h2 class="ct">Triết Lý A: IDE-Native</h2>
+  <blockquote class="mq">"AI sống trong editor của bạn" — AI có quyền truy cập tự nhiên vào mọi thứ: file đang mở, project structure, terminal output, git history, và cursor position.</blockquote>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Ưu Điểm</div>
+      <ul class="bl">
+        <li><span class="hl">Flow state:</span> Không cần chuyển ứng dụng. AI xuất hiện đúng chỗ bạn cần</li>
+        <li><span class="hl">Context tự nhiên:</span> AI thấy những gì bạn thấy. Không cần paste code</li>
+        <li><span class="hl">Làm quen nhanh:</span> Biết VS Code → Cursor chỉ mất 5 phút</li>
+        <li><span class="hl">Codebase indexing:</span> Index toàn bộ dự án để AI hiểu kiến trúc</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Nhược Điểm</div>
+      <ul class="bl">
+        <li><span class="hl-r">Lock-in vào IDE:</span> Phải dùng IDE của họ. Cursor là VS Code fork</li>
+        <li><span class="hl-r">Autonomy giới hạn:</span> Agent mode kém terminal-native vì thiếu full shell access</li>
+        <li><span class="hl-r">Large refactors khó:</span> Dự án 100+ files có thể chậm hoặc mất context</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ab info"><div class="at">Tools Đại Diện</div>Cursor · Windsurf · Amazon Kiro · Zed AI</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 6 · PLUGIN/EXTENSION
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="6">
+<div class="si">
+  <p class="slide-tag">3.1.1 — Trục 1: Triết Lý Tích Hợp</p>
+  <h2 class="ct">Triết Lý B: Plugin/Extension</h2>
+  <blockquote class="mq">"AI là phần mở rộng của editor bạn" — Không tạo IDE mới, thêm AI vào IDE đã dùng. Bạn giữ nguyên môi trường làm việc hiện tại.</blockquote>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Ưu Điểm</div>
+      <ul class="bl">
+        <li><span class="hl">Không đổi IDE:</span> Giữ nguyên workflow. Đặc biệt quan trọng với JetBrains/Vim</li>
+        <li><span class="hl">Ecosystem rộng:</span> Copilot chạy trên mọi IDE lớn. Không ai bị bỏ rơi</li>
+        <li><span class="hl">Enterprise adoption:</span> Dễ được IT department chấp nhận vì chỉ là extension</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Nhược Điểm</div>
+      <ul class="bl">
+        <li><span class="hl-r">Context hạn chế:</span> Chỉ truy cập được những gì extension API cho phép</li>
+        <li><span class="hl-r">Agentic yếu hơn:</span> Hầu hết là chat + autocomplete, không có full agent mode</li>
+        <li><span class="hl-r">Phụ thuộc IDE updates:</span> Khi IDE thay đổi API, plugin có thể hỏng</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ab info"><div class="at">Tools Đại Diện</div>GitHub Copilot · Cline · Continue.dev · Cody (Sourcegraph)</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 7 · TERMINAL-NATIVE
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="7">
+<div class="si">
+  <p class="slide-tag">3.1.1 — Trục 1: Triết Lý Tích Hợp</p>
+  <h2 class="ct">Triết Lý C: Terminal-Native Agentic</h2>
+  <blockquote class="mq">"AI là đồng nghiệp làm việc qua terminal" — AI không chỉ gợi ý code mà <span class="hl">TỰ LÀM</span>: đọc codebase → lên plan → edit files → chạy tests → fix errors → commit.</blockquote>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Ưu Điểm</div>
+      <ul class="bl">
+        <li><span class="hl">Autonomy cao nhất:</span> Đọc/ghi files, chạy commands, install packages</li>
+        <li><span class="hl">Codebase awareness:</span> Đọc toàn bộ project, hiểu kiến trúc tổng thể</li>
+        <li><span class="hl">Multi-file editing:</span> Sửa hàng chục files trong 1 task — refactor toàn project</li>
+        <li><span class="hl">IDE-agnostic:</span> Hoạt động với bất kỳ editor nào vì không cần editor</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Nhược Điểm</div>
+      <ul class="bl">
+        <li><span class="hl-r">Learning curve:</span> Terminal-based workflow không quen với nhiều sinh viên</li>
+        <li><span class="hl-r">Risk cao hơn:</span> Agent có thể chạy lệnh nguy hiểm nếu không có guard rails</li>
+        <li><span class="hl-r">Không visual feedback:</span> Không thấy diff view tự động (trừ khi dùng với IDE extension)</li>
+        <li><span class="hl-r">Chi phí:</span> Dùng nhiều tokens hơn → đắt hơn per task</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ab info"><div class="at">Tools Đại Diện</div>Claude Code · OpenAI Codex CLI · Gemini CLI · Aider</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 8 · TABLE: BẢNG 3.1
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="8">
+<div class="si">
+  <p class="slide-tag">3.1.1 — Bảng So Sánh</p>
+  <h2 class="ct">Bảng 3.1: So Sánh 3 Triết Lý Tích Hợp</h2>
+  <table class="mt">
+    <thead>
+      <tr><th>Tiêu chí</th><th>IDE-Native</th><th>Plugin/Extension</th><th>Terminal-Native</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Phép ẩn dụ</td><td>Kiến trúc sư tích hợp</td><td>Cố vấn bên cạnh</td><td>Đồng nghiệp tự chủ</td></tr>
+      <tr><td>Context depth</td><td><span class="hl">Cao</span> (file + project + terminal)</td><td><span class="hl-o">Trung bình</span> (file + partial project)</td><td><span class="hl">Rất cao</span> (toàn bộ filesystem)</td></tr>
+      <tr><td>Autonomy</td><td><span class="hl-o">Trung bình</span> (Agent mode)</td><td><span class="hl-r">Thấp</span> (Chat + autocomplete)</td><td><span class="hl">Rất cao</span> (full shell access)</td></tr>
+      <tr><td>Learning curve</td><td><span class="hl">Thấp</span> (VS Code familiar)</td><td><span class="hl">Rất thấp</span> (cài extension)</td><td><span class="hl-o">Trung bình</span> (terminal skills)</td></tr>
+      <tr><td>Workflow change</td><td>Vừa (editor mới)</td><td><span class="hl">Không</span> (đồ cũ)</td><td><span class="hl-r">Lớn</span> (terminal-first)</td></tr>
+      <tr><td>Multi-file editing</td><td>Tốt</td><td><span class="hl-r">Hạn chế</span></td><td><span class="hl">Xuất sắc</span></td></tr>
+      <tr><td>Phù hợp cho</td><td>Daily coding, vừa + nhỏ</td><td>Mọi IDE, team lớn</td><td>Complex tasks, refactors</td></tr>
+      <tr><td>Ví dụ tool</td><td>Cursor, Windsurf, Kiro</td><td>Copilot, Cline</td><td>Claude Code, Codex CLI</td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 9 · SECTION HEADER 3.1.2
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="9">
+<div class="si">
+  <div class="sh">
+    <div class="sh-bg">3.1.2</div>
+    <div class="sh-c">
+      <p class="sh-label">Trục 2</p>
+      <h2 class="st">Model-Agnostic<br>vs Model-Locked</h2>
+      <p class="sh-desc">Trục phân loại thứ hai <span class="hl">cực kỳ quan trọng</span> mà nhiều người bỏ qua.<br>Ảnh hưởng trực tiếp đến 3 yếu tố: <span class="hl">chi phí · bảo mật · linh hoạt tương lai</span></p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 10 · MODEL-LOCKED vs AGNOSTIC
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="10">
+<div class="si">
+  <p class="slide-tag">3.1.2 — Model Openness</p>
+  <h2 class="ct">Model-Locked vs Model-Agnostic</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Model-Locked ("Đóng")</div>
+      <p style="font-size:clamp(13px,1.35vw,16px);color:var(--muted);margin-bottom:10px;">Chỉ dùng model của nhà cung cấp. Không thể chọn model khác, không chạy local.</p>
+      <ul class="bl" style="font-size:clamp(13px,1.3vw,16px)">
+        <li><span class="hl">Claude Code:</span> Chỉ Anthropic (Opus 4.6, Sonnet 4.6)</li>
+        <li><span class="hl">Amazon Kiro:</span> Amazon Bedrock (Claude + Amazon models)</li>
+        <li><span class="hl">Copilot (trước):</span> Ban đầu chỉ OpenAI models</li>
+      </ul>
+      <div style="margin-top:10px;font-size:clamp(12px,1.2vw,14px);color:var(--muted);line-height:1.6">
+        <span class="hl">✓</span> Tối ưu sâu, đơn giản, output nhất quán<br>
+        <span class="hl-r">✗</span> Vendor lock-in, chi phí cố định, data luôn lên cloud
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Model-Agnostic ("Mở")</div>
+      <p style="font-size:clamp(13px,1.35vw,16px);color:var(--muted);margin-bottom:10px;">Đổi model như đổi ống kính. Claude cho task phức tạp, GPT-4o cho task nhanh, Llama local cho code nhạy cảm.</p>
+      <ul class="bl" style="font-size:clamp(13px,1.3vw,16px)">
+        <li><span class="hl">Cursor:</span> GPT-4o, Claude, Gemini, custom API key</li>
+        <li><span class="hl">Cline:</span> Anthropic, OpenAI, Google, Ollama (local)</li>
+        <li><span class="hl">Aider:</span> 30+ models. Ollama cho 100% local</li>
+        <li><span class="hl">Continue.dev:</span> Mọi provider kể cả local</li>
+      </ul>
+      <div style="margin-top:10px;font-size:clamp(12px,1.2vw,14px);color:var(--muted);line-height:1.6">
+        <span class="hl">✓</span> Tiết kiệm 50-70%, bảo mật, không lock-in<br>
+        <span class="hl-r">✗</span> Phức tạp hơn, cần quản lý nhiều API keys
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 11 · TỐI ƯU CHI PHÍ
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="11">
+<div class="si">
+  <p class="slide-tag">3.1.2 — Tối Ưu Chi Phí</p>
+  <h2 class="ct">Ví Dụ: Tiết Kiệm Chi Phí Với Model-Agnostic</h2>
+  <p class="bt" style="text-align:center">Nhóm 5 SV · 20 tuần · 8h/ngày × 5 ngày/tuần</p>
+  <div class="dg" style="grid-template-columns:repeat(3,1fr)">
+    <div class="dp"><span class="dn" style="color:#ff7070">$2,500</span><span class="dl">PA1: Claude Code only<br>(Model-Locked)</span></div>
+    <div class="dp"><span class="dn" style="color:#ffc844">$700</span><span class="dl">PA2: Cursor + API<br>(Model-Agnostic)</span></div>
+    <div class="dp"><span class="dn">$100</span><span class="dl">PA3: Cline + Ollama<br>(Local-first)</span></div>
+  </div>
+  <div class="two-col">
+    <div class="ab info"><div class="at">PA2 vs PA1</div>Tiết kiệm <span class="hl">72%</span> — 5×$20/tháng Cursor + ~$200 API = $700 tổng</div>
+    <div class="ab info"><div class="at">PA3 vs PA1</div>Tiết kiệm <span class="hl">96%</span> — nhưng cần máy mạnh, model local yếu hơn cloud</div>
+  </div>
+  <div class="ab tip">
+    <div class="at">Quy Tắc Chọn Nhanh</div>
+    Ngân sách hạn hẹp + máy mạnh → <span class="hl-b">Agnostic + Local (Cline + Ollama)</span><br>
+    Cần chất lượng cao nhất → <span class="hl-b">Model-Locked (Claude Code)</span><br>
+    Team lớn + nhất quán → <span class="hl-b">Model-Locked (mọi người cùng model)</span><br>
+    Bảo mật cao → <span class="hl-b">Model-Agnostic + Local LLM</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 12 · TABLE: BẢNG 3.2 MA TRẬN 2 CHIỀU
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="12">
+<div class="si">
+  <p class="slide-tag">3.1.2 — Bảng So Sánh</p>
+  <h2 class="ct">Bảng 3.2: Ma Trận 2 Chiều</h2>
+  <p class="bt" style="text-align:center;margin-bottom:18px">Triết lý tích hợp × Model openness</p>
+  <table class="mt">
+    <thead>
+      <tr><th></th><th>Model-Locked (Đóng)</th><th>Model-Agnostic (Mở)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>IDE-Native</strong></td>
+        <td>Kiro (Amazon models)<br>Windsurf (hỗn hợp)</td>
+        <td><span class="hl">Cursor</span> (GPT/Claude/Gemini/local)<br>Zed AI (multi-provider)</td>
+      </tr>
+      <tr>
+        <td><strong>Plugin/Extension</strong></td>
+        <td>Copilot (chủ yếu OpenAI)</td>
+        <td><span class="hl">Cline</span> (mọi provider + Ollama)<br>Continue.dev (mọi provider + local)</td>
+      </tr>
+      <tr>
+        <td><strong>Terminal-Native</strong></td>
+        <td><span class="hl">Claude Code</span> (Anthropic)</td>
+        <td>Aider (30+ models + Ollama)<br>Codex CLI (OpenAI, open-source)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 13 · SECTION HEADER 3.1.3
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="13">
+<div class="si">
+  <div class="sh">
+    <div class="sh-bg">3.1.3</div>
+    <div class="sh-c">
+      <p class="sh-label">Trục 3</p>
+      <h2 class="st">Cách Tool Xử Lý Context<br>RAG vs Long Context</h2>
+      <p class="sh-desc">Context là tài nguyên hữu hạn. Các tools xử lý giới hạn này bằng <span class="hl">2 chiến lược khác nhau</span>.<br>Hiểu sự khác biệt giúp bạn dùng tool <span class="hl">hiệu quả hơn</span>.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 14 · RAG vs LONG CONTEXT
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="14">
+<div class="si">
+  <p class="slide-tag">3.1.3 — Context Strategies</p>
+  <h2 class="ct">RAG vs Long Context Window</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Chiến Lược 1: RAG</div>
+      <p style="font-size:clamp(13px,1.3vw,16px);color:var(--muted);margin-bottom:10px;">Index codebase → Vector DB → Query tìm chunks liên quan → Gửi ít tokens cho LLM. Giống như Google: không đọc toàn bộ internet, chỉ trả kết quả relevant.</p>
+      <ul class="bl" style="font-size:clamp(13px,1.3vw,16px)">
+        <li><span class="hl">Ưu:</span> Tiết kiệm tokens, nhanh, hoạt động codebase lớn</li>
+        <li><span class="hl-r">Nhược:</span> Có thể miss context quan trọng. "AI không biết những gì không được cho thấy."</li>
+      </ul>
+      <div class="ab info" style="margin-top:10px;padding:8px 12px"><div class="at" style="font-size:10px">Tools dùng RAG</div>Cursor · Copilot · Continue.dev</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Chiến Lược 2: Long Context</div>
+      <p style="font-size:clamp(13px,1.3vw,16px);color:var(--muted);margin-bottom:10px;">Gửi nhiều files trực tiếp vào context window. AI "thấy" tất cả cùng lúc. Giống trải hết giấy tờ lên bàn lớn để nhìn toàn cảnh.</p>
+      <ul class="bl" style="font-size:clamp(13px,1.3vw,16px)">
+        <li><span class="hl">Ưu:</span> AI hiểu toàn cảnh, không miss context. Tốt cho refactoring, architecture</li>
+        <li><span class="hl-r">Nhược:</span> Tốn nhiều tokens, đắt, chậm hơn</li>
+      </ul>
+      <div style="font-size:clamp(12px,1.2vw,14px);color:var(--muted);margin-top:10px">
+        Gemini 2.5 Pro (1M tokens) → ~600K dòng code<br>Claude Opus (200K tokens) → ~130K dòng code
+      </div>
+      <div class="ab info" style="margin-top:8px;padding:8px 12px"><div class="at" style="font-size:10px">Tools dùng Long Context</div>Claude Code · Kiro · Aider</div>
+    </div>
+  </div>
+  <div class="ab tip">
+    <div class="at">Thực Tế: Hầu Hết Tools Dùng HYBRID</div>
+    <strong>Claude Code:</strong> RAG tìm files liên quan → load toàn bộ vào long context ·
+    <strong>Cursor:</strong> index RAG, cho phép @file để chỉ định cụ thể
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 15 · SECTION HEADER 3.2
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="15" data-section="2">
+<div class="si">
+  <div class="sh">
+    <div class="sh-bg">3.2</div>
+    <div class="sh-c">
+      <p class="sh-label">Phần 3.2</p>
+      <h2 class="st">Đánh Giá Chi Tiết<br>Từng Tool</h2>
+      <p class="sh-desc">6 tools chính được đánh giá theo <span class="hl">cùng một bộ tiêu chí</span> để so sánh công bằng.<br>Mỗi tool có bảng Snapshot thống nhất, sau đó là phân tích sâu về nguyên lý và use case.</p>
+      <div class="ab warn" style="max-width:560px;margin:18px auto 0">
+        <div class="at">⚠ Lưu Ý Về Giá</div>
+        Giá ghi nhận tại Q1/2026. Kiểm tra website chính thức trước khi quyết định.
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 16 · TABLE: SNAPSHOT CLAUDE CODE
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="16">
+<div class="si">
+  <p class="slide-tag">3.2.1 — Snapshot</p>
+  <h2 class="ct">Claude Code (Anthropic)</h2>
+  <table class="mt">
+    <tbody>
+      <tr><td width="32%"><strong>Triết lý</strong></td><td>Terminal-Native Agentic</td></tr>
+      <tr><td><strong>Model</strong></td><td><span class="hl-o">Model-Locked:</span> Claude Opus 4.6, Sonnet 4.6</td></tr>
+      <tr><td><strong>Context Handling</strong></td><td>Hybrid: Agent tự chọn files (search) + load vào 200K context window</td></tr>
+      <tr><td><strong>Execution Power</strong></td><td><span class="hl">Rất cao:</span> đọc/ghi files, chạy terminal, git, install packages, sub-agents</td></tr>
+      <tr><td><strong>Agentic Capability</strong></td><td>Plan → Execute → Observe → Adjust. Extended Thinking. Multi-agent spawning.</td></tr>
+      <tr><td><strong>Chi phí</strong></td><td>Pro $20/mo (hạn chế) · Max $100/mo (5x) · Max $200/mo (20x) · API: pay-per-use</td></tr>
+      <tr><td><strong>Free tier</strong></td><td><span class="hl-r">Không</span> (cần subscription hoặc API key)</td></tr>
+      <tr><td><strong>IDE Integration</strong></td><td>CLI + VS Code extension + Desktop app + Browser</td></tr>
+      <tr><td><strong>MCP Support</strong></td><td><span class="hl">Có</span> — kết nối Google Drive, Jira, Slack, custom tools</td></tr>
+      <tr><td><strong>Data Privacy</strong></td><td>Code gửi lên Anthropic servers. ZDR (Zero Data Retention) cho API.</td></tr>
+      <tr><td><strong>Config files</strong></td><td>CLAUDE.md (project memory) · slash commands · hooks</td></tr>
+      <tr><td><strong>Open-source</strong></td><td>Không (proprietary)</td></tr>
+      <tr><td><strong>Điểm mạnh nhất</strong></td><td><span class="hl">Deep reasoning · multi-file refactoring · "hiểu" cả codebase</span></td></tr>
+      <tr><td><strong>Điểm yếu nhất</strong></td><td><span class="hl-r">Chi phí cao · model-locked · learning curve terminal</span></td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 17 · CLAUDE CODE NGUYÊN LÝ + KHI NÀO CHỌN
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="17">
+<div class="si">
+  <p class="slide-tag">3.2.1 — Claude Code</p>
+  <h2 class="ct">Claude Code: Nguyên Lý & Khi Nào Chọn</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Vòng Đời Một Task</div>
+      <ul class="bl" style="font-size:clamp(13px,1.3vw,16px)">
+        <li>Bạn mô tả mục tiêu → agent lên plan (Extended Thinking)</li>
+        <li>Đọc CLAUDE.md → biết tech stack và conventions</li>
+        <li>Tự tìm và đọc tất cả files liên quan</li>
+        <li>Hiển thị plan → bạn review và approve</li>
+        <li>Agent tự thực hiện: sửa files, chạy tests, fix lỗi</li>
+        <li>Báo cáo kết quả: "Done. 7 files changed, 2 created."</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Khi Nào Chọn Claude Code</div>
+      <ul class="bl">
+        <li><span class="hl">Task phức tạp, multi-file:</span> Refactoring lớn, thay đổi kiến trúc, migrate patterns</li>
+        <li><span class="hl">Cần deep reasoning:</span> Debug lỗi logic phức tạp, phân tích architecture</li>
+        <li><span class="hl">Greenfield projects:</span> Scaffold toàn bộ dự án từ spec</li>
+        <li><span class="hl">Thoải mái với terminal:</span> CLI-first workflow</li>
+      </ul>
+    </div>
+  </div>
+  <blockquote class="mq">Agent không chỉ code mà còn install dependencies, áp dụng cho nhiều files, viết tests, và chạy tests — tất cả trong 1 task. Đây là sự khác biệt cốt lõi so với chat-based tools.</blockquote>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 18 · TABLE: SNAPSHOT CURSOR
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="18">
+<div class="si">
+  <p class="slide-tag">3.2.2 — Snapshot</p>
+  <h2 class="ct">Cursor</h2>
+  <table class="mt">
+    <tbody>
+      <tr><td width="32%"><strong>Triết lý</strong></td><td>IDE-Native (VS Code fork)</td></tr>
+      <tr><td><strong>Model</strong></td><td><span class="hl">Model-Agnostic:</span> GPT-4o, Claude Sonnet/Opus, Gemini, custom via API key</td></tr>
+      <tr><td><strong>Context Handling</strong></td><td>Hybrid: Codebase indexing (RAG) + @file/@folder cho manual selection</td></tr>
+      <tr><td><strong>Execution Power</strong></td><td>Trung bình-cao: Agent mode chạy terminal, nhưng trong IDE sandbox</td></tr>
+      <tr><td><strong>Agentic Capability</strong></td><td>Agent Mode (plan + multi-file edit + terminal). Background agents (beta).</td></tr>
+      <tr><td><strong>Chi phí</strong></td><td>Free (hạn chế) · Pro <span class="hl">$20/mo</span> · Business $40/mo</td></tr>
+      <tr><td><strong>Free tier</strong></td><td><span class="hl">Có</span> (giới hạn số requests/tháng)</td></tr>
+      <tr><td><strong>IDE Integration</strong></td><td>Là IDE (VS Code fork). Cũng có ở Cursor.com web.</td></tr>
+      <tr><td><strong>MCP Support</strong></td><td><span class="hl">Có</span> (từ 2025)</td></tr>
+      <tr><td><strong>Data Privacy</strong></td><td>Privacy Mode: code không được lưu trữ. SOC 2 certified.</td></tr>
+      <tr><td><strong>Config files</strong></td><td>.cursorrules (rules) · .cursorignore (exclude files)</td></tr>
+      <tr><td><strong>Điểm mạnh nhất</strong></td><td><span class="hl">Flow state · autocomplete nhanh · familiar UX (VS Code)</span></td></tr>
+      <tr><td><strong>Điểm yếu nhất</strong></td><td><span class="hl-r">Large refactors không bằng Claude Code · giá thay đổi thường xuyên</span></td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 19 · CURSOR RULES + KHI NÀO CHỌN
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="19">
+<div class="si">
+  <p class="slide-tag">3.2.2 — Cursor</p>
+  <h2 class="ct">Cursor: Tại Sao "Mượt" & Khi Nào Chọn</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">.cursorrules — Constitution Cho IDE</div>
+      <p style="font-size:clamp(13px,1.3vw,15px);color:var(--muted);margin-bottom:8px;">Hướng dẫn Cursor về conventions, patterns, constraints của dự án — tương tự AGENTS.md.</p>
+      <div class="cb"># .cursorrules
+- Use camelCase for functions, PascalCase for types
+- Error handling: always use AppError class
+- Database: use Prisma ORM, never raw SQL
+- Architecture: Controller → Service → Repository
+- Tests: Jest, co-locate in __tests__ folders
+- NEVER use `any` type
+- ALWAYS validate input with zod</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Khi Nào Chọn Cursor</div>
+      <ul class="bl">
+        <li><span class="hl">Daily coding:</span> Autocomplete nhanh, small-medium tasks hàng ngày</li>
+        <li><span class="hl">Đã dùng VS Code:</span> Chuyển sang mất 5 phút, giữ mọi extensions</li>
+        <li><span class="hl">Cần nhiều models:</span> Claude cho tasks khó, GPT-4o mini cho tasks nhanh</li>
+        <li><span class="hl">Ngân sách hạn chế:</span> $20/tháng Pro là mức giá phải chăng cho sinh viên</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 20 · TABLE: SNAPSHOT GITHUB COPILOT
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="20">
+<div class="si">
+  <p class="slide-tag">3.2.3 — Snapshot</p>
+  <h2 class="ct">GitHub Copilot</h2>
+  <table class="mt">
+    <tbody>
+      <tr><td width="32%"><strong>Triết lý</strong></td><td>Plugin/Extension + đang chuyển dần sang Agentic</td></tr>
+      <tr><td><strong>Model</strong></td><td>Hỗn hợp: chủ yếu GPT-4o, đang mở cho Claude và Gemini</td></tr>
+      <tr><td><strong>Context Handling</strong></td><td>RAG (embeddings của repo) + @workspace cho broad context</td></tr>
+      <tr><td><strong>Execution Power</strong></td><td>Trung bình: Agent mode (mới), Copilot Workspace cho GitHub-centric</td></tr>
+      <tr><td><strong>Agentic Capability</strong></td><td>Agent Mode · Copilot Workspace · Agent HQ (multi-agent, beta 02/2026)</td></tr>
+      <tr><td><strong>Chi phí</strong></td><td>Free (hạn chế) · Individual <span class="hl">$10/mo</span> · Business $19/mo · Enterprise $39/mo</td></tr>
+      <tr><td><strong>Free tier</strong></td><td><span class="hl">Có — Free cho verified students và open-source maintainers</span></td></tr>
+      <tr><td><strong>IDE Integration</strong></td><td>VS Code · JetBrains · Vim/Neovim · Xcode · Visual Studio</td></tr>
+      <tr><td><strong>MCP Support</strong></td><td>Đang phát triển (Agent HQ)</td></tr>
+      <tr><td><strong>Data Privacy</strong></td><td>Business/Enterprise: code KHÔNG dùng training. <span class="hl-r">Individual: có thể được dùng.</span></td></tr>
+      <tr><td><strong>Config files</strong></td><td>.github/copilot-instructions.md</td></tr>
+      <tr><td><strong>Điểm mạnh nhất</strong></td><td><span class="hl">Ecosystem GitHub · giá rẻ · miễn phí cho SV · enterprise features</span></td></tr>
+      <tr><td><strong>Điểm yếu nhất</strong></td><td><span class="hl-r">Agentic capability đang chuyển tiếp · chưa mạnh bằng Claude Code/Cursor</span></td></tr>
+    </tbody>
+  </table>
+  <div class="ab tip"><div class="at">Copilot Cho Đồ Án Sinh Viên</div>Cả nhóm có GitHub Education → Copilot <span class="hl">miễn phí ($0)</span>. Dùng Copilot cho daily coding + Claude Code API (pay-per-use) cho tasks phức tạp.</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 21 · TABLE: SNAPSHOT CODEX CLI
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="21">
+<div class="si">
+  <p class="slide-tag">3.2.4 — Snapshot</p>
+  <h2 class="ct">OpenAI Codex CLI</h2>
+  <table class="mt">
+    <tbody>
+      <tr><td width="32%"><strong>Triết lý</strong></td><td>Terminal-Native Agentic · <span class="hl">Open-Source</span></td></tr>
+      <tr><td><strong>Model</strong></td><td>Chủ yếu OpenAI (o3, o4-mini, GPT-4.1). Hỗ trợ providers khác qua config.</td></tr>
+      <tr><td><strong>Context Handling</strong></td><td>File reading + AGENTS.md layered system</td></tr>
+      <tr><td><strong>Execution Power</strong></td><td><span class="hl">Cao:</span> sandboxed execution, network-disabled by default (an toàn)</td></tr>
+      <tr><td><strong>Agentic Capability</strong></td><td>Plan + execute trong sandbox. 3 modes: suggest · auto-edit · full-auto.</td></tr>
+      <tr><td><strong>Chi phí</strong></td><td>Tool <span class="hl">miễn phí</span> (open-source). Trả API usage cho OpenAI.</td></tr>
+      <tr><td><strong>Free tier</strong></td><td>Tool free, cần OpenAI API key ($)</td></tr>
+      <tr><td><strong>Data Privacy</strong></td><td><span class="hl">Sandbox mặc định:</span> network disabled, chỉ truy cập project folder</td></tr>
+      <tr><td><strong>Config files</strong></td><td>AGENTS.md (layered: global → project → directory)</td></tr>
+      <tr><td><strong>Open-source</strong></td><td><span class="hl">Có — Apache 2.0 license</span></td></tr>
+      <tr><td><strong>Điểm mạnh nhất</strong></td><td><span class="hl">Open-source · sandbox an toàn · AGENTS.md native · tùy chỉnh cao</span></td></tr>
+      <tr><td><strong>Điểm yếu nhất</strong></td><td><span class="hl-r">Mới · ít mature hơn Claude Code · cộng đồng nhỏ hơn</span></td></tr>
+    </tbody>
+  </table>
+  <blockquote class="mq">Codex CLI là birthplace của AGENTS.md — format giờ đã được 60K+ projects sử dụng và donate cho Linux Foundation.</blockquote>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 22 · TABLE: SNAPSHOT AMAZON KIRO
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="22">
+<div class="si">
+  <p class="slide-tag">3.2.5 — Snapshot</p>
+  <h2 class="ct">Amazon Kiro</h2>
+  <table class="mt">
+    <tbody>
+      <tr><td width="32%"><strong>Triết lý</strong></td><td>IDE-Native với <span class="hl">SDD built-in</span></td></tr>
+      <tr><td><strong>Model</strong></td><td><span class="hl-o">Model-Locked:</span> Amazon Bedrock (Claude + Amazon models)</td></tr>
+      <tr><td><strong>Context Handling</strong></td><td>Long context (Gemini 1M tokens qua Bedrock)</td></tr>
+      <tr><td><strong>Execution Power</strong></td><td>Trung bình: IDE-based execution, DevOps automation</td></tr>
+      <tr><td><strong>Agentic Capability</strong></td><td>SDD workflow: requirements.md → design.md → tasks.md → implement</td></tr>
+      <tr><td><strong>Chi phí</strong></td><td><span class="hl">Free (beta)</span> tại thời điểm viết, giá chưa công bố chính thức</td></tr>
+      <tr><td><strong>IDE Integration</strong></td><td>Là IDE (Code OSS fork, giống VS Code)</td></tr>
+      <tr><td><strong>Data Privacy</strong></td><td>AWS compliance (SOC 2, HIPAA eligible với Bedrock)</td></tr>
+      <tr><td><strong>Config files</strong></td><td>requirements.md · design.md · tasks.md (định dạng EARS)</td></tr>
+      <tr><td><strong>Open-source</strong></td><td>Không (Amazon proprietary)</td></tr>
+      <tr><td><strong>Điểm mạnh nhất</strong></td><td><span class="hl">SDD tích hợp sẵn trong IDE · EARS notation · spec-first workflow</span></td></tr>
+      <tr><td><strong>Điểm yếu nhất</strong></td><td><span class="hl-r">Mới (07/2025) · performance chưa ổn định · Amazon ecosystem lock-in</span></td></tr>
+    </tbody>
+  </table>
+  <blockquote class="mq">Kiro là tool duy nhất tích hợp SDD workflow trực tiếp vào IDE — "training wheels" tốt nhất cho người mới học SDD. Đáng theo dõi nhưng chưa nên dựa hoàn toàn vào.</blockquote>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 23 · TABLE: SNAPSHOT CLINE + CONTINUE + AIDER
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="23">
+<div class="si">
+  <p class="slide-tag">3.2.6 — Model-Agnostic Tools Nổi Bật</p>
+  <h2 class="ct">Cline · Continue.dev · Aider</h2>
+  <p class="bt" style="text-align:center;margin-bottom:16px">3 tools chia sẻ triết lý chung: dùng <span class="hl">bất kỳ model nào</span>, kể cả local models</p>
+  <table class="mt">
+    <thead>
+      <tr><th>Tiêu chí</th><th>Cline</th><th>Continue.dev</th><th>Aider</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Triết lý</td><td>Plugin, Agnostic, <span class="hl">Agentic</span></td><td>Plugin (VS Code + JetBrains)</td><td>Terminal-Native, Agnostic</td></tr>
+      <tr><td>Models</td><td>Anthropic, OpenAI, Google, Ollama, OpenRouter</td><td>Mọi providers + Ollama + LM Studio + custom</td><td><span class="hl">30+ models:</span> GPT, Claude, Gemini, Llama, DeepSeek, Qwen...</td></tr>
+      <tr><td>Chi phí</td><td><span class="hl">Miễn phí</span> (open-source)</td><td><span class="hl">Miễn phí</span> (Apache 2.0)</td><td><span class="hl">Miễn phí</span> (open-source)</td></tr>
+      <tr><td>Agentic</td><td><span class="hl">Có:</span> đọc/ghi files, terminal, browser automation</td><td>Hạn chế: chat + autocomplete (đang phát triển)</td><td><span class="hl">Có:</span> edit files, chạy tests, git integration</td></tr>
+      <tr><td>Đặc biệt</td><td>Structured modes (plan/code/review), token tracking chi tiết</td><td>JetBrains support, local-first design</td><td>Leaderboard benchmark models để chọn tối ưu</td></tr>
+      <tr><td>Local LLM</td><td><span class="hl">Có</span> — Ollama, LM Studio</td><td><span class="hl">Có</span> — thiết kế đặc biệt cho local-first</td><td><span class="hl">Có</span> — Ollama native, LM Studio</td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 24 · SETUP LOCAL LLM
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="24">
+<div class="si">
+  <p class="slide-tag">3.2.6 — Setup Thực Hành</p>
+  <h2 class="ct">Setup Local LLM với Cline + Ollama</h2>
+  <p class="bt">Dùng AI coding <span class="hl">100% local</span> — code không bao giờ rời máy bạn.</p>
+  <div class="cb"># Bước 1: Cài Ollama
+# macOS: brew install ollama
+# Linux: curl -fsSL https://ollama.com/install.sh | sh
+# Windows: tải installer từ ollama.com
+
+# Bước 2: Tải model coding tốt nhất cho local
+ollama pull qwen2.5-coder:14b   # 14B params, tốt cho coding
+ollama pull deepseek-coder-v2:16b  # Alternative tốt
+ollama pull llama3.1:8b          # Nhẹ hơn, cho máy yếu
+
+# Bước 3: Chạy thử
+ollama run qwen2.5-coder:14b "Viết function hello world bằng TypeScript"
+
+# Bước 4: Cấu hình Cline trong VS Code
+# Settings > Cline > API Provider: Ollama
+# Model: qwen2.5-coder:14b  |  Base URL: http://localhost:11434
+
+# Yêu cầu phần cứng tối thiểu:
+# 14B model: 16GB RAM, hoặc GPU 10GB VRAM (RTX 3060)
+# 8B model: 8GB RAM, hoặc GPU 6GB VRAM</div>
+  <div class="ab warn">
+    <div class="at">⚠ Giới Hạn Của Local LLM</div>
+    Model local (8B-14B) <span class="hl-o">YẾU HƠN NHIỀU</span> so với Claude Opus hay GPT-4o.<br>
+    <span class="hl">Phù hợp:</span> autocomplete, small tasks, bảo mật · <span class="hl-r">KHÔNG phù hợp:</span> complex reasoning, multi-file refactoring, architecture.<br>
+    <span class="hl-b">Chiến lược tối ưu:</span> local cho daily work (80%) + cloud API cho tasks khó (20%)
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 25 · SO SÁNH THỰC TẾ: 3 WORKFLOWS
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="25">
+<div class="si">
+  <p class="slide-tag">3.2.7 — So Sánh Thực Tế</p>
+  <h2 class="ct">Cùng 1 Task · 3 Workflows Khác Nhau</h2>
+  <p class="bt" style="text-align:center"><em>Task: "Thêm full-text search tiếng Việt cho dự án thư viện sách"</em></p>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title" style="color:#55ccff">Cursor (IDE-Native) · ~15 phút</div>
+      <ul class="bl" style="font-size:clamp(12px,1.25vw,15px)">
+        <li>Mở project → Cursor tự index (30s)</li>
+        <li>Cmd+L → Agent Mode → prompt với @files được chỉ định</li>
+        <li>Cursor hiển thị plan trong chat</li>
+        <li>Approve → sửa files với <span class="hl">diff view inline</span></li>
+        <li>Chạy tests thủ công trong terminal</li>
+      </ul>
+      <div style="margin-top:9px;font-size:clamp(11px,1.1vw,13px);color:var(--muted)">✓ Diff view trực quan · ✗ Phải chỉ định @files</div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:#00ff55">Claude Code (Terminal) · ~10 phút</div>
+      <ul class="bl" style="font-size:clamp(12px,1.25vw,15px)">
+        <li><code style="color:var(--accent)">$ claude</code> → mô tả task đơn giản</li>
+        <li>Tự đọc CLAUDE.md → biết tech stack</li>
+        <li>Tự tìm tất cả files liên quan</li>
+        <li>Hiển thị plan → bạn approve</li>
+        <li><span class="hl">Tự chạy migration + tests + fix lỗi</span></li>
+      </ul>
+      <div style="margin-top:9px;font-size:clamp(11px,1.1vw,13px);color:var(--muted)">✓ Tự động hoàn toàn · ✗ Không diff view</div>
+    </div>
+  </div>
+  <div class="card" style="border-color:rgba(255,200,68,.5)">
+    <div class="card-title" style="color:#ffc844">Copilot (Plugin) · ~30 phút</div>
+    <p style="font-size:clamp(12px,1.2vw,15px);color:var(--muted)">Hỏi → nhận code snippet → tự copy vào file → tự tạo migration → tự chạy tests → tự fix errors. <span class="hl-o">Kiểm soát từng dòng nhưng chậm 2-3x.</span></p>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 26 · TABLE: BẢNG 3.5 SO SÁNH 3 WORKFLOWS
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="26">
+<div class="si">
+  <p class="slide-tag">3.2.7 — Bảng So Sánh</p>
+  <h2 class="ct">Bảng 3.5: So Sánh 3 Workflows Cho Cùng 1 Task</h2>
+  <table class="mt">
+    <thead>
+      <tr><th>Tiêu chí</th><th>Cursor</th><th>Claude Code</th><th>Copilot</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Thời gian</td><td>~15 phút</td><td><span class="hl">~10 phút</span></td><td><span class="hl-r">~30 phút</span></td></tr>
+      <tr><td>Files tự xử lý</td><td>Phải chỉ định @files</td><td><span class="hl">Tự tìm</span></td><td>Từng file manually</td></tr>
+      <tr><td>Chạy tests</td><td>Thủ công</td><td><span class="hl">Tự động</span></td><td>Thủ công</td></tr>
+      <tr><td>Fix errors</td><td>Chat lại</td><td><span class="hl">Tự động fix + re-run</span></td><td>Thủ công</td></tr>
+      <tr><td>DB migration</td><td>Agent mode có thể tạo file</td><td><span class="hl">Tự tạo + chạy</span></td><td>Bạn tự làm</td></tr>
+      <tr><td>Trực quan</td><td><span class="hl">Diff view inline ★</span></td><td>Git diff (terminal)</td><td>Xem code trực tiếp</td></tr>
+      <tr><td>Kiểm soát</td><td>Từng file</td><td>Từng task</td><td><span class="hl">Từng dòng</span></td></tr>
+      <tr><td>Phù hợp cho task này?</td><td>Tốt</td><td><span class="hl">Rất tốt</span></td><td>Được nhưng chậm</td></tr>
+    </tbody>
+  </table>
+  <div class="ab info">
+    <div class="at">Insight Từ So Sánh</div>
+    <strong>Claude Code</strong> nhanh nhất cho task multi-file vì TỰ ĐỘNG: tìm files, chạy migration, chạy tests, fix errors. ·
+    <strong>Cursor</strong> tốt nhất về trải nghiệm vì diff view trực quan. ·
+    <strong>Combo tối ưu:</strong> Claude Code cho setup ban đầu, Cursor cho tinh chỉnh hàng ngày.
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 27 · DEBUG SO SÁNH
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="27">
+<div class="si">
+  <p class="slide-tag">3.2.8 — Cùng 1 Bug · 3 Cách Debug</p>
+  <h2 class="ct">Bug: Search "nguyễn" Trả Về 0 Kết Quả</h2>
+  <p class="bt" style="text-align:center"><em>Nguyên nhân: unaccent extension chưa được cài trong PostgreSQL</em></p>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title" style="color:#55ccff">Cursor</div>
+      <ul class="bl" style="font-size:clamp(12px,1.25vw,15px)">
+        <li>Highlight code search → Cmd+L → hỏi về bug</li>
+        <li>Cursor gợi ý: "Kiểm tra <code style="color:var(--accent)">SELECT unaccent('nguyễn')</code>"</li>
+        <li>Bạn tự chạy SQL trong psql hoặc DBeaver</li>
+        <li>Xác nhận lỗi → tự tạo migration</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:#00ff55">Claude Code</div>
+      <ul class="bl" style="font-size:clamp(12px,1.25vw,15px)">
+        <li>1 prompt: <em>"Search 'nguyễn' trả về 0 kết quả. Debug."</em></li>
+        <li>Tự chạy <code style="color:var(--accent)">psql -c "SELECT unaccent('nguyễn')"</code></li>
+        <li>Phát hiện: <code style="color:#ff7070">ERROR: function unaccent does not exist</code></li>
+        <li>Tự tạo migration → chạy → test lại → báo cáo kết quả</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card" style="border-color:rgba(255,200,68,.5)">
+    <div class="card-title" style="color:#ffc844">Copilot</div>
+    <p style="font-size:clamp(12px,1.2vw,15px);color:var(--muted)">Hỏi → giải thích cần unaccent extension → bạn tự kiểm tra psql → tự tạo migration → tự chạy → tự test. <span class="hl-o">Chỉ giải thích, bạn làm hết.</span></p>
+  </div>
+  <blockquote class="mq">Claude Code giải quyết bug end-to-end (tìm nguyên nhân + fix + verify) chỉ với 1 prompt. Mức độ autonomy khác nhau rõ ràng giữa 3 triết lý.</blockquote>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 28 · TABLE: CONFIG FILES ECOSYSTEM
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="28">
+<div class="si">
+  <p class="slide-tag">3.2.9 — Hệ Sinh Thái Config Files</p>
+  <h2 class="ct">AGENTS.md · CLAUDE.md · .cursorrules</h2>
+  <table class="mt">
+    <thead>
+      <tr><th>File</th><th>Tool đọc</th><th>Mục đích</th><th>Scope</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="hl">AGENTS.md</span></td><td>Codex CLI, Cursor, Cline, mọi agent</td><td>Hướng dẫn chung cho MỌI AI tool</td><td><span class="hl">Universal</span></td></tr>
+      <tr><td>CLAUDE.md</td><td>Claude Code</td><td>Memory + context cho Claude</td><td>Claude only</td></tr>
+      <tr><td>.cursorrules</td><td>Cursor</td><td>Rules cho Cursor AI</td><td>Cursor only</td></tr>
+      <tr><td>.github/copilot-instructions.md</td><td>GitHub Copilot</td><td>Hướng dẫn cho Copilot</td><td>Copilot only</td></tr>
+      <tr><td>.continuerc.json</td><td>Continue.dev</td><td>Config cho Continue</td><td>Continue only</td></tr>
+      <tr><td>.aider.conf.yml</td><td>Aider</td><td>Config cho Aider</td><td>Aider only</td></tr>
+    </tbody>
+  </table>
+  <div class="ab tip">
+    <div class="at">Chiến Lược Tối Ưu: AGENTS.md Là Nguồn Sự Thật</div>
+    Thay vì duy trì nhiều files khác nhau, viết <span class="hl">AGENTS.md</span> là nguồn chính (universal standard), sau đó generate các file tool-specific từ nó.<br>
+    <code style="color:var(--accent)">CLAUDE.md</code> = AGENTS.md + Claude-specific ·
+    <code style="color:var(--accent)">.cursorrules</code> = AGENTS.md reformatted cho Cursor ·
+    Dùng pre-commit hook để luôn sync
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 29 · SECTION HEADER 3.3
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="29" data-section="3">
+<div class="si">
+  <div class="sh">
+    <div class="sh-bg">3.3</div>
+    <div class="sh-c">
+      <p class="sh-label">Phần 3.3</p>
+      <h2 class="st">Bảng Quyết Định<br>Chọn Tool Theo Tình Huống</h2>
+      <p class="sh-desc">Không có tool nào tốt nhất cho mọi tình huống —<br>chỉ có tool <span class="hl">phù hợp nhất cho bối cảnh của bạn</span>.<br>Decision Matrix 6 chiều · Data Privacy 3 mức · Phân tích TCO</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 30 · TABLE: DECISION MATRIX QUY MÔ + NGÂN SÁCH
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="30">
+<div class="si">
+  <p class="slide-tag">3.3.1 — Decision Matrix</p>
+  <h2 class="ct">Decision Matrix: Quy Mô & Ngân Sách</h2>
+  <h3 class="subt">Câu 1: Quy Mô Dự Án?</h3>
+  <table class="mt" style="margin-bottom:18px">
+    <thead><tr><th>Quy mô</th><th>Mô tả</th><th>Tool khuyên nghị</th></tr></thead>
+    <tbody>
+      <tr><td>Nhỏ (&lt;5K LOC)</td><td>Prototype, hackathon, side project</td><td>Cursor hoặc Copilot — nhanh, đơn giản</td></tr>
+      <tr><td>Vừa (5-50K LOC)</td><td>Đồ án SE, startup MVP</td><td><span class="hl">Cursor + Claude Code (combo)</span></td></tr>
+      <tr><td>Lớn (&gt;50K LOC)</td><td>Enterprise, legacy system</td><td>Claude Code (agentic) + Copilot (team)</td></tr>
+    </tbody>
+  </table>
+  <h3 class="subt">Câu 2: Ngân Sách?</h3>
+  <table class="mt">
+    <thead><tr><th>Ngân sách</th><th>Lựa chọn tối ưu</th></tr></thead>
+    <tbody>
+      <tr><td><span class="hl">$0 (miễn phí)</span></td><td>Copilot (GitHub Education) + Cline (open-source) + Ollama (local)</td></tr>
+      <tr><td>$10-20/người/tháng</td><td>Cursor Pro ($20) hoặc Copilot Individual ($10)</td></tr>
+      <tr><td>$20-50/người/tháng</td><td>Cursor Pro + Claude Code API (pay-per-use)</td></tr>
+      <tr><td>&gt;$100/người/tháng</td><td>Claude Code Max ($100-200) cho full power</td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 31 · TABLE: DECISION MATRIX KỸ NĂNG + LOẠI DỰ ÁN
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="31">
+<div class="si">
+  <p class="slide-tag">3.3.1 — Decision Matrix</p>
+  <h2 class="ct">Decision Matrix: Kỹ Năng & Loại Dự Án</h2>
+  <h3 class="subt">Câu 3: Kỹ Năng Team?</h3>
+  <table class="mt" style="margin-bottom:18px">
+    <thead><tr><th>Kỹ năng</th><th>Tool khuyên nghị</th><th>Lý do</th></tr></thead>
+    <tbody>
+      <tr><td>Mới học lập trình</td><td>Cursor + Copilot</td><td>UI quen thuộc, learning curve thấp nhất</td></tr>
+      <tr><td>Biết cơ bản, chưa pro</td><td>Cursor (Agent Mode)</td><td>Agent hỗ trợ nhưng vẫn trong IDE quen</td></tr>
+      <tr><td>Thoải mái với terminal</td><td><span class="hl">Claude Code hoặc Aider</span></td><td>Tận dụng full agentic power</td></tr>
+      <tr><td>Hỗn hợp (nhóm 5 người)</td><td>Cursor (chung) + Claude Code (lead)</td><td>Mọi người dùng Cursor, lead dùng CC cho tasks khó</td></tr>
+    </tbody>
+  </table>
+  <h3 class="subt">Câu 4: Loại Dự Án?</h3>
+  <table class="mt">
+    <thead><tr><th>Loại dự án</th><th>Tool khuyên nghị</th><th>Lý do</th></tr></thead>
+    <tbody>
+      <tr><td>Greenfield (từ đầu)</td><td><span class="hl">Claude Code + Spec Kit</span></td><td>Scaffold nhanh từ spec</td></tr>
+      <tr><td>Brownfield (mở rộng)</td><td>Cursor + Claude Code</td><td>Cần hiểu codebase hiện tại</td></tr>
+      <tr><td>Data pipeline</td><td>Claude Code (terminal-first)</td><td>Cần chạy scripts, process data</td></tr>
+      <tr><td>Mobile app</td><td>Cursor (preview UI)</td><td>Cần thấy UI trực quan</td></tr>
+      <tr><td>Microservices</td><td>Claude Code (multi-repo)</td><td>Cần làm việc across services</td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 32 · DATA PRIVACY 3 MỨC ĐỘ
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="32">
+<div class="si">
+  <p class="slide-tag">3.3.2 — Data Privacy & Compliance</p>
+  <h2 class="ct">Data Privacy: 3 Mức Độ</h2>
+  <p class="bt" style="text-align:center">Câu hỏi cốt lõi: <em>code của bạn đi đâu khi bạn dùng AI tool?</em></p>
+  <div class="card">
+    <div class="card-title">Mức 1: Cloud Processing</div>
+    <p style="font-size:clamp(13px,1.35vw,16px);color:var(--muted)">Code gửi lên cloud servers để LLM xử lý. Hầu hết tools mặc định ở mức này. Cần hỏi vendor: code có được lưu trữ? dùng cho training? servers ở đâu?</p>
+  </div>
+  <div class="card">
+    <div class="card-title" style="color:#55ccff">Mức 2: Zero Data Retention (ZDR)</div>
+    <p style="font-size:clamp(13px,1.35vw,16px);color:var(--muted)">Code gửi lên, xử lý, trả kết quả, <span class="hl-b">xóa ngay</span>. Không lưu, không log, không training. Anthropic API với ZDR và Cursor với Privacy Mode ở mức này. <span class="hl">Đủ cho hầu hết dự án.</span></p>
+  </div>
+  <div class="card">
+    <div class="card-title" style="color:#00ff55">Mức 3: 100% Local ("Air-gapped")</div>
+    <p style="font-size:clamp(13px,1.35vw,16px);color:var(--muted)">Code <span class="hl">không bao giờ rời máy</span>. LLM chạy local qua Ollama. Cần thiết cho: dự án quân sự/chính phủ, dữ liệu y tế (HIPAA), tài chính (PCI DSS), hoặc công ty cấm gửi code ra ngoài.</p>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 33 · TABLE: PRIVACY COMPARISON
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="33">
+<div class="si">
+  <p class="slide-tag">3.3.2 — Data Privacy</p>
+  <h2 class="ct">So Sánh Data Privacy Giữa Các Tool</h2>
+  <table class="mt" style="margin-bottom:14px">
+    <thead>
+      <tr><th>Tool</th><th>Code dùng training?</th><th>Lưu trữ?</th><th>Data Region</th><th>Certifications</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Claude Code (Sub)</td><td><span class="hl">Không</span></td><td>30 ngày (trust &amp; safety)</td><td>US</td><td>SOC 2 Type II</td></tr>
+      <tr><td>Claude Code (API)</td><td><span class="hl">Không</span></td><td><span class="hl">Không (ZDR)</span></td><td>US, EU</td><td>SOC 2, HIPAA eligible</td></tr>
+      <tr><td>Cursor (Pro+)</td><td><span class="hl">Không</span> (Privacy Mode)</td><td><span class="hl">Không</span></td><td>US</td><td>SOC 2</td></tr>
+      <tr><td>Copilot (Individual)</td><td><span class="hl-r">Có thể</span> (đọc ToS kỹ)</td><td><span class="hl-r">Có thể</span></td><td>US</td><td>SOC 2</td></tr>
+      <tr><td>Copilot (Business+)</td><td><span class="hl">Không</span></td><td><span class="hl">Không</span></td><td>US, EU</td><td>SOC 2, ISO 27001</td></tr>
+      <tr><td>Codex CLI (API)</td><td><span class="hl">Không</span></td><td>30 ngày</td><td>US</td><td>SOC 2</td></tr>
+    </tbody>
+  </table>
+  <div class="ab warn">
+    <div class="at">⚠ Bản Cá Nhân vs Doanh Nghiệp — Copilot</div>
+    <strong>Individual:</strong> code có thể được dùng để cải thiện Copilot (training).<br>
+    <strong>Business/Enterprise:</strong> cam kết KHÔNG dùng code cho training. Quyền sở hữu code output thuộc về bạn cả 2 bản — nhưng nếu code AI trùng với code công khai, có thể có vấn đề license.
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 34 · TABLE: KHI NÀO CẦN LOCAL LLM
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="34">
+<div class="si">
+  <p class="slide-tag">3.3.2 — Khi Nào Cần Local LLM</p>
+  <h2 class="ct">Khi Nào Cần Local LLM?</h2>
+  <table class="mt" style="margin-bottom:16px">
+    <thead>
+      <tr><th>Tình huống</th><th>Mức privacy cần</th><th>Giải pháp</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Đồ án sinh viên thông thường</td><td>Mức 1-2 (đủ)</td><td>Cursor/Copilot/Claude Code bình thường</td></tr>
+      <tr><td>Đồ án dùng dữ liệu thực người dùng</td><td>Mức 2 (ZDR)</td><td>API với ZDR, không paste dữ liệu thực vào prompt</td></tr>
+      <tr><td>Startup với IP quan trọng</td><td>Mức 2-3</td><td>ZDR API + local cho core algorithms</td></tr>
+      <tr><td><span class="hl-r">Dự án bảo mật cao</span> (quân sự, y tế)</td><td><span class="hl-r">Mức 3 (bắt buộc)</span></td><td>Continue.dev + Ollama + Llama 3</td></tr>
+      <tr><td><span class="hl-r">Công ty cấm gửi code ra ngoài</span></td><td><span class="hl-r">Mức 3 (bắt buộc)</span></td><td>Cline + Ollama hoặc Aider + local model</td></tr>
+    </tbody>
+  </table>
+  <div class="ab info">
+    <div class="at">Stack Bảo Mật Cao — Đề Xuất</div>
+    VS Code + Continue.dev/Cline + Ollama + Qwen 2.5 Coder 14B<br>
+    Yêu cầu tối thiểu: 16GB RAM + GPU 8GB VRAM (RTX 3060)<br>
+    <span class="hl-b">Chiến lược hybrid:</span> 80% local (miễn phí, bảo mật) + 20% cloud API ZDR (tasks khó)
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 35 · TCO MODEL + API COSTS
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="35">
+<div class="si">
+  <p class="slide-tag">3.3.3 — Phân Tích Chi Phí</p>
+  <h2 class="ct">Mô Hình TCO: Chi Phí Toàn Bộ</h2>
+  <p class="bt" style="text-align:center">TCO = Subscription + API + Learning + Risk</p>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Subscription Cost</div>
+      <ul class="bl" style="font-size:clamp(13px,1.3vw,16px)">
+        <li>Cursor Pro: <span class="hl">$20/người/tháng</span></li>
+        <li>Claude Code Max: <span class="hl-r">$100/người/tháng</span></li>
+        <li>Copilot Individual: <span class="hl">$10/người/tháng</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">API Cost (Biến Động)</div>
+      <ul class="bl" style="font-size:clamp(13px,1.3vw,16px)">
+        <li>Claude Sonnet 4.6: $3/1M in + $15/1M out</li>
+        <li>Claude Opus 4.6: $15/1M in + $75/1M out</li>
+        <li>GPT-4o: $2.5/1M in + $10/1M out</li>
+        <li><span class="hl">GPT-4o mini: $0.15/1M + $0.6/1M</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Learning Cost (Thời Gian)</div>
+      <ul class="bl" style="font-size:clamp(13px,1.3vw,16px)">
+        <li><span class="hl">Copilot: 1-2 giờ</span> (cài extension xong là dùng)</li>
+        <li><span class="hl">Cursor: 2-4 giờ</span> (VS Code familiar)</li>
+        <li><span class="hl-o">Claude Code: 4-8 giờ</span> (terminal workflow mới)</li>
+        <li><span class="hl-o">Cline + Ollama: 4-6 giờ</span> (cấu hình phức tạp)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Risk Cost</div>
+      <ul class="bl" style="font-size:clamp(13px,1.3vw,16px)">
+        <li><span class="hl-r">Model-locked:</span> Provider down → không làm việc được</li>
+        <li><span class="hl">Model-agnostic:</span> Chuyển provider khác trong 5 phút</li>
+        <li><span class="hl">Local LLM:</span> Không phụ thuộc internet</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 36 · TABLE: CASE STUDY CHI PHÍ PA-A B C
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="36">
+<div class="si">
+  <p class="slide-tag">3.3.3 — Case Study Chi Phí</p>
+  <h2 class="ct">Chi Phí Thực Tế: Nhóm 5 SV · 20 Tuần</h2>
+  <table class="mt">
+    <thead>
+      <tr>
+        <th>Hạng mục</th>
+        <th>PA-A: Bootstrap ($0)</th>
+        <th>PA-B: Standard</th>
+        <th style="background:rgba(0,255,65,.22)">PA-C: Hybrid ★ Khuyên Nghị</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Subscription/tháng</td><td>$0</td><td>5×$20 = $100</td><td style="background:rgba(0,255,65,.05)"><span class="hl">~$100</span></td></tr>
+      <tr><td>API/tháng</td><td>~$5-10</td><td>$0 (đủ trong sub)</td><td style="background:rgba(0,255,65,.05)">~$20 (shared key)</td></tr>
+      <tr><td>Tổng 5 tháng</td><td>~$50</td><td>~$500</td><td style="background:rgba(0,255,65,.05)"><span class="hl">~$600</span></td></tr>
+      <tr><td>Tools</td><td>Copilot Free + Cline</td><td>Cursor Pro only</td><td style="background:rgba(0,255,65,.05)"><span class="hl">Cursor + Claude Code</span></td></tr>
+      <tr><td>Chất lượng AI</td><td>Trung bình</td><td>Tốt</td><td style="background:rgba(0,255,65,.05)"><span class="hl">Rất tốt</span></td></tr>
+      <tr><td>Learning time</td><td>6-8h (Cline phức tạp)</td><td>2-4h</td><td style="background:rgba(0,255,65,.05)">4-6h</td></tr>
+      <tr><td>Risk khi down</td><td>Thấp (multi-provider)</td><td>Trung bình</td><td style="background:rgba(0,255,65,.05)"><span class="hl">Thấp (có backup)</span></td></tr>
+      <tr><td>Đánh giá</td><td>★★★ (tiết kiệm)</td><td>★★★★ (đơn giản)</td><td style="background:rgba(0,255,65,.05)"><span class="hl">★★★★★ (tối ưu)</span></td></tr>
+    </tbody>
+  </table>
+  <div class="ab warn"><div class="at">Lưu Ý</div>Giá API thay đổi thường xuyên và thường giảm theo thời gian. Kiểm tra giá mới nhất trước khi quyết định.</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 37 · SECTION HEADER 3.4
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="37" data-section="4">
+<div class="si">
+  <div class="sh">
+    <div class="sh-bg">3.4</div>
+    <div class="sh-c">
+      <p class="sh-label">Phần 3.4</p>
+      <h2 class="st">Chiến Lược Multi-Tool</h2>
+      <p class="sh-desc">Developer giỏi không chỉ dùng 1 tool mà <span class="hl">kết hợp nhiều tools</span> cho các mục đích khác nhau.<br>Giống như thợ mộc không chỉ có 1 cái búa — họ có cả hộp công cụ và biết khi nào dùng cái nào.<br><br><em style="color:var(--muted)">Xu hướng rõ ràng trong 2026</em></p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 38 · COMBO CURSOR + CLAUDE CODE
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="38">
+<div class="si">
+  <p class="slide-tag">3.4.1 — Combo Phổ Biến Nhất</p>
+  <h2 class="ct">Cursor + Claude Code</h2>
+  <p class="bt" style="text-align:center">Pattern được nhiều developer sử dụng nhất: daily coding với Cursor + complex tasks với Claude Code</p>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title" style="color:#55ccff">Cursor Cho</div>
+      <ul class="bl">
+        <li>Viết code hàng ngày (autocomplete, inline suggestions)</li>
+        <li>Small-medium tasks (implement 1 function, fix 1 bug)</li>
+        <li>Navigate và hiểu codebase (chat + @codebase)</li>
+        <li>Quick refactors trong 1-3 files</li>
+        <li>Viết tests cho code vừa viết</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:#00ff55">Claude Code Cho</div>
+      <ul class="bl">
+        <li>Multi-file refactoring (rename service, thay đổi pattern)</li>
+        <li>Greenfield scaffolding (tạo project từ spec)</li>
+        <li>Complex debugging (trace bug across 5+ files)</li>
+        <li>Architecture changes (thêm caching layer, change DB schema)</li>
+        <li>CI/CD setup, Docker configuration</li>
+        <li>Code review toàn bộ PR</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 39 · COMBO BOOTSTRAP $0
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="39">
+<div class="si">
+  <p class="slide-tag">3.4.2 — Combo Tiết Kiệm</p>
+  <h2 class="ct">Copilot (Free) + Cline + Ollama</h2>
+  <p class="bt" style="text-align:center">Cho nhóm sinh viên ngân sách <span class="hl">$0</span></p>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Copilot (GitHub Education = $0)</div>
+      <ul class="bl">
+        <li>Autocomplete hàng ngày trong IDE</li>
+        <li>Chat trong IDE cho câu hỏi nhanh</li>
+        <li>Tích hợp sẵn với GitHub Issues, PRs</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Cline (Open-source, Free)</div>
+      <ul class="bl">
+        <li>Agentic tasks với local model (Ollama)</li>
+        <li>Multi-file edits khi Copilot không đủ</li>
+        <li>Dùng API key (pay-per-use) cho tasks khó</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Ollama (Free, 100% Local)</div>
+    <ul class="bl">
+      <li>Chạy Qwen 2.5 Coder 14B cho tasks đơn giản</li>
+      <li>100% bảo mật khi làm việc với dữ liệu nhạy cảm</li>
+    </ul>
+  </div>
+  <div class="dg" style="grid-template-columns:repeat(2,1fr);margin-top:14px">
+    <div class="dp"><span class="dn">$0</span><span class="dl">Chi phí/tháng<br>(có GitHub Education)</span></div>
+    <div class="dp"><span class="dn" style="color:#ffc844">~$5-10</span><span class="dl">API/tháng<br>(nếu dùng cloud cho tasks khó)</span></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 40 · TABLE: 3 PHƯƠNG ÁN CHO NHÓM 5 SV
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="40">
+<div class="si">
+  <p class="slide-tag">3.4.3 — Khuyến Nghị Cụ Thể</p>
+  <h2 class="ct">3 Phương Án: Nhóm 5 SV · 20 Tuần</h2>
+  <table class="mt">
+    <thead>
+      <tr><th>Phương án</th><th>Thành viên</th><th>Tool chính</th><th>Tool phụ</th><th>Chi phí</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td rowspan="2"><span class="hl-o">PA-A<br>Bootstrap</span></td>
+        <td>Tất cả 5</td><td>Copilot (Free Education)</td><td>Cline + Ollama</td><td>$0</td>
+      </tr>
+      <tr>
+        <td>Lead (1)</td><td>+ Anthropic API key</td><td>Claude Code khi cần</td><td>~$10/tháng</td>
+      </tr>
+      <tr>
+        <td colspan="4" style="text-align:right;color:var(--muted)"><em>Tổng: ~$50 cả 20 tuần</em></td><td></td>
+      </tr>
+      <tr>
+        <td rowspan="2"><span class="hl-b">PA-B<br>Standard</span></td>
+        <td>Tất cả 5</td><td>Cursor Pro ($20/tháng)</td><td>—</td><td>$100/tháng</td>
+      </tr>
+      <tr>
+        <td>Lead (1)</td><td>+ Claude Code Max</td><td>—</td><td>+$100/tháng</td>
+      </tr>
+      <tr>
+        <td colspan="4" style="text-align:right;color:var(--muted)"><em>Tổng: ~$1,000 cả 5 tháng</em></td><td></td>
+      </tr>
+      <tr style="background:rgba(0,255,65,.06)">
+        <td rowspan="3"><span class="hl">PA-C<br>Hybrid ★</span></td>
+        <td>4 người</td><td>Cursor Pro ($20/tháng)</td><td>Copilot Free (backup)</td><td>$80/tháng</td>
+      </tr>
+      <tr style="background:rgba(0,255,65,.06)">
+        <td>Lead (1)</td><td>Claude Code Pro ($20)</td><td>Cursor Pro</td><td>$40/tháng</td>
+      </tr>
+      <tr style="background:rgba(0,255,65,.06)">
+        <td>Cả nhóm</td><td>Anthropic API (shared)</td><td>Cho tasks phức tạp</td><td>~$20/tháng</td>
+      </tr>
+      <tr style="background:rgba(0,255,65,.06)">
+        <td colspan="4" style="text-align:right"><span class="hl">Tổng: ~$700 cả 5 tháng — TỐI ƯU CHI PHÍ vs HIỆU QUẢ</span></td><td></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 41 · TÓM TẮT CHƯƠNG
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="41">
+<div class="si">
+  <p class="slide-tag">Tóm Tắt — Chương 3</p>
+  <h2 class="ct">Tóm Tắt Chương 3</h2>
+  <div class="card">
+    <div class="card-title">3.1 — Phân Loại Theo Nguyên Lý</div>
+    <p style="font-size:clamp(13px,1.35vw,17px);color:var(--muted)">3 triết lý tích hợp (IDE-native, Plugin, Terminal-native) + 2 trục phụ (Model-Locked vs Agnostic, RAG vs Long Context). Mọi tool là biến thể của 3 triết lý này.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">3.2 — Đánh Giá Chi Tiết</div>
+    <p style="font-size:clamp(13px,1.35vw,17px);color:var(--muted)"><span class="hl">Claude Code</span> mạnh nhất về reasoning. <span class="hl-b">Cursor</span> mượt nhất về flow. <span class="hl-o">Copilot</span> rộng nhất về ecosystem. Config files: dùng AGENTS.md làm nguồn sự thật duy nhất.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">3.3 — Bảng Quyết Định</div>
+    <p style="font-size:clamp(13px,1.35vw,17px);color:var(--muted)">Decision Matrix 6 chiều (quy mô, ngân sách, kỹ năng, loại dự án). Data Privacy 3 mức: Cloud → ZDR → Local. Local LLM với Ollama + Cline cho bảo mật cao.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">3.4 — Chiến Lược Multi-Tool</div>
+    <p style="font-size:clamp(13px,1.35vw,17px);color:var(--muted)">Multi-tool là xu hướng 2026. Combo tốt nhất: <span class="hl">Cursor + Claude Code</span>. Combo $0: Copilot + Cline + Ollama. Khuyên nghị nhóm 5 SV: <span class="hl">PA-C Hybrid ~$700/5 tháng</span>.</p>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 42 · TABLE: BÀI TẬP VỀ NHÀ
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="42">
+<div class="si">
+  <p class="slide-tag">Bài Tập — Chương 3</p>
+  <h2 class="ct">Bài Tập Về Nhà</h2>
+  <table class="mt" style="margin-bottom:16px">
+    <thead>
+      <tr><th>#</th><th>Bài tập</th><th>Thời gian</th><th>Deliverable</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="hl">HW-7</span></td><td>Mỗi người cài và thử 1 tool chưa dùng (30 phút). Viết nhận xét 5 dòng.</td><td>30p</td><td>Tool review (5 dòng)</td></tr>
+      <tr><td><span class="hl">HW-8</span></td><td>Nhóm chọn tool stack cho đồ án. Viết Decision Record.</td><td>20p</td><td>DECISIONS.md: D-00X</td></tr>
+      <tr><td><span class="hl">HW-9</span></td><td>Setup AGENTS.md + .cursorrules (hoặc tương đương) cho dự án.</td><td>30p</td><td>Config files committed</td></tr>
+      <tr><td><span class="hl">HW-10</span></td><td>(Nếu có máy mạnh) Thử Cline + Ollama local. So sánh với cloud.</td><td>40p</td><td>Báo cáo local vs cloud</td></tr>
+    </tbody>
+  </table>
+  <div class="ab info">
+    <div class="at">Checklist Hoàn Thành Chương 3</div>
+    □ Biết 3 triết lý tích hợp và phân loại được bất kỳ tool mới<br>
+    □ Hiểu Model-Locked vs Agnostic và tác động đến chi phí/bảo mật<br>
+    □ Đã thử ít nhất 2 tools khác triết lý<br>
+    □ Chọn được tool stack cho đồ án và ghi vào Decision Log<br>
+    □ Tạo được AGENTS.md + tool-specific config files<br>
+    □ Hiểu 3 mức Data Privacy và khi nào cần Local LLM<br>
+    □ Biết setup Ollama + Cline cho local coding (nếu cần)
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 43 · NEXT CHAPTER
+══════════════════════════════════════════════════════════ -->
+<div class="slide" data-idx="43">
+<div class="si">
+  <div class="ts">
+    <p class="cl">Kết Thúc Chương 3</p>
+    <h1 class="mt" style="font-size:clamp(36px,5vw,62px)">Tiếp Theo: Chương 4</h1>
+    <p class="subt-it">Các Tiêu Chuẩn Mở: AGENTS.md · CLAUDE.md · MCP · A2A</p>
+    <div class="card" style="max-width:600px;margin:22px auto;text-align:left">
+      <div class="card-title">Nội Dung Chương 4</div>
+      <ul class="bl">
+        <li>AGENTS.md — universal standard, cấu trúc và best practices</li>
+        <li>CLAUDE.md — project memory cho Claude Code</li>
+        <li>MCP (Model Context Protocol) — kết nối AI với tools bên ngoài</li>
+        <li>A2A (Agent-to-Agent) — multi-agent architecture</li>
+        <li>Hands-on setup cho dự án của bạn</li>
+      </ul>
+    </div>
+    <p class="ft">Playbook SDD &amp; ADD</p>
+  </div>
+</div>
+</div>
+
+</div><!-- end .ss -->
+
+<div id="nav">
+  <button onclick="prev()">← PREV</button>
+  <span id="ctr">1 / 43</span>
+  <button onclick="next()">NEXT →</button>
+</div>
+
+<script>
+// ── Matrix Rain ────────────────────────────────────────────────
+const canvas=document.getElementById('mc');
+const ctx=canvas.getContext('2d');
+let cols,drops;
+function resize(){
+  canvas.width=innerWidth;canvas.height=innerHeight;
+  cols=Math.floor(canvas.width/18);drops=new Array(cols).fill(1);
+}
+resize();window.addEventListener('resize',resize);
+const chars='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF';
+function drawMx(){
+  ctx.fillStyle='rgba(1,21,0,.05)';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#00ff41';ctx.font='14px monospace';
+  for(let i=0;i<drops.length;i++){
+    ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*18,drops[i]*18);
+    if(drops[i]*18>canvas.height&&Math.random()>.975)drops[i]=0;
+    drops[i]++;
+  }
+}
+setInterval(drawMx,50);
+
+// ── Slideshow ──────────────────────────────────────────────────
+const slides=document.querySelectorAll('.slide');
+const total=slides.length;
+let cur=0;
+
+const smap={};
+slides.forEach((s,i)=>{const sec=s.getAttribute('data-section');if(sec)smap[parseInt(sec)]=i;});
+
+function show(idx){
+  slides[cur].classList.remove('active');
+  cur=Math.max(0,Math.min(idx,total-1));
+  slides[cur].classList.add('active');
+  const si=slides[cur].querySelector('.si');
+  if(si)si.scrollTop=0;
+  ui();
+}
+function next(){show(cur+1);}
+function prev(){show(cur-1);}
+function jmp(n){if(smap[n]!==undefined)show(smap[n]);}
+
+function ui(){
+  document.getElementById('ctr').textContent=(cur+1)+' / '+total;
+  document.getElementById('pb').style.width=((cur+1)/total*100)+'%';
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();next();}
+  else if(e.key==='ArrowLeft'){e.preventDefault();prev();}
+  else if(e.key==='1')jmp(1);
+  else if(e.key==='2')jmp(2);
+  else if(e.key==='3')jmp(3);
+  else if(e.key==='4')jmp(4);
+});
+
+let tx=0;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx;
+  if(Math.abs(dx)>50){if(dx<0)next();else prev();}
+},{passive:true});
+
+ui();
+
+// ── Anti-copy protection ───────────────────────────────────────
+// Disable right-click context menu
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+// Disable text selection drag
+document.addEventListener('selectstart',e=>e.preventDefault());
+document.addEventListener('dragstart',e=>e.preventDefault());
+
+// Disable copy event
+document.addEventListener('copy',e=>e.preventDefault());
+
+// Disable keyboard shortcuts
+document.addEventListener('keydown',e=>{
+  // F12
+  if(e.key==='F12'){e.preventDefault();return;}
+  // Ctrl/Cmd combos
+  if(e.ctrlKey||e.metaKey){
+    const k=e.key.toLowerCase();
+    // Ctrl+Shift+I/J/K (DevTools)
+    if(e.shiftKey&&(k==='i'||k==='j'||k==='k')){e.preventDefault();return;}
+    // Ctrl+C (copy), Ctrl+U (view-source), Ctrl+S (save),
+    // Ctrl+A (select all), Ctrl+P (print), Ctrl+F (find)
+    if(['c','u','s','a','p','f'].includes(k)){e.preventDefault();return;}
+  }
+},true);
+</script>
+</body>
+</html>

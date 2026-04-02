@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chương 6 — SDD Workflow: Từ Spec Đến Code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#011500;
+  --accent:#00ff55;
+  --text:#ffffff;
+  --muted:#ccffcc;
+  --dim:#7de87d;
+  --card-border:rgba(0,255,65,0.5);
+  --card-bg:rgba(0,255,65,0.09);
+  --table-hdr:rgba(0,255,65,0.18);
+  --red:#ff7070;
+  --orange:#ffc844;
+  --blue:#55ccff;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{
+  font-family:'Josefin Sans',sans-serif;
+  color:var(--text);
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+/* ── CANVAS MATRIX RAIN ── */
+#matrix-canvas{
+  position:fixed;inset:0;z-index:0;
+  opacity:.09;pointer-events:none;
+}
+
+/* ── SCANLINES ── */
+.scanlines{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px
+  );
+}
+
+/* ── PROGRESS BAR ── */
+#progress-bar{
+  position:fixed;top:0;left:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),#00cc44);
+  z-index:200;transition:width .4s ease;
+  box-shadow:0 0 10px var(--accent);
+}
+
+/* ── AUTHOR ── */
+#author{
+  position:fixed;bottom:10px;left:20px;z-index:200;
+  font-family:'Josefin Sans',sans-serif;
+  font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(0,255,85,.35);pointer-events:none;user-select:none;
+}
+
+/* ── NAV CONTROLS ── */
+#nav{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  z-index:200;display:flex;align-items:center;gap:18px;
+}
+.nav-btn{
+  background:rgba(0,255,65,.12);border:1px solid var(--card-border);
+  color:var(--accent);font-family:'Josefin Sans',sans-serif;
+  font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:9px 22px;cursor:pointer;transition:all .2s;
+}
+.nav-btn:hover{background:rgba(0,255,65,.25);box-shadow:0 0 12px rgba(0,255,65,.3)}
+#slide-counter{
+  font-size:.75rem;letter-spacing:.15em;color:var(--dim);min-width:70px;text-align:center;
+}
+
+/* ── SLIDE WRAPPER ── */
+#slides{position:fixed;inset:0;z-index:10}
+.slide{
+  position:absolute;inset:0;
+  display:none;flex-direction:column;
+  padding:60px 80px 80px;
+  background:radial-gradient(ellipse at 50% 0%,#022800,#011500,#010f00);
+  animation:fadeIn .45s ease;
+  overflow-y:auto;
+}
+.slide.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ── SLIDE TYPES ── */
+
+/* TITLE SLIDE */
+.slide-title{justify-content:center;align-items:center;text-align:center}
+.title-badge{
+  display:inline-block;font-size:.72rem;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--accent);border:1px solid var(--card-border);
+  padding:6px 18px;margin-bottom:32px;
+  background:var(--card-bg);
+}
+h1.main-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(44px,6.5vw,80px);
+  font-weight:700;line-height:1.1;
+  color:var(--text);
+  text-shadow:0 0 40px rgba(0,255,85,.35),0 0 80px rgba(0,255,85,.1);
+  margin-bottom:20px;
+}
+.subtitle{
+  font-size:clamp(16px,1.8vw,24px);color:var(--muted);
+  font-weight:300;letter-spacing:.06em;margin-bottom:40px;
+}
+.title-footer{
+  font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);margin-top:16px;
+}
+
+/* SECTION HEADER SLIDE */
+.slide-section{justify-content:center;align-items:center;text-align:center;position:relative;overflow:hidden}
+.section-num-bg{
+  position:absolute;font-family:'Cormorant Garamond',serif;
+  font-size:clamp(160px,22vw,300px);font-weight:700;
+  color:rgba(0,255,65,.04);line-height:1;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  pointer-events:none;user-select:none;white-space:nowrap;
+}
+.section-tag{
+  font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:20px;
+}
+h2.section-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(34px,4.5vw,60px);font-weight:700;
+  color:var(--text);margin-bottom:18px;
+  text-shadow:0 0 30px rgba(0,255,85,.3);
+}
+.section-desc{font-size:clamp(16px,1.7vw,22px);color:var(--muted);max-width:680px;line-height:1.6}
+
+/* CONTENT SLIDES */
+.slide-tag{
+  font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:14px;opacity:.8;text-align:center;
+}
+h2.content-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(28px,3.4vw,48px);font-weight:700;
+  color:var(--text);margin-bottom:28px;
+  text-shadow:0 0 20px rgba(0,255,85,.25);
+  text-align:center;
+}
+.body-text{
+  font-size:clamp(16px,1.7vw,22px);color:var(--muted);
+  line-height:1.75;max-width:960px;margin:0 auto 24px;
+}
+
+/* CARDS */
+.card{
+  border-left:3px solid var(--accent);
+  background:var(--card-bg);
+  padding:20px 24px;margin-bottom:18px;
+}
+.card-title{
+  font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:10px;
+}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+
+/* BULLET LIST */
+.bullet-list{list-style:none;padding:0;}
+.bullet-list li{
+  font-size:clamp(15px,1.6vw,20px);color:var(--muted);
+  line-height:1.65;padding:4px 0 4px 22px;position:relative;
+}
+.bullet-list li::before{
+  content:'▸';color:var(--accent);position:absolute;left:0;top:4px;
+}
+
+/* BLOCKQUOTE */
+blockquote.matrix-quote{
+  border-left:3px solid var(--accent);
+  background:rgba(0,255,65,.06);
+  padding:20px 24px;
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:clamp(17px,1.8vw,24px);
+  color:var(--muted);
+  line-height:1.65;
+  margin:18px 0;
+}
+
+/* BIG QUOTE */
+.big-quote-wrap{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;flex:1;text-align:center;padding:40px 0;
+}
+.big-quote{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:clamp(26px,3.2vw,44px);
+  color:var(--text);line-height:1.4;
+  text-shadow:0 0 30px rgba(0,255,85,.3);
+  max-width:820px;margin:0 auto 28px;
+}
+.big-quote-src{
+  font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);
+}
+
+/* TABLES */
+.table-wrap{overflow-x:auto;margin-top:10px}
+table.matrix-table{
+  width:100%;border-collapse:collapse;
+  font-size:clamp(13px,1.3vw,16px);
+}
+table.matrix-table th{
+  background:var(--table-hdr);color:var(--accent);
+  font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  font-size:clamp(11px,1.1vw,14px);
+  padding:10px 14px;text-align:left;
+  border:1px solid var(--card-border);
+}
+table.matrix-table td{
+  padding:9px 14px;border:1px solid rgba(0,255,65,.2);
+  color:var(--muted);vertical-align:top;line-height:1.5;
+}
+table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,.04)}
+
+/* ALERT BOXES */
+.alert-box{
+  padding:14px 20px;margin:12px 0;
+  font-size:clamp(14px,1.5vw,18px);
+  border-left:4px solid;
+  line-height:1.6;
+}
+.alert-box strong{display:block;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px}
+.alert-box.info{border-color:#55ccff;background:rgba(85,204,255,.07);color:#a0e8ff}
+.alert-box.info strong{color:#55ccff}
+.alert-box.warn{border-color:#ffc844;background:rgba(255,200,68,.07);color:#ffe096}
+.alert-box.warn strong{color:#ffc844}
+.alert-box.danger{border-color:#ff7070;background:rgba(255,112,112,.07);color:#ffb0b0}
+.alert-box.danger strong{color:#ff7070}
+.alert-box.tip{border-color:var(--accent);background:var(--card-bg);color:var(--muted)}
+.alert-box.tip strong{color:var(--accent)}
+
+/* DATA GRID */
+.data-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin:18px 0}
+.data-point{
+  text-align:center;padding:24px 16px;
+  border:1px solid var(--card-border);background:var(--card-bg);
+}
+.data-point .num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(32px,4vw,52px);font-weight:700;color:var(--accent);
+  display:block;line-height:1;margin-bottom:8px;
+  text-shadow:0 0 20px rgba(0,255,85,.4);
+}
+.data-point .label{font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim)}
+
+/* TOC GRID */
+.toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px}
+.toc-item{
+  display:flex;align-items:flex-start;gap:14px;
+  border:1px solid var(--card-border);background:var(--card-bg);
+  padding:16px 18px;
+}
+.toc-num{
+  font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;
+  color:rgba(0,255,85,.25);line-height:1;flex-shrink:0;
+}
+.toc-content h4{font-size:.9rem;letter-spacing:.08em;color:var(--accent);margin-bottom:4px}
+.toc-content p{font-size:.78rem;color:var(--dim);line-height:1.4}
+
+/* HIGHLIGHT */
+.hl{color:var(--accent);font-weight:600}
+.hl-r{color:var(--red)}
+.hl-o{color:var(--orange)}
+.hl-b{color:var(--blue)}
+
+/* SUMMARY SLIDE */
+.next-chapter-box{
+  border:1px solid rgba(0,255,65,.3);background:rgba(0,255,65,.05);
+  padding:20px 24px;margin-top:24px;
+}
+.next-chapter-box .nxt-label{
+  font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:8px;
+}
+.next-chapter-box p{font-size:clamp(15px,1.5vw,19px);color:var(--muted);line-height:1.6}
+
+/* CODE BLOCK */
+.code-block{
+  background:rgba(0,0,0,.5);border:1px solid rgba(0,255,65,.2);
+  padding:16px 20px;margin:12px 0;
+  font-family:'Courier New',monospace;font-size:clamp(12px,1.2vw,14px);
+  color:#88ff88;line-height:1.6;overflow-x:auto;white-space:pre;
+}
+
+/* PHASE PIPELINE VIS */
+.pipeline-wrap{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:20px 0;justify-content:center}
+.phase-box{
+  flex:1;min-width:120px;text-align:center;padding:18px 10px;
+  border:1px solid var(--card-border);background:var(--card-bg);position:relative;
+}
+.phase-arrow{
+  color:var(--accent);font-size:1.4rem;padding:0 6px;flex-shrink:0;
+}
+.phase-num{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.phase-name{font-size:.9rem;font-weight:600;color:var(--accent);margin-bottom:4px}
+.phase-actor{font-size:.72rem;color:var(--muted)}
+
+/* INTRO SLIDE */
+.intro-text{
+  font-size:clamp(16px,1.7vw,22px);color:var(--muted);line-height:1.8;
+  max-width:900px;margin:0 auto;
+}
+.philosophy-box{
+  border:2px solid var(--accent);background:rgba(0,255,65,.06);
+  padding:22px 28px;margin:28px auto;max-width:800px;text-align:center;
+}
+.philosophy-box .phil-label{font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.philosophy-box .phil-text{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:clamp(20px,2.4vw,30px);color:var(--text);line-height:1.4;
+}
+
+/* DIVIDER */
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--card-border),transparent);margin:20px 0}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .slide{padding:40px 30px 70px}
+  .two-col{grid-template-columns:1fr}
+  .toc-grid{grid-template-columns:1fr}
+  .pipeline-wrap{flex-direction:column}
+  .phase-arrow{transform:rotate(90deg)}
+  h1.main-title{font-size:36px}
+  h2.section-title{font-size:28px}
+  h2.content-title{font-size:24px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+<div class="scanlines"></div>
+<div id="progress-bar"></div>
+<div id="author">LinhNDM &mdash; Nguyễn Đình Mạnh Linh</div>
+
+<div id="slides">
+
+<!-- ══════════════════════════════════════
+     SLIDE 1: TITLE
+══════════════════════════════════════ -->
+<div class="slide slide-title active">
+  <div class="title-badge">Playbook SDD + ADD &nbsp;|&nbsp; 2025</div>
+  <h1 class="main-title">SDD Workflow<br/>Từ Spec Đến Code</h1>
+  <p class="subtitle">5 pha · 1 triết lý · Không còn đoán mò</p>
+  <div class="title-footer">Chương 6 &nbsp;·&nbsp; Spec-Driven Development</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 2: GIỚI THIỆU CHƯƠNG
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">Giới thiệu chương</div>
+  <h2 class="content-title">Động Cơ Của SDD Workflow</h2>
+  <p class="intro-text">
+    Chương 5 đã cho bạn <span class="hl">ngôn ngữ</span> — EARS Notation, 8 thành phần, Risk Matrix.
+    Chương này cho bạn <span class="hl">động cơ</span> — một quy trình làm việc hoàn chỉnh
+    biến spec thành production code thông qua <span class="hl">năm pha</span> được thiết kế kỹ lưỡng.
+  </p>
+  <p class="intro-text" style="margin-top:12px">
+    Tỷ lệ <span class="hl-o">40/60 lý thuyết–thực hành</span> có chủ đích: bạn sẽ thực sự chạy workflow,
+    không chỉ đọc về nó. Ba công cụ cụ thể được giới thiệu theo thứ tự tăng dần về tính linh hoạt —
+    không có "cách tốt nhất", chỉ có "cách phù hợp nhất" với đội nhóm và dự án của bạn.
+  </p>
+  <div class="philosophy-box">
+    <div class="phil-label">Triết lý xuyên suốt chương</div>
+    <div class="phil-text">"Sai ở đâu, sửa ở Spec đó."<br/>Fix the Spec, not the Code.</div>
+  </div>
+  <p class="intro-text" style="font-size:clamp(14px,1.4vw,18px);text-align:center;color:var(--dim)">
+    Khi AI generate code sai → không sửa code trực tiếp → tìm điểm trong Spec chưa rõ ràng → sửa Spec → re-generate.
+    <br/>Code là artifact tạm thời. Spec mới là nguồn sự thật lâu dài.
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 3: MỤC LỤC
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">Mục lục chương</div>
+  <h2 class="content-title">Nội Dung Chương 6</h2>
+  <div class="toc-grid">
+    <div class="toc-item">
+      <div class="toc-num">6.1</div>
+      <div class="toc-content">
+        <h4>Quy Trình 5 Pha của SDD</h4>
+        <p>Context Discovery → Spec → Plan → Tasks → Implementation → Validation</p>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">6.2</div>
+      <div class="toc-content">
+        <h4>GitHub Spec Kit</h4>
+        <p>Workflow thực tế với 5 Slash Commands — 5 Touchpoints trong GitHub Issues & PRs</p>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">6.3</div>
+      <div class="toc-content">
+        <h4>Cline (Roo Code)</h4>
+        <p>Open Agentic IDE — đọc file, chạy terminal, multi-model, MCP integration</p>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">6.4</div>
+      <div class="toc-content">
+        <h4>DIY SDD</h4>
+        <p>Xây dựng workflow riêng với Markdown thuần — tự do tuyệt đối, không toolkit</p>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">6.5</div>
+      <div class="toc-content">
+        <h4>Hands-on Lab A → Z</h4>
+        <p>Lab A: CRUD đơn giản (45 phút) · Lab B: Import Business Logic phức tạp (60 phút)</p>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">★</div>
+      <div class="toc-content">
+        <h4>Evaluation & Reflection</h4>
+        <p>Rubric chấm điểm, bài học từ hai Labs, tổng kết chương</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 4: SECTION HEADER 6.1
+══════════════════════════════════════ -->
+<div class="slide slide-section">
+  <div class="section-num-bg">6.1</div>
+  <div class="section-tag">Section 6.1</div>
+  <h2 class="section-title">Quy Trình 5 Pha của SDD</h2>
+  <p class="section-desc">
+    Pipeline tuyến tính với các điểm kiểm tra rõ ràng. Mỗi pha có đầu vào, đầu ra,
+    người chịu trách nhiệm, và Definition of Done cụ thể.
+    Không được phép chuyển sang pha tiếp theo khi pha hiện tại chưa hoàn thành.
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 5: SDD PIPELINE TỔNG QUAN
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1 — SDD Pipeline</div>
+  <h2 class="content-title">5 Pha — Tổng Quan Pipeline</h2>
+  <div class="pipeline-wrap">
+    <div class="phase-box">
+      <div class="phase-num">Pha 0</div>
+      <div class="phase-name">CONTEXT</div>
+      <div class="phase-actor">Human<br/>(domain research)</div>
+    </div>
+    <div class="phase-arrow">→</div>
+    <div class="phase-box">
+      <div class="phase-num">Pha 1</div>
+      <div class="phase-name">SPEC</div>
+      <div class="phase-actor">Human<br/>(EARS notation)</div>
+    </div>
+    <div class="phase-arrow">→</div>
+    <div class="phase-box">
+      <div class="phase-num">Pha 2</div>
+      <div class="phase-name">PLAN</div>
+      <div class="phase-actor">AI<br/>(arch + risks)</div>
+    </div>
+    <div class="phase-arrow">→</div>
+    <div class="phase-box">
+      <div class="phase-num">Pha 3</div>
+      <div class="phase-name">TASKS</div>
+      <div class="phase-actor">AI<br/>(atomic tasks)</div>
+    </div>
+    <div class="phase-arrow">→</div>
+    <div class="phase-box">
+      <div class="phase-num">Pha 4</div>
+      <div class="phase-name">IMPL</div>
+      <div class="phase-actor">AI<br/>(generate + test)</div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:8px">
+    <div style="display:inline-block;border:1px solid var(--card-border);background:rgba(0,255,65,.06);padding:12px 28px">
+      <span class="hl" style="font-size:.85rem;letter-spacing:.1em">▼ Pha 5: VALIDATION — Human + AI (code vs. spec check)</span>
+    </div>
+  </div>
+  <blockquote class="matrix-quote" style="margin-top:20px;text-align:center">
+    ◄─────── "Fix the Spec, not the Code" ───────►<br/>
+    Khi validation thất bại → quay về Spec, không sửa code trực tiếp
+  </blockquote>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 6: BẢNG TỔNG QUAN 5 PHA
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1 — Tổng quan bảng các pha</div>
+  <h2 class="content-title">Bảng Tổng Quan 5 Pha</h2>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th>Pha</th><th>Tên</th><th>Actor</th><th>Input</th><th>Output</th><th>Definition of Done</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="hl">0</td><td>Context Discovery</td><td>Human</td><td>User stories, domain knowledge</td><td>Context document</td><td>Team hiểu domain &amp; constraints</td></tr>
+        <tr><td class="hl">1</td><td>Specification</td><td>Human</td><td>Context doc, user stories</td><td>SPEC.md (APPROVED)</td><td>AI review passed, spec locked</td></tr>
+        <tr><td class="hl">2</td><td>Planning</td><td>AI</td><td>SPEC.md</td><td>PLAN.md</td><td>Human approved arch + risks</td></tr>
+        <tr><td class="hl">3</td><td>Task Decomp.</td><td>AI</td><td>PLAN.md</td><td>TASKS.md</td><td>Tasks atomic &amp; independent</td></tr>
+        <tr><td class="hl">4</td><td>Implementation</td><td>AI</td><td>TASKS.md + SPEC.md</td><td>Source code + tests</td><td>All tests green</td></tr>
+        <tr><td class="hl">5</td><td>Validation</td><td>Both</td><td>Code + SPEC.md</td><td>Validation report</td><td>Code ↔ Spec 100% match</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="alert-box info" style="margin-top:18px">
+    <strong>Rule quan trọng nhất</strong>
+    Không được phép chuyển sang pha tiếp theo khi pha hiện tại chưa hoàn thành — không có "gần xong", không có "sẽ update sau".
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 7: PHA 0 — CONTEXT DISCOVERY
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1.1 — Pha 0</div>
+  <h2 class="content-title">Pha 0 — Context Discovery</h2>
+  <p class="body-text">
+    Đây là pha thường bị bỏ qua nhất vì nó không tạo ra file code nào. Nhưng đây chính là
+    <span class="hl">nguyên nhân số một</span> khiến dự án AI-assisted thất bại: team đã viết spec và nhờ AI implement
+    mà không thực sự hiểu domain. AI implement đúng spec nhưng spec lại <span class="hl-r">sai về mặt business</span>.
+  </p>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Thời lượng thực tế</div>
+      <ul class="bullet-list">
+        <li>Feature nhỏ: <span class="hl">30 phút</span> là đủ</li>
+        <li>Module lớn: cần 2–3 buổi workshop</li>
+        <li>Điểm quan trọng: ra khỏi pha này với <span class="hl">Context Document</span> — không phải trong đầu, phải là file viết ra</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Dấu hiệu chưa xong</div>
+      <ul class="bullet-list">
+        <li>Vẫn còn <span class="hl-r">Open Questions</span> chưa được trả lời</li>
+        <li>Team chưa đồng thuận về domain terms</li>
+        <li>Constraints chưa được liệt kê đầy đủ</li>
+        <li>Không ai biết ai là <span class="hl-o">Decision Maker</span> cuối cùng</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 8: CONTEXT DOCUMENT TEMPLATE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1.1 — Context Document Template</div>
+  <h2 class="content-title">Template CONTEXT.md</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">1. Problem Statement</div>
+      <p style="font-size:clamp(14px,1.4vw,18px);color:var(--muted);line-height:1.6">
+        Vấn đề thực sự là gì? User đang bị đau ở đâu?<br/>
+        <span class="hl-r">Tránh solution thinking ở bước này.</span> Chỉ mô tả pain.
+      </p>
+      <div class="divider" style="margin:12px 0"></div>
+      <div class="card-title">2. Domain Knowledge</div>
+      <p style="font-size:clamp(14px,1.4vw,18px);color:var(--muted);line-height:1.6">
+        Các thuật ngữ domain-specific mà AI cần biết.<br/>
+        Các quy tắc nghiệp vụ bất thành văn.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-title">3. Stakeholders</div>
+      <p style="font-size:clamp(14px,1.4vw,18px);color:var(--muted);line-height:1.6">Ai được lợi? Ai chịu ảnh hưởng? Ai có quyền quyết định?</p>
+      <div class="divider" style="margin:12px 0"></div>
+      <div class="card-title">4. Constraints (không thể thay đổi)</div>
+      <p style="font-size:clamp(14px,1.4vw,18px);color:var(--muted);line-height:1.6">Tech, Business, Time — ràng buộc cứng.</p>
+      <div class="divider" style="margin:12px 0"></div>
+      <div class="card-title">5. Assumptions &amp; 6. Open Questions</div>
+      <p style="font-size:clamp(14px,1.4vw,18px);color:var(--muted);line-height:1.6">
+        Mỗi assumption là một rủi ro nếu sai.<br/>
+        Open Questions cần clarify với stakeholder <span class="hl">trước khi viết spec</span>.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 9: PHA 1 — SPECIFICATION
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1.2 — Pha 1</div>
+  <h2 class="content-title">Pha 1 — Specification</h2>
+  <p class="body-text">
+    Đây là pha <span class="hl">con người làm chủ hoàn toàn</span>. Dựa trên Context Document từ Pha 0,
+    bạn viết SPEC.md theo đúng cấu trúc 8 thành phần và EARS Notation đã học ở Chương 5.
+    Sau khi viết xong draft, mới đưa AI vào để review — <span class="hl-r">không sớm hơn</span>.
+  </p>
+  <div class="card">
+    <div class="card-title">Checklist Pha 1 — Definition of Done</div>
+    <ul class="bullet-list">
+      <li>SPEC.md có đủ <span class="hl">8 thành phần</span> (7 core + Out of Scope)</li>
+      <li>Mỗi requirement dùng <span class="hl">EARS Notation</span> (WHEN/WHILE/WHERE/SHALL)</li>
+      <li>AI đã review và tìm logic gaps — mọi gaps đã được resolve</li>
+      <li>Không còn Open Questions từ Pha 0</li>
+      <li>Spec đã được <span class="hl">team lead hoặc product owner approve</span></li>
+      <li>SPEC.md version 1.0.0 đã commit vào git với tag</li>
+      <li>"Out of Scope" section rõ ràng, không ambiguous</li>
+    </ul>
+  </div>
+  <div class="alert-box warn" style="margin-top:14px">
+    <strong>Điểm mấu chốt</strong>
+    Pha 1 kết thúc khi spec được lock với trạng thái APPROVED. Không có "gần xong", không có "sẽ update sau". Spec phải cứng trước khi AI bắt đầu làm việc.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 10: PHA 2 — PLANNING
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1.3 — Pha 2</div>
+  <h2 class="content-title">Pha 2 — Planning (AI tạo PLAN.md)</h2>
+  <p class="body-text">
+    Pha 2 là lần đầu tiên AI tham gia chủ động với vai trò <span class="hl">kiến trúc sư</span>.
+    AI đọc SPEC.md và tạo ra PLAN.md — một tài liệu mô tả cách tiếp cận kỹ thuật, các component cần tạo,
+    dependency giữa chúng, và risk assessment. Con người review và approve trước khi đi tiếp.
+  </p>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">PLAN.md phải có</div>
+      <ul class="bullet-list">
+        <li><span class="hl">Architectural Approach</span> — pattern, design pattern, lý do</li>
+        <li><span class="hl">Components</span> — tên, trách nhiệm, interface</li>
+        <li><span class="hl">Data Flow</span> — user input → processing → storage → response</li>
+        <li><span class="hl">Dependencies</span> — thứ tự implement, external deps</li>
+        <li><span class="hl">Risks &amp; Mitigations</span> — ít nhất 3 rủi ro kỹ thuật</li>
+        <li><span class="hl">Questions for Human</span> — những điểm spec còn mơ hồ</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Tại sao cần Pha 2 riêng biệt?</div>
+      <p style="font-size:clamp(14px,1.4vw,18px);color:var(--muted);line-height:1.65">
+        "Design trước, code sau" luôn cho kết quả tốt hơn.
+        AI có xu hướng bắt đầu code ngay khi được đưa spec —
+        giống như nhà thầu xây móng trước khi có bản vẽ.
+      </p>
+      <p style="font-size:clamp(14px,1.4vw,18px);color:var(--muted);line-height:1.65;margin-top:10px">
+        PLAN.md buộc AI phải <span class="hl">"nghĩ"</span> trước khi <span class="hl-o">"làm"</span>.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 11: PLAN.MD — COMPONENTS TABLE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1.3 — PLAN.md ví dụ: Components</div>
+  <h2 class="content-title">PLAN.md — Bảng Components & Data Flow</h2>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Component</th><th>Trách nhiệm</th><th>File</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="hl">ReviewRouter</td><td>HTTP endpoints, validation</td><td>src/reviews/router.py</td></tr>
+        <tr><td class="hl">ReviewService</td><td>Business logic từ SPEC §3</td><td>src/reviews/service.py</td></tr>
+        <tr><td class="hl">ReviewRepository</td><td>DB CRUD + aggregate query</td><td>src/reviews/repository.py</td></tr>
+        <tr><td class="hl">BlacklistService</td><td>Filter inappropriate content</td><td>src/shared/blacklist.py</td></tr>
+        <tr><td class="hl">AggregateUpdateJob</td><td>Background rating recalculation</td><td>src/jobs/aggregate_update.py</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">Data Flow</div>
+    <p style="font-family:'Courier New',monospace;font-size:clamp(12px,1.2vw,15px);color:#88ff88;line-height:1.7">
+      POST /reviews → ReviewRouter (validate input)<br/>
+      &nbsp;&nbsp;→ ReviewService.create_review()<br/>
+      &nbsp;&nbsp;→ OrderRepository.verify_purchase() &nbsp;[check buyer đã mua]<br/>
+      &nbsp;&nbsp;→ ReviewRepository.find_by_order() &nbsp;&nbsp;[check duplicate]<br/>
+      &nbsp;&nbsp;→ BlacklistService.scan() &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[check content]<br/>
+      &nbsp;&nbsp;→ ReviewRepository.create() &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[persist]<br/>
+      &nbsp;&nbsp;→ Response 201 Created<br/>
+      (async) → AggregateUpdateJob.enqueue()
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 12: PLAN.MD — RISKS TABLE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1.3 — PLAN.md ví dụ: Risks</div>
+  <h2 class="content-title">PLAN.md — Bảng Risks & Mitigations</h2>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Rủi ro</th><th>Khả năng</th><th>Impact</th><th>Mitigation</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Race condition: double submit</td><td class="hl-r">High</td><td class="hl-r">High</td><td>DB unique constraint</td></tr>
+        <tr><td>Aggregate lag &gt; 5 min</td><td class="hl-o">Med</td><td class="hl-o">Med</td><td>Redis cache + job queue</td></tr>
+        <tr><td>Blacklist false positives</td><td class="hl-o">Med</td><td class="hl">Low</td><td>Whitelist + user appeal</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <blockquote class="matrix-quote" style="margin-top:20px">
+    <strong style="color:var(--accent)">"Questions for Human" là vàng.</strong><br/>
+    Đây là nơi AI cho bạn biết những chỗ spec còn mơ hồ. Nếu AI không có câu hỏi nào,
+    hoặc spec của bạn rất tốt, hoặc AI đang assume — hãy hỏi lại: <em>"Bạn đã assume điều gì?"</em>
+    Mỗi assumption ẩn là một bug tiềm ẩn cho nó.
+  </blockquote>
+  <div class="card">
+    <div class="card-title">Questions for Human — ví dụ</div>
+    <ul class="bullet-list">
+      <li>AggregateUpdateJob: dùng <span class="hl">Celery</span> hay <span class="hl">Kafka</span>? (spec không chỉ định)</li>
+      <li>BlacklistService: hardcoded list hay dynamic từ DB?</li>
+      <li>Spec §3 nói "cập nhật trong 5 phút" — <span class="hl-b">eventual consistency</span> hay realtime với cache invalidation?</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 13: QUOTE — QUESTIONS FOR HUMAN
+══════════════════════════════════════ -->
+<div class="slide" style="justify-content:center">
+  <div class="slide-tag" style="text-align:center">6.1.3 — Quote Spotlight</div>
+  <div class="big-quote-wrap">
+    <div class="big-quote">
+      "Mỗi assumption ẩn là một bug tiềm ẩn cho nó."
+    </div>
+    <p style="font-size:clamp(16px,1.7vw,22px);color:var(--muted);max-width:640px;text-align:center;line-height:1.65">
+      Nếu AI không đặt câu hỏi sau khi đọc PLAN.md — hãy chủ động hỏi nó:
+      <span class="hl">"Bạn đã assume điều gì trong quá trình tạo plan này?"</span>
+    </p>
+    <div class="big-quote-src">Playbook SDD + ADD — Chương 6</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 14: PHA 3 — TASK DECOMPOSITION
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1.4 — Pha 3</div>
+  <h2 class="content-title">Pha 3 — Task Decomposition</h2>
+  <p class="body-text">
+    Từ PLAN.md, AI tạo TASKS.md — danh sách các task cụ thể, có thể implement độc lập,
+    với acceptance criteria rõ ràng cho từng task. Đây là bước chuyển từ
+    <span class="hl">"what to build"</span> sang <span class="hl">"how to build it step by step"</span>.
+  </p>
+  <div class="card">
+    <div class="card-title">Task tốt phải thỏa 3 tiêu chí</div>
+    <ul class="bullet-list">
+      <li><span class="hl">Atomic</span> — không chia nhỏ hơn được</li>
+      <li><span class="hl">Independent</span> — implement được mà không phụ thuộc task chưa xong</li>
+      <li><span class="hl">Verifiable</span> — có test case cụ thể để biết đã xong</li>
+    </ul>
+  </div>
+  <div class="alert-box tip" style="margin-top:14px">
+    <strong>Prompt Pha 3 — Tạo TASKS.md</strong>
+    Doc PLAN.md và SPEC.md, tạo TASKS.md — danh sách tasks có thể implement độc lập.
+    Format ID: T001, T002... · Estimated time · Dependencies · EARS spec refs · Done criteria.
+    <strong style="color:var(--orange);display:inline;font-size:inherit">Tối đa 4 giờ/task. Nếu task &gt; 4h, chia nhỏ hơn.</strong>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 15: TASKS.MD TABLE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1.4 — TASKS.md ví dụ</div>
+  <h2 class="content-title">TASKS.md — Product Review Feature</h2>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>ID</th><th>Task</th><th>Est</th><th>Deps</th><th>Spec Refs</th><th>Done When</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="hl">T001</td><td>Tạo DB migration reviews table</td><td>1h</td><td>—</td><td>§5 Data</td><td>Migration runs, rollback OK</td></tr>
+        <tr><td class="hl">T002</td><td>Implement BlacklistService</td><td>2h</td><td>—</td><td>§3 Unwanted</td><td>10 test cases pass</td></tr>
+        <tr><td class="hl">T003</td><td>Implement ReviewRepository</td><td>3h</td><td>T001</td><td>§5 Data</td><td>CRUD ops + aggregate query OK</td></tr>
+        <tr><td class="hl">T004</td><td>Implement ReviewService</td><td>4h</td><td>T002,T003</td><td>§3 Func.</td><td>All business rules enforced</td></tr>
+        <tr><td class="hl">T005</td><td>Implement ReviewRouter</td><td>2h</td><td>T004</td><td>§3 Func.</td><td>All endpoints return correct HTTP</td></tr>
+        <tr><td class="hl">T006</td><td>Implement AggregateUpdateJob</td><td>3h</td><td>T003</td><td>§4 Non-func</td><td>Rating updates within 5 min</td></tr>
+        <tr><td class="hl">T007</td><td>Integration tests</td><td>2h</td><td>T005,T006</td><td>§7 Accept.</td><td>All AC checklist items pass</td></tr>
+        <tr><td class="hl">T008</td><td>API documentation</td><td>1h</td><td>T005</td><td>—</td><td>OpenAPI spec generated</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 16: PHA 4 — IMPLEMENTATION
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1.5 — Pha 4</div>
+  <h2 class="content-title">Pha 4 — Implementation</h2>
+  <p class="body-text">
+    Đây là pha AI làm việc nhiều nhất — nhưng không phải theo nghĩa "chat và nhận code".
+    AI implement từng task trong TASKS.md, theo đúng thứ tự dependency, với SPEC.md và PLAN.md
+    luôn trong context. <span class="hl-r">Không có task nào được implement mà không có spec refs rõ ràng.</span>
+  </p>
+  <div class="card">
+    <div class="card-title">Prompt mẫu — Implement Task T004: ReviewService</div>
+    <ul class="bullet-list">
+      <li>Implement ReviewService theo <span class="hl">ĐÚNG spec §3</span></li>
+      <li>Dùng dependency injection — không instantiate deps bên trong</li>
+      <li>Thêm <span class="hl">EARS tag comment</span> cho mỗi business rule</li>
+      <li>Xử lý TẤT CẢ Unwanted patterns trong spec §6</li>
+      <li>Type hints bắt buộc cho tất cả method signatures</li>
+      <li>Tạo đồng thời: <span class="hl">tests/reviews/test_service.py</span></li>
+      <li><span class="hl-r">KHÔNG implement những gì nằm trong Out of Scope (SPEC §8)</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 17: FIX THE SPEC — BIG QUOTE
+══════════════════════════════════════ -->
+<div class="slide" style="justify-content:center">
+  <div class="slide-tag" style="text-align:center">6.1.5 — Nguyên tắc cốt lõi</div>
+  <div class="big-quote-wrap">
+    <div class="big-quote">"Fix the Spec, not the Code."</div>
+    <div class="two-col" style="max-width:880px;margin-top:24px">
+      <div class="card">
+        <div class="card-title" style="color:var(--red)">❌ WRONG — Sửa code trực tiếp</div>
+        <p style="font-size:clamp(13px,1.3vw,16px);color:#ffb0b0;line-height:1.6;font-family:'Courier New',monospace">
+          AI generate: if rating not in range(1, 5):<br/>
+          Dev sửa tay: if rating not in range(1, 6):<br/>
+          → Code diverge khỏi spec, không ai biết tại sao
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-title">✓ RIGHT — Trace về Spec</div>
+        <p style="font-size:clamp(13px,1.3vw,16px);color:var(--muted);line-height:1.6;font-family:'Courier New',monospace">
+          Test fails → Check SPEC §3: "rating 1–5 (integer)"<br/>
+          Spec rõ nhưng AI dùng range() sai<br/>
+          Update prompt → Re-generate → Correct
+        </p>
+      </div>
+    </div>
+    <div class="big-quote-src" style="margin-top:18px">Rule: KHÔNG có dòng code nào không truy được về spec.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 18: PHA 5 — VALIDATION
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1.6 — Pha 5</div>
+  <h2 class="content-title">Pha 5 — Validation (Kiểm tra Code vs. Spec)</h2>
+  <p class="body-text">
+    Pha cuối cùng là formal verification: đọc code và spec song song, xác nhận mọi requirement
+    đều được implement đúng. Đây không phải code review thông thường — đây là <span class="hl">compliance check</span>.
+  </p>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Spec Section</th><th>Requirement (tóm tắt)</th><th>Code File/Line</th><th>Test Name</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>§3 WHEN submit</td><td>Validate rating 1–5</td><td>service.py:L45</td><td>test_rating_boundary_valid</td><td class="hl">Pass</td></tr>
+        <tr><td>§3 WHEN submit</td><td>Validate comment 10–500</td><td>service.py:L52</td><td>test_comment_length_boundaries</td><td class="hl">Pass</td></tr>
+        <tr><td>§3 Unwanted buyer</td><td>Reject non-buyer review</td><td>service.py:L61</td><td>test_non_buyer_rejected</td><td class="hl">Pass</td></tr>
+        <tr><td>§3 Unwanted dup</td><td>Reject duplicate review</td><td>service.py:L72</td><td>test_duplicate_review_rejected</td><td class="hl">Pass</td></tr>
+        <tr><td>§8 Out of Scope</td><td>NO moderation queue</td><td>(verify absent)</td><td>test_no_moderation_endpoint</td><td class="hl">Pass</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="alert-box warn" style="margin-top:16px">
+    <strong>Out of Scope cũng cần Validation</strong>
+    Nhiều team chỉ verify "những gì đã làm". SDD cũng verify "những gì không được làm".
+    grep codebase tìm code không có trong spec → nếu AI "helpful" implement thêm feature ngoài scope → <span class="hl-r">remove ngay</span>.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 19: BÀI TẬP 6.1
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.1.7 — Bài tập</div>
+  <h2 class="content-title">Bài Tập — Mapping SDD Phases</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Bài tập 6.1.A — Phase Identification ⭐⭐</div>
+      <p style="font-size:clamp(14px,1.4vw,18px);color:var(--muted);line-height:1.65">
+        Cho đoạn hội thoại sau — xác định mỗi message thuộc pha nào và tại sao developer này đang làm <span class="hl-r">sai</span>:
+      </p>
+      <ul class="bullet-list" style="margin-top:10px">
+        <li>Dev: <em>"Viết cho tôi authentication module cho app Node.js."</em></li>
+        <li>AI: [Generate code 200 dòng không có spec]</li>
+        <li>Dev: <em>"Code bị lỗi, sửa đi."</em> [Sửa code trực tiếp]</li>
+        <li>Dev: <em>"Thêm 2FA vào đi."</em> [Feature mới không có spec]</li>
+      </ul>
+      <p style="font-size:clamp(13px,1.3vw,16px);color:var(--dim);margin-top:10px">
+        → Pha nào bị skip? Sai lầm cụ thể là gì? SDD đúng trông như thế nào?
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-title">Bài tập 6.1.B — PLAN.md Review ⭐⭐⭐</div>
+      <p style="font-size:clamp(14px,1.4vw,18px);color:var(--muted);line-height:1.65">
+        Viết SPEC.md ngắn (Detailed level) cho tính năng <span class="hl">"Password Reset"</span>.
+        Sau đó đưa cho Cline với prompt Pha 2 để generate PLAN.md.
+      </p>
+      <p style="font-size:clamp(13px,1.3vw,16px);color:var(--dim);margin-top:10px">
+        Review output của AI: risks nào nó tìm được? Questions nào nó đặt ra?
+        Bạn đồng ý với architectural approach không?
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 20: SECTION HEADER 6.2
+══════════════════════════════════════ -->
+<div class="slide slide-section">
+  <div class="section-num-bg">6.2</div>
+  <div class="section-tag">Section 6.2</div>
+  <h2 class="section-title">GitHub Spec Kit</h2>
+  <p class="section-desc">
+    Workflow thực tế với Slash Commands — đưa SDD pipeline trực tiếp
+    vào GitHub Issues và Pull Requests. 5 Slash Commands, 5 Touchpoints,
+    mỗi lần chuyển pha đều có human-in-the-loop.
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 21: GITHUB SPEC KIT INTRO
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.2 — GitHub Spec Kit</div>
+  <h2 class="content-title">GitHub Spec Kit — Triết Lý Thiết Kế</h2>
+  <p class="body-text">
+    GitHub Spec Kit là tập hợp workflows, templates, và GitHub Actions được thiết kế
+    để đưa SDD pipeline trực tiếp vào GitHub Issues và Pull Requests.
+    Thay vì quản lý SPEC.md, PLAN.md, TASKS.md thủ công, Spec Kit cung cấp các
+    <span class="hl">slash commands</span> — những điểm chạm (touchpoints) chuẩn hóa giữa người và AI.
+  </p>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Triết lý thiết kế</div>
+      <p style="font-size:clamp(14px,1.4vw,18px);color:var(--muted);line-height:1.65">
+        Mỗi slash command là một "handoff point" — nơi con người chuyển giao quyền kiểm soát
+        cho AI một cách <span class="hl">có chủ đích</span>, với context được chuẩn bị sẵn.
+        Không có gì xảy ra mà không có ý chí của người dùng.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-title">Cấu trúc thư mục</div>
+      <ul class="bullet-list">
+        <li><span class="hl">.github/ISSUE_TEMPLATE/</span> — feature spec template</li>
+        <li><span class="hl">.github/workflows/</span> — speckit-*.yml actions</li>
+        <li><span class="hl">.github/speckit/prompts/</span> — prompt templates mỗi pha</li>
+        <li><span class="hl">.github/speckit/constitution.md</span> — AGENTS.md của project</li>
+        <li><span class="hl">.github/speckit/config.yml</span> — model, token limits</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 22: 5 SLASH COMMANDS TABLE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.2.2 — 5 Slash Commands</div>
+  <h2 class="content-title">5 Slash Commands — 5 Touchpoints</h2>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Command</th><th>Pha</th><th>Actor kích hoạt</th><th>AI làm gì</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="hl">/speckit.constitution</td><td>Setup</td><td>Tech lead, once</td><td>Tạo AGENTS.md từ project description + tech stack</td></tr>
+        <tr><td class="hl">/speckit.specify</td><td>Pha 1</td><td>Developer / PM</td><td>Review spec draft, tìm gaps, tạo SPEC.md version cuối</td></tr>
+        <tr><td class="hl">/speckit.plan</td><td>Pha 2</td><td>Developer</td><td>Đọc SPEC.md, tạo PLAN.md với arch + risks + questions</td></tr>
+        <tr><td class="hl">/speckit.tasks</td><td>Pha 3</td><td>Developer (sau approve)</td><td>Đọc PLAN.md, tạo TASKS.md với atomic tasks và deps</td></tr>
+        <tr><td class="hl">/speckit.implement</td><td>Pha 4</td><td>Developer (per task)</td><td>Implement task cụ thể + tests, tạo PR</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="alert-box info" style="margin-top:16px">
+    <strong>Slash Commands là Touchpoints, không phải automation</strong>
+    Không command nào là "bấm và quên". Sau <strong>/speckit.specify</strong> → người dùng đọc và APPROVE spec trước khi tiếp tục.
+    Sau <strong>/speckit.plan</strong> → người dùng review PLAN.md, trả lời Questions for Human. AI chờ.
+    Không có gì tự động sang pha tiếp theo — đây là cách SDD đảm bảo human-in-the-loop.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 23: /speckit.specify & /speckit.plan
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.2.2 — Slash Commands chi tiết</div>
+  <h2 class="content-title">/speckit.specify &amp; /speckit.plan</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">/speckit.specify — Từ ý tưởng đến SPEC.md</div>
+      <p style="font-size:clamp(13px,1.3vw,16px);color:var(--muted);line-height:1.6;margin-bottom:8px">
+        Command quan trọng nhất. Gọi khi đã có draft spec (hoặc chỉ có user story). AI sẽ:
+      </p>
+      <ul class="bullet-list">
+        <li>Expand thành SPEC.md đầy đủ 8 thành phần</li>
+        <li>Thêm EARS notation cho mỗi requirement</li>
+        <li>Tìm edge cases: xóa địa chỉ mặc định → làm sao?</li>
+        <li>Thêm Out of Scope rõ ràng</li>
+        <li>Post spec vào Issue dưới dạng comment + attach file</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">/speckit.plan — AI kiến trúc hóa</div>
+      <p style="font-size:clamp(13px,1.3vw,16px);color:var(--muted);line-height:1.6;margin-bottom:8px">
+        Trigger sau khi SPEC.md đã được approve. AI sẽ:
+      </p>
+      <ul class="bullet-list">
+        <li>Fetch SPEC.md từ Issue</li>
+        <li>Đọc constitution.md (tech stack, patterns)</li>
+        <li>Tạo PLAN.md: arch, components, data flow, deps, risks</li>
+        <li>Post PLAN.md vào Issue dưới dạng comment</li>
+        <li>Tag reviewer để approve</li>
+      </ul>
+      <p style="font-size:clamp(12px,1.2vw,15px);color:var(--dim);margin-top:8px">
+        Sau khi plan được approve → dev có thể chạy /speckit.tasks
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 24: /speckit.tasks & /speckit.implement
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.2.2 — Slash Commands chi tiết</div>
+  <h2 class="content-title">/speckit.tasks &amp; /speckit.implement</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">/speckit.tasks — Atomic task breakdown</div>
+      <p style="font-size:clamp(13px,1.3vw,16px);color:var(--muted);line-height:1.6;margin-bottom:8px">
+        Trigger sau khi PLAN.md approved. AI sẽ:
+      </p>
+      <ul class="bullet-list">
+        <li>Đọc SPEC.md + PLAN.md</li>
+        <li>Tạo TASKS.md với atomic tasks (max 4h/task)</li>
+        <li>Tạo <span class="hl">GitHub sub-issues</span> cho mỗi task tự động</li>
+        <li>Gán dependencies bằng GitHub issue links</li>
+      </ul>
+      <div class="code-block" style="font-size:11px;margin-top:10px">Issue #42 (feature): "Shipping Address"
+  ↳ #43 (T001): "Create DB migration"
+  ↳ #44 (T002): "Implement Repository"
+  ↳ #45 (T003): "Implement Service [deps: #44]"</div>
+    </div>
+    <div class="card">
+      <div class="card-title">/speckit.implement — Code theo spec</div>
+      <p style="font-size:clamp(13px,1.3vw,16px);color:var(--muted);line-height:1.6;margin-bottom:8px">
+        Trigger trong task sub-issue. AI sẽ:
+      </p>
+      <ul class="bullet-list">
+        <li>Đọc task definition, fetch SPEC.md và PLAN.md</li>
+        <li>Đọc code đã có từ dependency tasks</li>
+        <li>Generate code + tests với EARS tags</li>
+        <li>Tạo <span class="hl">Pull Request</span> tự động với traceability report</li>
+      </ul>
+      <p style="font-size:clamp(12px,1.2vw,15px);color:var(--dim);margin-top:8px">
+        PR description: Task ID · Spec refs · Test coverage · Out of Scope verified
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 25: FULL WALKTHROUGH
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.2.3 — Walkthrough đầy đủ</div>
+  <h2 class="content-title">Full Walkthrough — Từ Init Đến Complete</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Ngày 1 — Setup & Specify</div>
+      <ul class="bullet-list">
+        <li>PM tạo GitHub Issue: "Feature: Shipping Address"</li>
+        <li>Dev đọc, hiểu domain → viết Context trong Issue body</li>
+        <li>Dev trigger: <span class="hl">/speckit.constitution</span> (chỉ lần đầu)</li>
+        <li>Dev viết draft spec → trigger: <span class="hl">/speckit.specify</span></li>
+        <li>Review output, resolve 3 gaps AI tìm được</li>
+        <li>Approve spec → Issue labeled <span class="hl">"spec:approved"</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Ngày 2-4 — Plan, Tasks, Implement</div>
+      <ul class="bullet-list">
+        <li><span class="hl">/speckit.plan #42</span> → AI tạo PLAN.md</li>
+        <li>Review plan, trả lời 2 Questions for Human</li>
+        <li>Approve plan → <span class="hl">/speckit.tasks #42</span> → 5 sub-issues</li>
+        <li>Mỗi task sub-issue: <span class="hl">/speckit.implement</span> → code + PR</li>
+        <li>Review PR: check traceability, approve nếu OK → merge</li>
+        <li>Tất cả 5 tasks merged → Run validation → Close #42</li>
+      </ul>
+    </div>
+  </div>
+  <div class="alert-box info" style="margin-top:16px">
+    <strong>Timeline & Audit Trail</strong>
+    4 ngày cho feature với full spec trail. Mọi quyết định — ai làm gì, khi nào, dựa trên spec nào — đều được lưu trong GitHub Issues. Traceability hoàn hảo.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 26: SECTION HEADER 6.3
+══════════════════════════════════════ -->
+<div class="slide slide-section">
+  <div class="section-num-bg">6.3</div>
+  <div class="section-tag">Section 6.3</div>
+  <h2 class="section-title">Cline (Roo Code)</h2>
+  <p class="section-desc">
+    Open Agentic IDE — đối cực của Spec Kit. Chạy ngay trong VSCode,
+    đọc file, chạy terminal, gọi MCP servers, thực thi kế hoạch multi-step
+    mà không cần copy-paste từng đoạn code.
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 27: TẠI SAO CHỌN CLINE?
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.3.1 — Tại sao chọn Cline?</div>
+  <h2 class="content-title">Cline vs. Các Công Cụ Khác</h2>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Tiêu chí</th><th>Cline (Roo Code)</th><th>GitHub Copilot Chat</th><th>Cursor AI</th><th>Kiro IDE</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Open source</td><td class="hl">MIT License</td><td class="hl-r">Proprietary</td><td class="hl-r">Proprietary</td><td class="hl-r">AWS-controlled</td></tr>
+        <tr><td>Agentic (multi-step)</td><td class="hl">Native</td><td class="hl-o">Limited</td><td class="hl-o">Composer</td><td class="hl">Native</td></tr>
+        <tr><td>Multi-model support</td><td class="hl">Anthropic/OpenAI/Ollama</td><td class="hl-r">Copilot only</td><td class="hl-o">Multiple</td><td class="hl-o">AWS Bedrock</td></tr>
+        <tr><td>MCP integration</td><td class="hl">Full</td><td class="hl-r">None</td><td class="hl-o">Partial</td><td class="hl-o">Limited</td></tr>
+        <tr><td>File system access</td><td class="hl">Full read/write</td><td class="hl-o">Read only</td><td class="hl">Full</td><td class="hl">Full</td></tr>
+        <tr><td>Terminal execution</td><td class="hl">With approval</td><td class="hl-r">No</td><td class="hl">Yes</td><td class="hl">Yes</td></tr>
+        <tr><td>Cost model</td><td class="hl">Pay-per-token (API)</td><td class="hl-o">Subscription</td><td class="hl-o">Subscription</td><td class="hl-o">AWS pricing</td></tr>
+        <tr><td>Vendor lock-in</td><td class="hl">Lowest</td><td class="hl-r">GitHub/MS</td><td class="hl-o">Medium</td><td class="hl-r">AWS</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 28: CLINE TỰ ĐỘNG ĐỌC FILE, CHẠY TERMINAL
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.3.2 — Cline autonomous workflow</div>
+  <h2 class="content-title">Cline Tự Động Đọc File &amp; Chạy Terminal</h2>
+  <p class="body-text">
+    Điểm khác biệt lớn nhất của Cline so với AI chatbot thông thường là khả năng
+    <span class="hl">thực thi</span> — không chỉ suggest. Ví dụ: giao Cline implement Task T004 với full autonomy.
+  </p>
+  <div class="card">
+    <div class="card-title">Cline tự động thực hiện từng bước</div>
+    <ul class="bullet-list">
+      <li><span class="hl">read_file("TASKS.md")</span> → hiểu T004 requirements</li>
+      <li><span class="hl">read_file("SPEC.md")</span> → load business rules</li>
+      <li><span class="hl">read_file("src/reviews/repository.py")</span> → đọc interface</li>
+      <li><span class="hl">write_file("src/reviews/service.py")</span> → implement</li>
+      <li><span class="hl">write_file("tests/reviews/test_service.py")</span> → tests</li>
+      <li><span class="hl">execute_command("pytest tests/reviews/ -v")</span> → run</li>
+      <li>[nếu fail] đọc output, fix service.py, re-run cho đến khi pass</li>
+      <li>Report: <em>"All 15 tests passed. Coverage: 94%."</em></li>
+    </ul>
+  </div>
+  <div class="alert-box tip" style="margin-top:12px">
+    <strong>Developer chỉ cần approve các "dangerous" actions</strong>
+    write_file, execute_command khi Cline xin phép — toàn bộ còn lại Cline tự xử lý.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 29: MULTI-MODEL TABLE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.3.3 — Multi-model strategy</div>
+  <h2 class="content-title">Multi-Model — Chọn Model Đúng Cho Đúng Task</h2>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Task trong SDD</th><th>Model khuyến nghị</th><th>Lý do</th><th>Approx cost</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Pha 0: Context Discovery</td><td class="hl">Claude Sonnet</td><td>Cần reasoning, domain understanding</td><td>$0.003/1k tokens</td></tr>
+        <tr><td>Pha 1: Spec review + gaps</td><td class="hl">Claude Sonnet</td><td>Logic analysis, contradiction detect</td><td>$0.003/1k tokens</td></tr>
+        <tr><td>Pha 2: Planning (PLAN.md)</td><td class="hl">Claude Sonnet</td><td>Architecture decisions cần depth</td><td>$0.003/1k tokens</td></tr>
+        <tr><td>Pha 3: Task decomp.</td><td class="hl-b">Claude Haiku</td><td>Structured breakdown, không cần depth</td><td>$0.00025/1k tokens</td></tr>
+        <tr><td>Pha 4: Boilerplate code</td><td class="hl-b">Claude Haiku / GPT4o-mini</td><td>Simple patterns, CRUD generation</td><td>$0.00015/1k tokens</td></tr>
+        <tr><td>Pha 4: Business logic</td><td class="hl">Claude Sonnet</td><td>Complex logic cần reasoning</td><td>$0.003/1k tokens</td></tr>
+        <tr><td>Pha 5: Validation</td><td class="hl">Claude Sonnet</td><td>Careful comparison cần accuracy</td><td>$0.003/1k tokens</td></tr>
+        <tr><td>Offline / confidential</td><td class="hl-o">Llama 3 via Ollama</td><td>Data không ra ngoài machine</td><td>Free (local GPU)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 30: CLINE + MCP
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.3.4 — Cline + MCP</div>
+  <h2 class="content-title">Cline + MCP = Agentic SDD Hoàn Chỉnh</h2>
+  <p class="body-text">
+    Kết nối Cline với MCP servers tạo ra workflow agentic thực sự: AI không chỉ generate code —
+    nó đọc Jira để biết requirement, đọc GitHub để biết existing code, viết code, chạy tests,
+    và tạo PR. Tất cả mà <span class="hl">không cần bạn switch tab</span>.
+  </p>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">MCP Servers cho SDD Workflow</div>
+      <ul class="bullet-list">
+        <li><span class="hl">@modelcontextprotocol/server-github</span> — đọc/tạo Issues, PRs</li>
+        <li><span class="hl">jira-mcp</span> — đọc tickets, update status</li>
+        <li><span class="hl">@modelcontextprotocol/server-filesystem</span> — đọc/ghi files</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Kịch bản agentic đầy đủ</div>
+      <p style="font-size:clamp(13px,1.3vw,16px);color:var(--muted);line-height:1.65">
+        Bạn nói với Cline:<br/>
+        <em class="hl">"Đọc Jira ticket PROJ-123, implement theo spec, tạo PR và link vào ticket."</em>
+      </p>
+      <p style="font-size:clamp(13px,1.3vw,16px);color:var(--muted);line-height:1.65;margin-top:8px">
+        Cline sẽ tự động orchestrate toàn bộ: fetch ticket → read spec → implement → test → create PR → update Jira.
+      </p>
+    </div>
+  </div>
+  <blockquote class="matrix-quote" style="margin-top:16px">
+    Không có MCP → Cline chỉ là AI code editor thông minh. Với MCP → Cline thực hiện multi-step workflow hoàn chỉnh.
+    Đây chính là tầm nhìn của SDD: <strong>con người design ý định, AI thực thi toàn bộ.</strong>
+  </blockquote>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 31: SECTION HEADER 6.4
+══════════════════════════════════════ -->
+<div class="slide slide-section">
+  <div class="section-num-bg">6.4</div>
+  <div class="section-tag">Section 6.4</div>
+  <h2 class="section-title">DIY SDD</h2>
+  <p class="section-desc">
+    Xây dựng workflow riêng không cần toolkit — chỉ với Markdown files, git,
+    và bất kỳ AI chat nào. Bản chất SDD không phụ thuộc vào công cụ,
+    mà phụ thuộc vào nguyên lý.
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 32: .SDD/ DIRECTORY STRUCTURE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.4.1 — Cấu trúc thư mục .sdd/</div>
+  <h2 class="content-title">Thư Mục .sdd/ — Tiêu Chuẩn SDD</h2>
+  <p class="body-text">
+    Quy ước thư mục <span class="hl">.sdd/</span> đặt tất cả spec artifacts trong một nơi,
+    tách biệt với source code nhưng nằm cùng repo. Dấu chấm đầu tên tránh nhầm lẫn với source code,
+    đồng thời truyền tín hiệu rõ ràng: đây là metadata của dự án.
+  </p>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Cấu trúc thư mục</div>
+      <div class="code-block" style="font-size:11px">.sdd/
+├── README.md          # Hướng dẫn SDD trong project
+├── constitution.md    # = AGENTS.md: rules cho AI
+├── specs/
+│   ├── _template.md   # Template tạo spec mới
+│   ├── feature-auth/
+│   │   ├── SPEC.md    # Spec chính (locked khi approved)
+│   │   ├── CONTEXT.md # Context discovery output
+│   │   ├── PLAN.md    # AI-generated plan
+│   │   ├── TASKS.md   # Task breakdown
+│   │   └── CHANGELOG.md
+│   └── feature-cart/
+├── reviews/           # AI spec review outputs
+└── metrics/           # Token usage, spec quality</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Tại sao .sdd/ vào git?</div>
+      <ul class="bullet-list">
+        <li>Spec là source of truth → phải được <span class="hl">version control</span> như code</li>
+        <li><span class="hl">git diff SPEC.md</span> → xem spec thay đổi thế nào qua thời gian</li>
+        <li><span class="hl">git blame SPEC.md</span> → ai thay đổi dòng nào, khi nào</li>
+        <li><span class="hl">git revert</span> → rollback spec khi quyết định thay đổi</li>
+        <li><span class="hl">Pull Request</span> cho spec → review process giống code review</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 33: BIẾN MARKDOWN THÀNH "BẢN GIAO KÈO"
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.4.2 — Contract với AI</div>
+  <h2 class="content-title">Biến Markdown Thành "Bản Giao Kèo" Với AI</h2>
+  <p class="body-text">
+    Mỗi khi bắt đầu AI session mới, bạn không chat tự nhiên — bạn
+    <span class="hl">trình bày contract</span> và yêu cầu AI "ký" (acknowledge) trước khi làm việc.
+    Điều này áp dụng cho mọi AI: ChatGPT, Claude, Gemini, hay bất kỳ model nào.
+  </p>
+  <div class="card">
+    <div class="card-title">System Prompt chuẩn — Đầu mỗi AI session</div>
+    <ul class="bullet-list">
+      <li><span class="hl">=== CONTRACT ===</span> — khai báo bối cảnh</li>
+      <li>Paste nội dung <span class="hl">constitution.md</span> (rules)</li>
+      <li>CURRENT TASK: Chúng ta đang ở Pha N. Nhiệm vụ cụ thể.</li>
+      <li>CONTEXT FILES: Paste SPEC.md, PLAN.md nếu có</li>
+      <li>CONSTRAINTS: KHÔNG implement Out of Scope · KHÔNG assume</li>
+      <li>Mọi code phải có EARS tag tham chiếu về SPEC section</li>
+    </ul>
+  </div>
+  <div class="alert-box tip" style="margin-top:14px">
+    <strong>Bước "Xác nhận" cuối prompt — rất quan trọng</strong>
+    Yêu cầu AI: <em>"Xác nhận bạn đã đọc contract. Tóm tắt nhiệm vụ của bạn trong 3 bullet points trước khi bắt đầu."</em>
+    Nếu AI tóm tắt sai → bạn biết nó đã hiểu sai context và có thể điều chỉnh ngay.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 34: DIY WORKFLOW HOÀN CHỈNH
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.4.3 — DIY Workflow thực tế</div>
+  <h2 class="content-title">DIY Workflow Hoàn Chỉnh — Password Reset</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Bước 1–4: Setup & Spec</div>
+      <ul class="bullet-list">
+        <li>Tạo structure: <span class="hl">mkdir -p .sdd/specs/feature-password-reset</span></li>
+        <li>Viết CONTEXT.md (30 phút, tự làm) — domain knowledge, constraints</li>
+        <li>Viết SPEC.md draft (45 phút) — 8-component template, EARS notation</li>
+        <li>AI Review session → paste contract + yêu cầu tìm logic gaps</li>
+        <li>Update SPEC.md, lock: <span class="hl">git commit + git tag spec/password-reset/v1.0.0</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Bước 5–9: Plan, Tasks, Implement</div>
+      <ul class="bullet-list">
+        <li>AI tạo PLAN.md (Claude.ai session mới) → paste contract với Pha 2</li>
+        <li>Copy output vào file, review và approve</li>
+        <li>AI tạo TASKS.md (session mới) → paste SPEC.md + PLAN.md</li>
+        <li>Implement trong VSCode với Cursor/Cline — dùng SPEC.md + PLAN.md trong context (@file)</li>
+        <li>Validation: AI đọc code + spec, tạo traceability matrix → merge nếu pass</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 35: NAMING CONVENTIONS TABLE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.4.4 — Naming Conventions</div>
+  <h2 class="content-title">Naming Conventions &amp; Git Strategy</h2>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Artifact</th><th>Naming</th><th>Location</th><th>Ví dụ</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Feature spec</td><td>feature-{name}/SPEC.md</td><td>.sdd/specs/</td><td>feature-cart/SPEC.md</td></tr>
+        <tr><td>Bugfix spec</td><td>fix-{issue-id}/SPEC.md</td><td>.sdd/specs/</td><td>fix-gh-234/SPEC.md</td></tr>
+        <tr><td>Plan</td><td>PLAN.md (trong folder)</td><td>.sdd/specs/{name}/</td><td>feature-cart/PLAN.md</td></tr>
+        <tr><td>Tasks</td><td>TASKS.md (trong folder)</td><td>.sdd/specs/{name}/</td><td>feature-cart/TASKS.md</td></tr>
+        <tr><td>AI review</td><td>{name}-review-{date}.md</td><td>.sdd/reviews/</td><td>cart-review-2025-01-20.md</td></tr>
+        <tr><td>Git tag</td><td>spec/{name}/v{semver}</td><td>git tag</td><td class="hl">spec/cart/v1.0.0</td></tr>
+        <tr><td>Git commit</td><td>spec({name}): {action}</td><td>commit msg</td><td class="hl">spec(cart): approve v1.0.0</td></tr>
+        <tr><td>Branch</td><td>spec/{name}-draft</td><td>git branch</td><td class="hl">spec/cart-draft</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 36: SECTION HEADER 6.5
+══════════════════════════════════════ -->
+<div class="slide slide-section">
+  <div class="section-num-bg">6.5</div>
+  <div class="section-tag">Section 6.5</div>
+  <h2 class="section-title">Hands-on Lab A → Z</h2>
+  <p class="section-desc">
+    Bài thực hành trung tâm của chương — chạy toàn bộ SDD pipeline cho hai tính năng
+    với độ phức tạp khác nhau. Lab B là "bài test thực sự".
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 37: LAB A INTRO
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.5.1 — Lab A</div>
+  <h2 class="content-title">Lab A — CRUD Đơn Giản (45 phút)</h2>
+  <p class="body-text">
+    Feature: <span class="hl">Quản lý Categories cho blog</span>. Simple CRUD, không có business logic phức tạp.
+    Mục đích: làm quen với SDD pipeline trong môi trường "an toàn" trước khi tackle Lab B.
+  </p>
+  <div class="card">
+    <div class="card-title">User Story ban đầu (rough)</div>
+    <ul class="bullet-list">
+      <li>Tạo, đọc, sửa, xóa categories</li>
+      <li>Category có: name (unique), slug (auto-gen), description</li>
+      <li>Không thể xóa category đang có bài viết</li>
+      <li>Danh sách sorted by name</li>
+    </ul>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">Pipeline Steps (30 phút với Cline)</div>
+    <ul class="bullet-list">
+      <li><strong>Pha 2</strong> — "Đọc SPEC.md và tạo PLAN.md. Chú ý: <span class="hl">slug auto-generation logic</span> cần rõ ràng."</li>
+      <li><strong>Pha 3</strong> — "Đọc PLAN.md, tạo TASKS.md. Max 4h/task. T001 (migration) là task đầu tiên."</li>
+      <li><strong>Pha 4</strong> — "Implement {task_id}. Đọc SPEC.md và PLAN.md. EARS tags bắt buộc. Generate tests cùng lúc."</li>
+      <li><strong>Pha 5</strong> — "Tạo traceability matrix: mỗi EARS requirement → code line → test name → pass/fail."</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 38: LAB A SPEC.MD
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.5.1 — Lab A: SPEC.md tham khảo</div>
+  <h2 class="content-title">Lab A — SPEC.md Category Management</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">§3 Functional Requirements (EARS)</div>
+      <ul class="bullet-list" style="font-size:clamp(12px,1.2vw,15px)">
+        <li>WHEN admin POST /categories với valid data, THE system SHALL tạo category và return <span class="hl">201</span> + object</li>
+        <li>WHEN admin GET /categories, THE system SHALL return danh sách sorted by <span class="hl">name ascending</span></li>
+        <li>WHEN admin PUT /categories/{id}, THE system SHALL cập nhật và return 200 + updated object</li>
+        <li>WHEN admin DELETE /categories/{id}, THE system SHALL xóa và return <span class="hl">204</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">§6 Error Handling (Unwanted)</div>
+      <ul class="bullet-list" style="font-size:clamp(12px,1.2vw,15px)">
+        <li>WHERE POST với name đã tồn tại → <span class="hl-r">409 Conflict</span></li>
+        <li>WHERE DELETE category có bài viết → <span class="hl-r">422</span> + "Cannot delete: category has {n} posts. Reassign first."</li>
+        <li>WHERE PUT/DELETE với id không tồn tại → <span class="hl-r">404</span></li>
+      </ul>
+      <div class="divider" style="margin:10px 0"></div>
+      <div class="card-title">§8 Out of Scope</div>
+      <ul class="bullet-list" style="font-size:clamp(12px,1.2vw,15px)">
+        <li>Không có nested/hierarchical categories</li>
+        <li>Không có soft delete (hard delete only)</li>
+        <li>Không có search/filter trong sprint này</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 39: LAB B INTRO
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.5.2 — Lab B</div>
+  <h2 class="content-title">Lab B — Import CSV Với Business Logic Phức Tạp (60 phút)</h2>
+  <p class="body-text">
+    Đây là bài test thực sự. Tính năng Import Data có đủ độ phức tạp để bộc lộ tất cả
+    những gì có thể sai nếu Planning và Task Decomposition bị bỏ qua:
+    <span class="hl">format validation, error logging, partial success, rollback strategy</span>.
+    Những vấn đề này không hiện ra khi nhìn vào user story — chỉ hiện ra khi bạn spec kỹ.
+  </p>
+  <div class="card">
+    <div class="card-title">User Story ban đầu (từ PM) — tất cả những gì PM cung cấp</div>
+    <blockquote class="matrix-quote" style="margin:0">
+      Admin có thể upload file CSV để import hàng loạt sản phẩm.
+      Requirements: upload CSV, parse và import vào database, báo cáo số lượng thành công/thất bại, xử lý lỗi định dạng.
+      <br/><br/><em>← Đây là tất cả. Phần tiếp theo: bạn phải tự phát hiện tất cả những gì còn thiếu qua SDD process.</em>
+    </blockquote>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 40: LAB B — CONTEXT DISCOVERY QUESTIONS
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.5.2 — Lab B: Context Discovery</div>
+  <h2 class="content-title">Lab B — Câu Hỏi Context Discovery</h2>
+  <p class="body-text">Danh sách câu hỏi bạn phải trả lời trước khi viết spec. Chúng không xuất hiện trong user story — bạn phải tự phát hiện:</p>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Câu hỏi</th><th>Nếu không hỏi → Bug</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>"CSV format cụ thể thế nào? Header row có không?"</td><td class="hl-r">AI đoán format → import sai toàn bộ</td></tr>
+        <tr><td>"Nếu 1 row lỗi trong 1000 rows — rollback hay skip?"</td><td class="hl-r">Hành vi undefined → inconsistent data</td></tr>
+        <tr><td>"Duplicate product (same SKU) → update hay error?"</td><td class="hl-r">Silent data override hoặc false rejection</td></tr>
+        <tr><td>"File size limit?"</td><td class="hl-r">Memory exhaustion khi upload 500MB CSV</td></tr>
+        <tr><td>"Log ở đâu? Admin xem được không? Trong bao lâu?"</td><td class="hl-r">Log mất sau restart, không debug được</td></tr>
+        <tr><td>"Import async hay sync? Timeout?"</td><td class="hl-r">30s timeout khi import 50,000 rows</td></tr>
+        <tr><td>"Validation per-row hay per-field?"</td><td class="hl-r">Row 1 lỗi field 2 → message không rõ</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 41: LAB B — SPEC REQUIREMENTS
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.5.2 — Lab B: SPEC.md</div>
+  <h2 class="content-title">Lab B — SPEC.md Product CSV Import</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">§3 Functional — CSV Format & Upload Flow</div>
+      <ul class="bullet-list" style="font-size:clamp(12px,1.2vw,15px)">
+        <li>Accept CSV: UTF-8, comma delimiter, header row bắt buộc: <span class="hl">sku, name, price, stock, category_slug</span></li>
+        <li>Tối đa <span class="hl">10,000 rows</span> mỗi file · File size tối đa: <span class="hl">10MB</span></li>
+        <li>WHEN admin POST /imports/csv với valid file, THE system SHALL: lưu file vào temp, tạo import_job (status=pending), return <span class="hl">202 Accepted + job_id</span>, process async</li>
+        <li>Processing Strategy: <span class="hl">partial success</span> — mỗi row xử lý độc lập, không transaction toàn bộ file</li>
+        <li>WHERE SKU đã tồn tại → <span class="hl-b">upsert</span> (không lỗi, không duplicate)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">§6 Error Handling — Unwanted Patterns</div>
+      <ul class="bullet-list" style="font-size:clamp(12px,1.2vw,15px)">
+        <li>WHERE file không phải CSV hoặc > 10MB → <span class="hl-r">400 ngay</span> (không process)</li>
+        <li>WHERE header row thiếu cột bắt buộc → <span class="hl-r">fail toàn bộ job</span> + error message</li>
+        <li>WHERE một row thiếu trường → skip row, ghi error: <span class="hl-o">"Row {n}: Missing {field}"</span></li>
+        <li>WHERE price không phải số dương → skip + <span class="hl-o">"Row {n}: Invalid price"</span></li>
+        <li>WHERE error_count = total_rows → status = "failed" + <span class="hl-r">email alert admin</span></li>
+        <li>WHERE 3 concurrent jobs đang running → <span class="hl-r">429 Too Many Requests</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 42: LAB A VS LAB B — DESIGN DECISIONS
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.5.2 — Lab B: Tại sao cần Planning kỹ hơn</div>
+  <h2 class="content-title">Lab A vs Lab B — Độ Phức Tạp Thiết Kế</h2>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Vấn đề thiết kế</th><th>Lab A (CRUD)</th><th>Lab B (Import)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Async processing</td><td class="hl-o">Không cần</td><td class="hl">Bắt buộc — background job queue</td></tr>
+        <tr><td>Transaction strategy</td><td class="hl-o">Per-request transaction</td><td class="hl">Per-row, không global rollback</td></tr>
+        <tr><td>Error storage</td><td class="hl-o">Không cần</td><td class="hl">import_errors table + downloadable</td></tr>
+        <tr><td>Concurrency control</td><td class="hl-o">Không cần</td><td class="hl">Semaphore/lock cho 3-job limit</td></tr>
+        <tr><td>File storage</td><td class="hl-o">Không cần</td><td class="hl">Temp storage + cleanup job</td></tr>
+        <tr><td>Progress tracking</td><td class="hl-o">Không cần</td><td class="hl">Real-time counters + polling</td></tr>
+        <tr><td>Testing complexity</td><td class="hl-o">Unit tests đủ</td><td class="hl">Integration + end-to-end bắt buộc</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="alert-box danger" style="margin-top:14px">
+    <strong>Bài học từ Lab B</strong>
+    "Import CSV" nghe đơn giản nhưng chứa đựng 6 quyết định thiết kế quan trọng.
+    Không có Context Discovery → miss file size limit, miss concurrent control.
+    Không có PLAN.md → AI implement sync thay vì async → timeout ở production.
+    Đây chính xác là lý do SDD tồn tại: complexity luôn cao hơn vẻ ngoài.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 43: LAB B — TASKS.MD TABLE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.5.2 — Lab B: TASKS.md</div>
+  <h2 class="content-title">Lab B — TASKS.md Product CSV Import (12 tasks, ~28h)</h2>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>ID</th><th>Task</th><th>Est</th><th>Dependencies</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="hl">T001</td><td>DB migration: import_jobs table</td><td>1h</td><td>—</td></tr>
+        <tr><td class="hl">T002</td><td>DB migration: import_errors table</td><td>1h</td><td>T001</td></tr>
+        <tr><td class="hl">T003</td><td>FileValidationService (size, ext)</td><td>2h</td><td>—</td></tr>
+        <tr><td class="hl">T004</td><td>CSVParserService (header + rows)</td><td>3h</td><td>T003</td></tr>
+        <tr><td class="hl">T005</td><td>RowValidatorService (per-field)</td><td>3h</td><td>—</td></tr>
+        <tr><td class="hl">T006</td><td>ImportJobRepository</td><td>2h</td><td>T001,T002</td></tr>
+        <tr><td class="hl">T007</td><td>ImportWorker (async background) — <span class="hl-o">critical path</span></td><td>4h</td><td>T004,T005,T006</td></tr>
+        <tr><td class="hl">T008</td><td>ConcurrencyGuard (3-job limit)</td><td>2h</td><td>T006</td></tr>
+        <tr><td class="hl">T009</td><td>ImportRouter (upload + status)</td><td>2h</td><td>T007,T008</td></tr>
+        <tr><td class="hl">T010</td><td>ErrorExportEndpoint (CSV download)</td><td>2h</td><td>T006</td></tr>
+        <tr><td class="hl">T011</td><td>Integration tests</td><td>4h</td><td>T009,T010</td></tr>
+        <tr><td class="hl">T012</td><td>Admin email alert (all-fail case)</td><td>2h</td><td>T007</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 44: EVALUATION RUBRIC
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.5.3 — Evaluation Rubric</div>
+  <h2 class="content-title">Evaluation Rubric — Chấm Điểm Cả Hai Labs</h2>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Tiêu chí</th><th>Lab A (CRUD)</th><th>Lab B (Import)</th><th>Điểm</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>SPEC đủ 8 thành phần</td><td>8/8 sections</td><td>8/8 sections</td><td class="hl">20đ</td></tr>
+        <tr><td>EARS notation</td><td>≥5 SHALL statements</td><td>≥12 SHALL statements</td><td class="hl">20đ</td></tr>
+        <tr><td>Out of Scope rõ ràng</td><td>≥3 items</td><td>≥5 items</td><td class="hl">10đ</td></tr>
+        <tr><td>PLAN.md có risks</td><td>≥2 risks</td><td>≥5 risks</td><td class="hl">10đ</td></tr>
+        <tr><td>Tasks atomic (≤4h)</td><td>All tasks ≤4h</td><td>All tasks ≤4h</td><td class="hl">15đ</td></tr>
+        <tr><td>Code có EARS tags</td><td>≥80% rules tagged</td><td>≥80% rules tagged</td><td class="hl">10đ</td></tr>
+        <tr><td>Tests cover AC</td><td>100% AC covered</td><td>100% AC covered</td><td class="hl">15đ</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="data-grid" style="margin-top:18px">
+    <div class="data-point"><span class="num">100</span><div class="label">Tổng điểm</div></div>
+    <div class="data-point"><span class="num">40%</span><div class="label">Lý thuyết</div></div>
+    <div class="data-point"><span class="num">60%</span><div class="label">Thực hành</div></div>
+    <div class="data-point"><span class="num">8</span><div class="label">SPEC components</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 45: REFLECTION QUESTIONS
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.5.4 — Reflection</div>
+  <h2 class="content-title">Reflection — Bài Học Từ Hai Labs</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Câu hỏi phân tích</div>
+      <ul class="bullet-list">
+        <li>Lab A vs Lab B: Bao nhiêu thời gian bạn dành cho Context Discovery và Spec Writing? Tỷ lệ lý thuyết theo SDD là <span class="hl">30–40%</span> thời gian dự án. Thực tế của bạn là bao nhiêu?</li>
+        <li>Khi AI generate PLAN.md cho Lab B, nó hỏi bao nhiêu <span class="hl">Questions for Human</span>? So sánh với Lab A. Điều đó nói lên gì về mức độ phức tạp tương đối?</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Câu hỏi ứng dụng thực tế</div>
+      <ul class="bullet-list">
+        <li>Nếu bạn bỏ qua Context Discovery và đưa user story trực tiếp vào AI để code — điều gì sẽ thiếu trong sản phẩm cuối? <span class="hl-r">Liệt kê cụ thể.</span></li>
+        <li>Trong môi trường làm việc thực, đồng nghiệp hoặc PM của bạn sẽ phản ứng thế nào khi bạn nói <em>"Tôi cần 1 ngày để viết spec trước khi code"</em>? Làm thế nào bạn <span class="hl">justify</span>?</li>
+      </ul>
+    </div>
+  </div>
+  <blockquote class="matrix-quote" style="margin-top:16px">
+    Task Decomposition không phải overhead — nó là quality gate.
+    Khi ai đó implement tất cả trong 1 task (không decompose) →
+    context overflow, AI forget spec details → thiếu partial success logic → lỗi production.
+  </blockquote>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 46: CHAPTER SUMMARY TABLE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">Tổng kết Chương 6</div>
+  <h2 class="content-title">Tổng Kết — Ba Con Đường SDD</h2>
+  <div class="table-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Cách tiếp cận</th><th>Phù hợp với</th><th>Điểm mạnh</th><th>Điểm yếu</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="hl">GitHub Spec Kit</td>
+          <td>Team dùng GitHub, muốn cấu trúc</td>
+          <td>Traceability tốt, audit trail hoàn hảo</td>
+          <td>Cần setup, learning curve</td>
+        </tr>
+        <tr>
+          <td class="hl">Cline (Roo Code)</td>
+          <td>Developer muốn speed + autonomy</td>
+          <td>Agentic, multi-model, MCP integration</td>
+          <td>Cần giám sát, có thể overrun</td>
+        </tr>
+        <tr>
+          <td class="hl">DIY Markdown</td>
+          <td>Team nhỏ, linh hoạt, bất kỳ AI</td>
+          <td>Không vendor lock, đơn giản, tự do</td>
+          <td>Tự kỷ luật cao hơn cần thiết</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="two-col" style="margin-top:18px">
+    <div class="card">
+      <div class="card-title">Key Takeaways</div>
+      <ul class="bullet-list">
+        <li><span class="hl">5 pha</span>: Context → Spec → Plan → Tasks → Impl → Validate</li>
+        <li><span class="hl">Fix the Spec, not the Code</span> — nguyên tắc bất biến</li>
+        <li>Mọi code phải truy được về spec — không exception</li>
+        <li>Out of Scope cũng cần validation — không chỉ "những gì đã làm"</li>
+      </ul>
+    </div>
+    <div class="next-chapter-box">
+      <div class="nxt-label">Chương tiếp theo — Chương 7</div>
+      <p>
+        <strong class="hl">Test-Driven Specification</strong><br/>
+        Given-When-Then (BDD) notation · AI generate test suite trước khi viết code (TDS) ·
+        Contract testing cho API · Mutation testing với AI-generated test cases.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 47: FINAL QUOTE
+══════════════════════════════════════ -->
+<div class="slide slide-title">
+  <div class="title-badge">Chương 6 — Hoàn thành</div>
+  <h1 class="main-title" style="font-size:clamp(32px,4.5vw,60px)">
+    "Code là artifact tạm thời.<br/>Spec mới là nguồn sự thật lâu dài."
+  </h1>
+  <p class="subtitle" style="margin-top:28px">
+    5 pha · Fix the Spec · Human-in-the-loop ở mọi điểm quan trọng
+  </p>
+  <div class="data-grid" style="margin-top:36px;max-width:700px">
+    <div class="data-point"><span class="num">5</span><div class="label">SDD Phases</div></div>
+    <div class="data-point"><span class="num">3</span><div class="label">Tooling Paths</div></div>
+    <div class="data-point"><span class="num">2</span><div class="label">Hands-on Labs</div></div>
+    <div class="data-point"><span class="num">∞</span><div class="label">Spec First</div></div>
+  </div>
+  <div class="title-footer" style="margin-top:28px">Playbook SDD + ADD &nbsp;·&nbsp; © 2025 &nbsp;·&nbsp; LinhNDM</div>
+</div>
+
+</div><!-- #slides -->
+
+<!-- NAV -->
+<div id="nav">
+  <button class="nav-btn" id="prev-btn">← Prev</button>
+  <div id="slide-counter">1 / 47</div>
+  <button class="nav-btn" id="next-btn">Next →</button>
+</div>
+
+<script>
+// ── ANTI-COPY PROTECTION ──
+['contextmenu','selectstart','dragstart','copy'].forEach(ev=>
+  document.addEventListener(ev,e=>e.preventDefault())
+);
+document.addEventListener('keydown',e=>{
+  if(e.key==='F12'||
+    (e.ctrlKey&&e.shiftKey&&['I','J','K'].includes(e.key))||
+    (e.ctrlKey&&['u','s','a','c','p','f','U','S','A','C','P','F'].includes(e.key))
+  )e.preventDefault();
+});
+
+// ── MATRIX RAIN ──
+(function(){
+  const canvas=document.getElementById('matrix-canvas');
+  const ctx=canvas.getContext('2d');
+  function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
+  resize();
+  window.addEventListener('resize',resize);
+  const chars='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF<>{}[]|/\\~';
+  const fontSize=14;
+  let cols=Math.floor(canvas.width/fontSize);
+  let drops=Array(cols).fill(1);
+  function draw(){
+    ctx.fillStyle='rgba(0,0,0,0.04)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#00ff41';
+    ctx.font=fontSize+'px monospace';
+    cols=Math.floor(canvas.width/fontSize);
+    if(drops.length<cols)drops=[...drops,...Array(cols-drops.length).fill(1)];
+    for(let i=0;i<cols;i++){
+      const c=chars[Math.floor(Math.random()*chars.length)];
+      ctx.fillText(c,i*fontSize,drops[i]*fontSize);
+      if(drops[i]*fontSize>canvas.height&&Math.random()>0.975)drops[i]=0;
+      drops[i]++;
+    }
+  }
+  setInterval(draw,50);
+})();
+
+// ── SLIDESHOW ──
+const slides=document.querySelectorAll('.slide');
+const total=slides.length;
+let cur=0;
+
+function goTo(n){
+  slides[cur].classList.remove('active');
+  cur=Math.max(0,Math.min(n,total-1));
+  slides[cur].classList.add('active');
+  document.getElementById('slide-counter').textContent=(cur+1)+' / '+total;
+  const pct=((cur+1)/total*100).toFixed(1);
+  document.getElementById('progress-bar').style.width=pct+'%';
+}
+
+document.getElementById('prev-btn').addEventListener('click',()=>goTo(cur-1));
+document.getElementById('next-btn').addEventListener('click',()=>goTo(cur+1));
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ')goTo(cur+1);
+  else if(e.key==='ArrowLeft')goTo(cur-1);
+  else if(e.key==='Home')goTo(0);
+  else if(e.key==='End')goTo(total-1);
+  // Number keys 1-9 jump to section
+  const n=parseInt(e.key);
+  if(n>=1&&n<=9){
+    // Map section numbers to rough slide positions
+    const sectionMap={1:3,2:19,3:25,4:30,5:35};
+    if(sectionMap[n]!==undefined)goTo(sectionMap[n]);
+  }
+});
+
+// Touch/swipe
+let touchX=0;
+document.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-touchX;
+  if(Math.abs(dx)>50){dx<0?goTo(cur+1):goTo(cur-1);}
+},{passive:true});
+
+// Init
+goTo(0);
+</script>
+</body>
+</html>

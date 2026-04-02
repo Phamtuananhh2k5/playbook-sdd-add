@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chương 5 — Executable Specification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#011500;color:#c8ffd4;font-family:'Josefin Sans',sans-serif;overflow:hidden;
+  user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none}
+canvas#rain{position:fixed;top:0;left:0;z-index:0;opacity:.09}
+.scanlines{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px)}
+#pb{position:fixed;top:0;left:0;height:3px;background:#00ff55;z-index:100;transition:width .4s ease}
+.slide{position:absolute;top:0;left:0;width:100%;height:100vh;z-index:10;display:flex;
+  flex-direction:column;justify-content:center;align-items:center;padding:10px 40px 52px;
+  opacity:0;pointer-events:none;transition:opacity .5s ease}
+.slide.active{opacity:1;pointer-events:all}
+.si{width:100%;max-width:1800px;max-height:92vh;overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;scrollbar-color:#00ff55 #011500}
+.si::-webkit-scrollbar{width:5px}
+.si::-webkit-scrollbar-track{background:#011500}
+.si::-webkit-scrollbar-thumb{background:#00ff55}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4.5vw,3.6rem);font-weight:700;
+  color:#00ff55;line-height:1.1;letter-spacing:.02em}
+h2{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,3.2rem);font-weight:600;
+  color:#00ff55;margin-bottom:.9rem;letter-spacing:.02em}
+h3{font-family:'Josefin Sans',sans-serif;font-size:1.3rem;font-weight:600;color:#66ffaa;
+  text-transform:uppercase;letter-spacing:.12em;margin-bottom:.5rem}
+h4{font-family:'Josefin Sans',sans-serif;font-size:1.05rem;font-weight:600;color:#aaff88;
+  letter-spacing:.06em;margin:.7rem 0 .3rem}
+p{font-size:1.08rem;line-height:1.75;color:#c8ffd4;margin-bottom:.65rem}
+p.lead{font-size:1.15rem;line-height:1.8;color:#d8ffe0}
+/* SECTION HEADER */
+.sh{display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;height:100vh;position:relative;overflow:hidden}
+.sh-bg{font-family:'Cormorant Garamond',serif;font-size:26vw;font-weight:700;color:rgba(0,255,85,.04);
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;z-index:0;pointer-events:none}
+.sh h1{font-size:clamp(2.6rem,5.5vw,4.8rem);z-index:1}
+.sh .sub{font-family:'Josefin Sans',sans-serif;font-size:.95rem;color:#66ffaa;letter-spacing:.2em;
+  text-transform:uppercase;margin-top:.8rem;z-index:1}
+/* TITLE */
+.ts{text-align:center}
+.ts .badge{display:inline-block;border:1px solid #00ff55;color:#00ff55;font-size:.7rem;
+  letter-spacing:.2em;text-transform:uppercase;padding:4px 14px;margin-bottom:1.2rem}
+.ts .meta{color:#66ffaa;font-size:.85rem;letter-spacing:.1em;margin-top:1rem}
+/* CARDS */
+.card{background:rgba(0,255,85,.04);border:1px solid rgba(0,255,85,.2);border-radius:4px;
+  padding:1.1rem 1.3rem;margin-bottom:.8rem}
+.card h3{margin-bottom:.4rem}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem}
+/* BULLET LIST */
+.bl{list-style:none;padding:0}
+.bl li{padding:.28rem 0 .28rem 1.4rem;position:relative;font-size:1.05rem;line-height:1.65;color:#c8ffd4}
+.bl li::before{content:"▸";position:absolute;left:0;color:#00ff55}
+.bl.tight li{padding:.15rem 0 .15rem 1.4rem}
+/* TABLE */
+.mt{width:100%;border-collapse:collapse;font-size:.94rem;font-family:'Josefin Sans',sans-serif}
+.mt th{background:rgba(0,255,85,.12);color:#00ff55;padding:.5rem .7rem;text-align:left;
+  font-weight:600;border:1px solid rgba(0,255,85,.2);letter-spacing:.06em}
+.mt td{padding:.42rem .7rem;border:1px solid rgba(0,255,85,.12);color:#c8ffd4;vertical-align:top;line-height:1.5}
+.mt tr:hover td{background:rgba(0,255,85,.04)}
+.mt td code,.mt th code{color:#00ff55;font-size:.78rem;font-family:monospace}
+/* ALERT BOXES */
+.ab{border-left:3px solid;padding:.65rem 1rem;margin:.5rem 0;border-radius:0 4px 4px 0;font-size:1rem;line-height:1.6}
+.ab.info{border-color:#00ff55;background:rgba(0,255,85,.06);color:#c8ffd4}
+.ab.warn{border-color:#ffaa00;background:rgba(255,170,0,.06);color:#ffe066}
+.ab.danger{border-color:#ff4444;background:rgba(255,68,68,.06);color:#ffaaaa}
+.ab.tip{border-color:#44aaff;background:rgba(68,170,255,.06);color:#aaddff}
+.ab.gold{border-color:#ffdd44;background:rgba(255,221,68,.05);color:#ffe88a}
+.ab strong{display:block;margin-bottom:.25rem;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase}
+/* DATA GRID */
+.dg{display:grid;gap:.65rem;margin:.5rem 0}
+.dg.g2{grid-template-columns:1fr 1fr}
+.dg.g3{grid-template-columns:1fr 1fr 1fr}
+.dp{background:rgba(0,255,85,.04);border:1px solid rgba(0,255,85,.15);border-radius:4px;padding:.75rem 1rem}
+.dp .dl{font-size:.7rem;color:#00ff55;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.2rem}
+.dp .dv{font-size:.92rem;color:#c8ffd4;font-weight:600}
+.dp .ds{font-size:.78rem;color:#66ffaa;margin-top:.15rem;line-height:1.5}
+/* TOC GRID */
+.toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-top:.9rem}
+.toc-item{background:rgba(0,255,85,.04);border:1px solid rgba(0,255,85,.15);border-radius:4px;padding:.9rem 1.1rem}
+.toc-item .tn{font-size:.68rem;color:#00ff55;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.35rem}
+.toc-item .tt{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:#c8ffd4;line-height:1.35}
+.toc-item .td{font-size:.78rem;color:#66ffaa;margin-top:.25rem;line-height:1.5}
+/* CODE BLOCK */
+.cb{background:#000d00;border:1px solid rgba(0,255,85,.2);border-radius:4px;padding:.75rem 1rem;
+  font-family:monospace;font-size:.76rem;color:#00ff55;white-space:pre;overflow-x:auto;margin:.4rem 0;line-height:1.65}
+.cb .cm{color:rgba(0,255,85,.5)}
+.cb .hl{color:#ffff88}
+/* HIGHLIGHTS */
+.hl{color:#00ff55;font-weight:600}
+.hl-r{color:#ff6666;font-weight:600}
+.hl-o{color:#ffaa44;font-weight:600}
+.hl-b{color:#66aaff;font-weight:600}
+.hl-y{color:#ffff66;font-weight:600}
+/* QUOTE */
+.mq{border-left:2px solid #00ff55;padding:.6rem 1rem;margin:.6rem 0;font-style:italic;
+  font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:#a8ffb8;line-height:1.7}
+.bq{background:rgba(0,255,85,.06);border:1px solid rgba(0,255,85,.2);border-radius:4px;
+  padding:.8rem 1.2rem;margin:.5rem 0;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:#a8ffb8;font-style:italic;line-height:1.7}
+/* STEP LIST */
+.steps{counter-reset:step;list-style:none;padding:0}
+.steps li{counter-increment:step;padding:.3rem 0 .3rem 2.1rem;position:relative;font-size:.9rem;line-height:1.65}
+.steps li::before{content:counter(step);position:absolute;left:0;width:1.4rem;height:1.4rem;
+  background:rgba(0,255,85,.15);border:1px solid #00ff55;border-radius:2px;
+  color:#00ff55;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;top:.38rem}
+/* COMPARE GRID */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:.5rem 0}
+.cmp-bad{background:rgba(255,68,68,.05);border:1px solid rgba(255,68,68,.2);border-radius:4px;padding:.7rem .9rem}
+.cmp-bad .clabel{font-size:.68rem;color:#ff6666;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem}
+.cmp-good{background:rgba(0,255,85,.05);border:1px solid rgba(0,255,85,.2);border-radius:4px;padding:.7rem .9rem}
+.cmp-good .clabel{font-size:.68rem;color:#00ff55;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem}
+.cmp-bad p,.cmp-good p{font-size:.83rem;margin:0;line-height:1.6}
+/* NAV */
+#nav{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:200;display:flex;gap:.45rem}
+.nb{background:rgba(0,255,85,.08);border:1px solid rgba(0,255,85,.25);color:#00ff55;
+  font-family:'Josefin Sans',sans-serif;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:5px 14px;cursor:pointer;transition:.2s}
+.nb:hover{background:rgba(0,255,85,.18)}
+#sc{position:fixed;bottom:28px;right:30px;font-family:'Josefin Sans',sans-serif;
+  font-size:.66rem;color:rgba(0,255,85,.4);letter-spacing:.1em;z-index:200}
+#author{position:fixed;bottom:10px;left:20px;z-index:200;font-family:'Josefin Sans',sans-serif;
+  font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(0,255,85,.35);
+  pointer-events:none;user-select:none}
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<div class="scanlines"></div>
+<div id="pb"></div>
+<div id="author">LinhNDM &mdash; Nguyễn Đình Mạnh Linh</div>
+
+<!-- ==== SLIDE 01 — TITLE ==== -->
+<div class="slide active" data-section="0">
+<div class="si ts">
+  <div class="badge">SDD Bootcamp · Chương 5</div>
+  <h1>Executable<br>Specification</h1>
+  <p style="margin-top:1rem;color:#66ffaa;font-size:.98rem;line-height:1.85;max-width:680px">
+    <em>Lập trình ở tầng ý định — Khi Spec trở thành ngôn ngữ máy hiểu được</em>
+  </p>
+  <p style="color:#c8ffd4;font-size:.88rem;max-width:640px;line-height:1.8">
+    Chương này xây dựng toàn bộ bộ công cụ để viết Executable Spec: từ triết lý thiết kế, cấu trúc 8 thành phần, đến EARS Notation — ngôn ngữ đặc tả yêu cầu được thiết kế riêng để loại bỏ sự mơ hồ.
+  </p>
+  <div style="margin-top:1.5rem;display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap">
+    <div class="ab info" style="margin:0;padding:.4rem .9rem;font-size:.78rem"><strong style="display:inline;margin:0">5.1</strong> Spec là Giao diện</div>
+    <div class="ab tip" style="margin:0;padding:.4rem .9rem;font-size:.78rem"><strong style="display:inline;margin:0">5.2</strong> 8 Thành phần</div>
+    <div class="ab warn" style="margin:0;padding:.4rem .9rem;font-size:.78rem"><strong style="display:inline;margin:0">5.3</strong> EARS Notation</div>
+    <div class="ab danger" style="margin:0;padding:.4rem .9rem;font-size:.78rem"><strong style="display:inline;margin:0">5.4</strong> Spec Depth</div>
+    <div class="ab gold" style="margin:0;padding:.4rem .9rem;font-size:.78rem"><strong style="display:inline;margin:0">5.5</strong> SDD Workflow</div>
+  </div>
+  <div class="meta">Trình chiếu cho chuyên gia công nghệ &nbsp;·&nbsp; 2025</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 02 — INTRO ==== -->
+<div class="slide" data-section="0">
+<div class="si">
+  <h2>Giới thiệu chương</h2>
+  <p class="lead">Có một nghịch lý thú vị trong thực tế phát triển phần mềm với AI: chúng ta trao cho AI khả năng viết code phức tạp, nhưng lại không dành đủ thời gian để nói với AI chính xác điều mình muốn. Kết quả là AI <span class="hl">"đoán"</span> — đôi khi đúng, nhiều khi sai, và luôn luôn không nhất quán.</p>
+  <p>Executable Specification (Spec có thể thực thi) là câu trả lời cho nghịch lý đó. Đây không phải tài liệu Word mà một người đọc rồi diễn giải theo cách riêng. Đây là một <span class="hl">hệ thống ngôn ngữ có cấu trúc chặt chẽ</span> — đủ rõ ràng để AI biến nó thành code mà không cần đoán, đủ có thể đọc để con người review và maintain.</p>
+  <div class="ab info" style="margin-top:.5rem"><strong>Mục tiêu học tập</strong>
+    Hiểu Executable Spec là "interface" giữa tư duy con người và năng lực thực thi của AI. Viết spec đầy đủ 8 thành phần, đặc biệt biết khi nào cần thêm "Out of Scope". Thuần thục EARS Notation — 5 patterns với Cheat Sheet tham khảo nhanh. Áp dụng đúng mức độ spec (Sketch / Detailed / Formal) theo Risk–Complexity Matrix. Thực hành quy trình SDD 4 bước: Draft → AI Review → Finalize → Generate. Nhận diện và tránh 5 Anti-patterns khiến AI hallucinate.
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 03 — TOC ==== -->
+<div class="slide" data-section="0">
+<div class="si">
+  <h2>Nội dung Chương 5</h2>
+  <div class="toc-grid">
+    <div class="toc-item">
+      <div class="tn">5.1 · Phím 1</div>
+      <div class="tt">Spec là "Giao diện"</div>
+      <div class="td">Interface giữa Người và Máy · PRD truyền thống vs Executable Spec · Precision & Hallucination · Tách What khỏi How</div>
+    </div>
+    <div class="toc-item">
+      <div class="tn">5.2 · Phím 2</div>
+      <div class="tt">8 Thành phần Cốt lõi</div>
+      <div class="td">Context & Goal · Actors · Functional · NFR · Data · Error · Acceptance · Out of Scope · 5 Anti-patterns</div>
+    </div>
+    <div class="toc-item">
+      <div class="tn">5.3 · Phím 3</div>
+      <div class="tt">EARS Notation</div>
+      <div class="td">5 patterns: Ubiquitous / Event / State / Optional / Unwanted · Cheat Sheet · SHALL/SHOULD/MAY · Kết hợp patterns</div>
+    </div>
+    <div class="toc-item">
+      <div class="tn">5.4 · Phím 4</div>
+      <div class="tt">Levels of Spec Depth</div>
+      <div class="td">Risk × Complexity Matrix · Sketch / Detailed / Formal · State Diagram · Decision guide</div>
+    </div>
+  </div>
+  <div class="ab gold" style="margin-top:.8rem"><strong>5.5 + 5.6</strong> SDD Workflow 4 bước: Draft → AI Review → Lock → Generate · Hands-on Capstone: Shopping Cart từ ý tưởng đến production code</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 04 — SECTION 5.1 HEADER ==== -->
+<div class="slide sh" data-section="1">
+  <div class="sh-bg">5.1</div>
+  <h1>Spec là "Giao diện"</h1>
+  <div class="sub">Interface giữa Người và Máy</div>
+</div>
+
+<!-- ==== SLIDE 05 — 5.1 Interface Analogy ==== -->
+<div class="slide" data-section="1">
+<div class="si">
+  <h2>5.1 — Spec là "Giao diện"</h2>
+  <p>Trong lập trình hướng đối tượng, Interface là hợp đồng: nó định nghĩa những gì một thành phần phải làm mà không quan tâm đến cách nó làm. Hai bên — người gọi và người thực thi — đều chỉ cần biết Interface, không cần biết chi tiết bên trong của nhau. <span class="hl">Giao tiếp được tách biệt khỏi implementation.</span></p>
+  <p>Executable Specification đóng vai trò y hệt trong giao tiếp giữa con người và AI Agent. Spec là hợp đồng giữa "ý định của con người" và "năng lực thực thi của AI". Con người không cần biết AI sẽ sinh code ra sao. AI không cần đọc tâm trí con người. Cả hai gặp nhau tại Spec — một văn bản đủ chính xác để không cần giải thích thêm.</p>
+  <div class="dg g3" style="margin-top:.8rem">
+    <div class="dp">
+      <div class="dl">Bên trái Interface</div>
+      <div class="dv">Con người</div>
+      <div class="ds">Mang ý định, kinh nghiệm domain, judgment về bài toán cần giải quyết</div>
+    </div>
+    <div class="dp">
+      <div class="dl">Interface</div>
+      <div class="dv">SPEC.md</div>
+      <div class="ds">Hợp đồng chính xác — zero ambiguity, executable, testable</div>
+    </div>
+    <div class="dp">
+      <div class="dl">Bên phải Interface</div>
+      <div class="dv">AI Agent</div>
+      <div class="ds">Mang năng lực thực thi — generate code, test, không mệt mỏi</div>
+    </div>
+  </div>
+  <div class="ab gold" style="margin-top:.6rem"><strong>Key insight</strong> Spec không phải tài liệu để đọc — Spec là chương trình. AI là compiler. Code là bytecode. Người sở hữu Spec chính là người sở hữu sản phẩm.</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 06 — 5.1.1 PRD truyền thống TABLE ==== -->
+<div class="slide" data-section="1">
+<div class="si">
+  <h2>5.1.1 — Tại sao PRD truyền thống thất bại với AI</h2>
+  <p style="margin-bottom:.7rem">Vấn đề cốt lõi: PRD truyền thống được viết cho con người — người có thể suy luận, hỏi lại, và lấp đầy khoảng trống bằng common sense. AI không làm được điều đó: nó chỉ thực thi — và khi gặp mơ hồ, nó <span class="hl-r">hallucinate</span>.</p>
+  <table class="mt">
+    <thead><tr>
+      <th>Chiều cạnh</th><th>PRD truyền thống</th><th>Executable Specification</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>Người đọc mục tiêu</td><td>Con người — tự suy luận</td><td><span class="hl">AI Agent — phải thực thi trực tiếp</span></td></tr>
+      <tr><td>Độ rõ ràng (Precision)</td><td>Cho phép mơ hồ, con người lấp đầy</td><td><span class="hl">Zero ambiguity</span> — thiếu logic = AI hallucinate</td></tr>
+      <tr><td>Ngôn ngữ</td><td>Ngôn ngữ tự nhiên, narrative</td><td>Ngôn ngữ có cấu trúc (EARS, BDD…)</td></tr>
+      <tr><td>Điều kiện biên</td><td>Ngụ ý hoặc bỏ qua</td><td><span class="hl">Explicit</span>, được liệt kê đầy đủ</td></tr>
+      <tr><td>Phạm vi</td><td>Thường chỉ nói những gì làm</td><td>Bao gồm cả <span class="hl">"Out of Scope"</span> — những gì KHÔNG làm</td></tr>
+      <tr><td>Testability</td><td>Khó đo lường trực tiếp</td><td>Mỗi requirement → <span class="hl">test case trực tiếp</span></td></tr>
+      <tr><td>Xử lý lỗi</td><td>Thường được để ngụ ý</td><td>Explicit — mọi failure path đều được đặc tả</td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ==== SLIDE 07 — 5.1.2 Hallucination ==== -->
+<div class="slide" data-section="1">
+<div class="si">
+  <h2>5.1.2 — Precision và vấn đề Hallucination</h2>
+  <p>Đây là điểm mấu chốt mà nhiều kỹ sư bỏ qua khi lần đầu viết spec cho AI. Khi một developer con người gặp một yêu cầu mơ hồ, họ có ba lựa chọn: hỏi lại, suy luận từ context, hoặc tạm bỏ qua. Khi một AI Agent gặp yêu cầu mơ hồ, nó chỉ có một lựa chọn: <span class="hl-r">đoán</span> — và đưa đoán đó ra như thể nó là sự thật.</p>
+  <p>Hiện tượng này gọi là <span class="hl">"confident hallucination"</span> — AI không nói "tôi không chắc", nó nói "đây là cách tôi hiểu và đây là code tôi viết". Kết quả: code chạy được, pass basic tests, nhưng implement sai logic. Lỗi này cực kỳ nguy hiểm vì <span class="hl-r">khó phát hiện hơn lỗi compile hay runtime</span>.</p>
+  <div class="cmp" style="margin-top:.6rem">
+    <div class="cmp-bad">
+      <div class="clabel">❌ PRD truyền thống — Mơ hồ, nguy hiểm</div>
+      <p>"Hệ thống phải xử lý đăng nhập một cách thông minh, đảm bảo bảo mật và trải nghiệm người dùng tốt."</p>
+      <p style="color:#ff9999;font-size:.8rem;margin-top:.4rem">AI tự quyết: "thông minh" → ML model? · "bảo mật" → bcrypt? SHA256? · "trải nghiệm tốt" → auto-fill? biometric? → 3 developer, 3 implementation khác nhau.</p>
+    </div>
+    <div class="cmp-good">
+      <div class="clabel">✅ Executable Spec — Không còn chỗ để đoán</div>
+      <p>GIVEN người dùng nhập email + password hợp lệ WHEN nhấn "Đăng nhập" THEN: Hash bcrypt (cost=12), JWT RS256 expiry=15 phút, failed≥5 → lock 30 phút, return 200+token HOẶC 401+error_code.</p>
+      <p style="color:#88ff99;font-size:.8rem;margin-top:.4rem">Mọi quyết định đã được con người đưa ra. AI chỉ còn việc implement.</p>
+    </div>
+  </div>
+  <div class="ab warn"><strong>Nguyên tắc vàng</strong> "If AI has to guess, you have already failed." — Mỗi điểm mơ hồ trong spec là một điểm AI có thể hallucinate. Rule of thumb: đọc lại spec và tự hỏi "câu này có thể hiểu theo nhiều cách không?" — Nếu có → viết lại. Làm cho nó có đúng MỘT cách hiểu duy nhất.</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 08 — 5.1.3 What vs How ==== -->
+<div class="slide" data-section="1">
+<div class="si">
+  <h2>5.1.3 — Tách biệt "Cái gì" và "Như thế nào"</h2>
+  <p>Một trong những giá trị lớn nhất của Executable Spec là nó buộc bạn tách biệt hai câu hỏi hoàn toàn khác nhau: <span class="hl">"Hệ thống phải làm gì?"</span> (What) và <span class="hl-b">"Hệ thống sẽ làm điều đó như thế nào?"</span> (How). Spec chỉ trả lời câu hỏi What. How là trách nhiệm của AI implementation — và AI giỏi việc đó hơn bạn nghĩ, miễn là What đủ rõ ràng.</p>
+  <p>Sự tách biệt này mang lại hai lợi ích quan trọng. Thứ nhất, nó cho phép bạn <span class="hl">thay đổi implementation mà không cần viết lại spec</span>. Thứ hai, nó cho phép bạn <span class="hl">test behavior thay vì test implementation</span> — test rằng "kết quả đúng" thay vì "code chạy theo đúng cách này".</p>
+  <div class="two-col" style="margin-top:.7rem">
+    <div class="card">
+      <h3>WHAT — Spec mô tả</h3>
+      <ul class="bl tight">
+        <li>Password phải được hash trước khi lưu</li>
+        <li>Hash algorithm: bcrypt, cost factor ≥ 12</li>
+        <li>Login thất bại 5 lần → lock 30 phút</li>
+        <li>Success → trả về JWT, TTL = 15 phút</li>
+        <li>Error response phải include error_code</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>HOW — AI tự quyết định</h3>
+      <ul class="bl tight">
+        <li>Import library nào để bcrypt</li>
+        <li>Structure class/function như thế nào</li>
+        <li>Error handler middleware hay try-catch</li>
+        <li>Redis để lưu lock hay DB counter</li>
+        <li>Middleware chain hay service layer</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ab tip" style="margin-top:.6rem"><strong>Design Principle</strong> Spec tốt là Spec mà khi đọc xong, bạn có thể kiểm tra tính đúng đắn của implementation mà không cần xem code — chỉ cần chạy tests dựa trên Acceptance Criteria.</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 09 — SECTION 5.2 HEADER ==== -->
+<div class="slide sh" data-section="2">
+  <div class="sh-bg">5.2</div>
+  <h1>8 Thành phần Cốt lõi</h1>
+  <div class="sub">Executable Spec · Cấu trúc đầy đủ</div>
+</div>
+
+<!-- ==== SLIDE 10 — 5.2 8 Components TABLE ==== -->
+<div class="slide" data-section="2">
+<div class="si">
+  <h2>5.2 — Cấu trúc Executable Spec — 8 Thành phần</h2>
+  <p style="margin-bottom:.7rem">Một Executable Specification đầy đủ cần tám thành phần, mỗi thành phần giải quyết một khía cạnh riêng biệt của bài toán. Thiếu bất kỳ thành phần nào cũng tạo ra <span class="hl-r">"lỗ hổng context"</span> — những khoảng trống mà AI sẽ tự lấp đầy bằng các giả định không được kiểm soát.</p>
+  <table class="mt">
+    <thead><tr><th>#</th><th>Thành phần</th><th>Câu hỏi trả lời</th><th>Thiếu → AI làm gì?</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><span class="hl">Context &amp; Goal</span></td><td>Tại sao feature này tồn tại?</td><td>Code "đúng kỹ thuật" nhưng sai bài toán</td></tr>
+      <tr><td>2</td><td><span class="hl">Actors &amp; Roles</span></td><td>Ai tương tác? Với quyền gì?</td><td>Bỏ qua phân quyền, code cho một loại user</td></tr>
+      <tr><td>3</td><td><span class="hl">Functional Requirements</span></td><td>Hệ thống làm gì?</td><td>Implement theo hiểu biết default của model</td></tr>
+      <tr><td>4</td><td><span class="hl">Non-functional Requirements</span></td><td>Tốt đến mức nào?</td><td>Performance/security theo best guess</td></tr>
+      <tr><td>5</td><td><span class="hl">Data Model</span></td><td>Dữ liệu có cấu trúc gì?</td><td>Tự thiết kế schema — thường không phù hợp</td></tr>
+      <tr><td>6</td><td><span class="hl">Error Handling</span></td><td>Khi sai thì làm gì?</td><td>Happy path only — production sẽ crash</td></tr>
+      <tr><td>7</td><td><span class="hl">Acceptance Criteria</span></td><td>Định nghĩa "xong" là gì?</td><td>Không có target — tests sẽ yếu và thiếu</td></tr>
+      <tr><td>8</td><td><span class="hl-o">Out of Scope</span></td><td>Hệ thống KHÔNG làm gì?</td><td>"Nhiệt tình" thêm features không cần thiết</td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ==== SLIDE 11 — 5.2.1 Context & Goal ==== -->
+<div class="slide" data-section="2">
+<div class="si">
+  <h2>5.2.1 — Context &amp; Goal · Tại sao trước khi Cái gì</h2>
+  <p>Thành phần này thường bị bỏ qua vì có cảm giác "không technical". Đây là sai lầm. AI model được train trên hàng triệu codebase — khi bạn cung cấp business context, model có thể <span class="hl">align implementation với những pattern phổ biến nhất cho use case đó</span>, thay vì chọn một pattern ngẫu nhiên.</p>
+  <div class="card">
+    <h3>Ví dụ — Context &amp; Goal tốt (Password Reset Feature)</h3>
+    <div class="cb">## Context & Goal
+<span class="cm">**Business problem:** Người dùng quên password thường phải liên hệ
+support mất 24-48 giờ. Điều này tạo ra 340 support tickets/tháng.</span>
+
+<span class="cm">**Feature goal:** Cho phép người dùng tự reset password trong &lt; 5 phút
+mà không cần human support.</span>
+
+<span class="cm">**Success metric:** Giảm support tickets liên quan đến password xuống 80%.</span>
+
+<span class="cm">**Tech context:** Đây là extension của auth service hiện tại.
+Stack: Node.js 20, Express, PostgreSQL 16, Redis 7, SendGrid API.
+Auth hiện tại dùng JWT (RS256). Password hash: bcrypt cost=12.</span></div>
+  </div>
+  <div class="ab info"><strong>Tại sao business problem quan trọng?</strong> Khi AI biết rằng feature này tạo ra để giảm 340 support tickets/tháng, nó sẽ ưu tiên reliability và user experience hơn là elegant architecture. Business context định hướng trade-off decisions của AI.</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 12 — 5.2.2 + 5.2.3-7 ==== -->
+<div class="slide" data-section="2">
+<div class="si">
+  <h2>5.2.2–5.2.7 — Actors, Functional, NFR, Data, Error, Acceptance</h2>
+  <div class="two-col">
+    <div class="card">
+      <h3>5.2.2 Actors &amp; Roles</h3>
+      <div class="cb" style="font-size:.74rem">## Actors & Roles
+| Actor           | Mô tả          | Permissions           |
+|-----------------|----------------|-----------------------|
+| Registered User | Account hợp lệ | Khởi tạo reset, nhập  |
+|                 |                | token, đặt pass mới   |
+| System (Auto)   | Email service  | Gửi email, expire     |
+|                 |                | tokens tự động        |
+| Admin           | Internal staff | Xem audit log, force- |
+|                 |                | expire tokens         |
+
+**Actors KHÔNG trong scope:**
+- Guest user (chưa có account)
+- OAuth users (không có password)
+- Service accounts (dùng API key)</div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:.6rem">
+        <h3>5.2.3–5.2.7 — 5 điểm cốt lõi</h3>
+        <ul class="bl tight">
+          <li><span class="hl">Functional:</span> Dùng EARS Notation. Mỗi requirement là một câu có thể test được.</li>
+          <li><span class="hl">Non-functional:</span> Phải có số đo cụ thể. "Nhanh" là vô nghĩa. "P95 latency &lt; 200ms" là executable.</li>
+          <li><span class="hl">Data Model:</span> Phải align với schema thực tế. Nếu DB đã có, paste relevant tables vào.</li>
+          <li><span class="hl">Error Handling:</span> Liệt kê TỪNG failure mode, không chỉ happy path.</li>
+          <li><span class="hl">Acceptance Criteria:</span> Viết theo format Given-When-Then. Nếu AI dùng criteria này để viết test, nó phải pass.</li>
+        </ul>
+      </div>
+      <div class="ab warn"><strong>NFR Example</strong> ❌ "Hệ thống phải nhanh" → ✅ "API response time: P95 &lt; 150ms, P99 &lt; 500ms dưới 1000 rps"</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 13 — 5.2.8 Out of Scope ==== -->
+<div class="slide" data-section="2">
+<div class="si">
+  <h2>5.2.8 — Out of Scope · Ranh giới quan trọng nhất</h2>
+  <p>Đây là thành phần ít phổ biến nhất nhưng lại có tác động lớn nhất đến chất lượng code sinh ra. AI model được train để "helpful" — nó có xu hướng thêm những gì nó nghĩ là hữu ích, ngay cả khi bạn không yêu cầu. Không có "Out of Scope" tường minh, AI sẽ <span class="hl-r">tự quyết định biên giới của feature — và thường quyết định sai</span>.</p>
+  <div class="ab warn" style="margin-bottom:.6rem"><strong>Tại sao AI "nhiệt tình quá mức"?</strong> AI học từ hàng triệu codebase chất lượng tốt — trong đó features thường đi kèm nhau. Khi bạn yêu cầu "login form", AI đã thấy hàng nghìn ví dụ có kèm: remember me, forgot password, social login, 2FA... và nó cho rằng đây là "complete implementation". Kết quả: codebase phình to, scope creep, tech debt từ code không được test kỹ.</div>
+  <div class="card">
+    <h3>Ví dụ — Out of Scope đầy đủ (Password Reset)</h3>
+    <div class="cb" style="font-size:.74rem">## Out of Scope — Sprint hiện tại
+
+### KHÔNG thực hiện trong sprint này:
+- 2FA/MFA trong quá trình reset (phase 2)
+- Reset qua SMS/phone (chỉ email)
+- Admin-triggered password reset (different flow)
+- Password strength enforcer UI (backend validation chỉ)
+- Remember device sau khi reset · Audit trail UI (chỉ logging)
+
+### Lý do loại trừ (giúp AI hiểu context, không chỉ tuân thủ):
+- 2FA: đang có epic riêng, tránh dependency
+- SMS: SendGrid đã ký contract, chưa có SMS provider
+
+### Boundary conditions — AI không được tự quyết:
+- KHÔNG tự thêm migration cho bảng users (schema đã lock)
+- KHÔNG thay đổi JWT structure hiện tại
+- KHÔNG implement email template — dùng SendGrid template ID đã có</div>
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 14 — 5.2.9 Anti-patterns 1+2 ==== -->
+<div class="slide" data-section="2">
+<div class="si">
+  <h2>5.2.9 — Anti-patterns · "Tử Huyệt" khi viết Spec cho AI</h2>
+  <p style="margin-bottom:.7rem">Sau đây là năm anti-pattern phổ biến nhất, mỗi loại đều được ghi nhận từ thực tế của các team đã áp dụng AI-assisted development. Nhận biết và tránh những lỗi này là kỹ năng phân biệt kỹ sư giỏi với kỹ sư trung bình trong kỷ nguyên AI.</p>
+  <div class="two-col">
+    <div class="card">
+      <h4>Anti-pattern 1 — "The Magic Requirement"</h4>
+      <p style="font-size:.85rem">Dùng những tính từ đánh giá mà không có tiêu chí đo lường. AI không có context để định nghĩa "nhanh", "thông minh", "mượt mà" — nó sẽ dùng định nghĩa của chính nó, thường là từ codebase training data phổ biến nhất.</p>
+      <div class="cb" style="font-size:.73rem"><span style="color:#ff6666">// ❌ "Magic" Requirements
+"Giao diện phải mượt mà và thân thiện."
+"Hệ thống phải xử lý request nhanh chóng."
+"Thuật toán phải thông minh và tối ưu."</span>
+
+<span style="color:#66ff88">// ✅ Executable Equivalents
+"Animation transition: 200ms ease-in-out, 60fps."
+"API response: P95 &lt; 150ms, P99 &lt; 500ms."
+"Sorting: O(n log n) worst-case, stable sort."</span></div>
+    </div>
+    <div class="card">
+      <h4>Anti-pattern 2 — "The Contradiction"</h4>
+      <p style="font-size:.85rem">Hai yêu cầu mâu thuẫn nhau mà không có cơ chế giải quyết. AI sẽ không báo lỗi — nó sẽ chọn một trong hai (thường là cái dễ implement hơn) và bỏ qua cái còn lại. Không có warning, không có error, chỉ có implementation sai.</p>
+      <div class="cb" style="font-size:.73rem"><span style="color:#ff6666">// ❌ Contradiction — AI phải chọn một
+"Bảo mật cực cao: 2FA bắt buộc,
+ session timeout 5 phút."
+"UX tốt: đăng nhập một chạm,
+ nhớ session 30 ngày."</span>
+
+<span style="color:#66ff88">// ✅ Resolved — Con người đã quyết định
+"Đọc data: session JWT, không re-auth
+ Ghi/sửa: re-enter password
+ Xóa/billing: bắt buộc 2FA TOTP
+ Nhớ device: tối đa 30 ngày, chỉ đọc"</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 15 — 5.2.9 Anti-patterns 3+4+5 ==== -->
+<div class="slide" data-section="2">
+<div class="si">
+  <h2>5.2.9 — Anti-patterns 3, 4, 5</h2>
+  <div class="card" style="margin-bottom:.6rem">
+    <h4>Anti-pattern 3 — "The Context Gap"</h4>
+    <p style="font-size:.85rem">Quên không cung cấp thông tin về stack hiện tại, conventions đang dùng, hoặc constraints của môi trường. AI sẽ dùng default knowledge từ training — đôi khi đúng, thường là conflict với codebase thực tế.</p>
+    <div class="cmp">
+      <div class="cmp-bad"><div class="clabel">❌ Context Gap</div><p>"Xây dựng DatePicker cho form booking." — AI sẽ chọn: react-datepicker? MUI? date-fns? Tailwind? useState? Formik? Zod? vi-VN hay English?</p></div>
+      <div class="cmp-good"><div class="clabel">✅ Context Provided</div><p>"DatePicker cho booking. Tech: shadcn/ui v2, Tailwind CSS v4, React Hook Form v8, Zod schema, date-fns v4, locale vi-VN. Pattern: xem /src/components/forms/TimePicker.tsx"</p></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <h4>Anti-pattern 4 — "The Implicit Assumption"</h4>
+      <p style="font-size:.85rem">Những điều "hiển nhiên" với con người thường hoàn toàn không hiển nhiên với AI. Đặc biệt là các business rules ẩn, regulatory requirements, hay domain invariants.</p>
+      <div class="ab danger" style="font-size:.8rem"><strong>Ví dụ</strong> "Cho phép user cập nhật tài khoản bank." — Con người tự hiểu: phải verify, audit log, không sửa khi pending transaction. AI không biết những điều này.</div>
+    </div>
+    <div class="card">
+      <h4>Anti-pattern 5 — "The Moving Target"</h4>
+      <p style="font-size:.85rem">Spec không có version, không có ownership, và thay đổi trong quá trình AI đang implement. Đây là recipe cho inconsistent codebase — code viết dựa trên spec v1 sẽ conflict với code viết dựa trên spec v2.</p>
+      <div class="ab danger" style="font-size:.8rem"><strong>Giải pháp</strong> SPEC.md — v1.3.0, Owner: @backend-lead, Status: APPROVED. Rule: Không modify spec đang trong sprint. Phát sinh → tạo addendum.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 16 — 5.2.9 Checklist ==== -->
+<div class="slide" data-section="2">
+<div class="si">
+  <h2>Checklist trước khi đưa Spec cho AI</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3>Anti-pattern Checklist</h3>
+        <ul class="bl">
+          <li>☐ Không có từ nào là "thông minh", "tối ưu", "nhanh" mà không có số đo cụ thể</li>
+          <li>☐ Tất cả contradictions đã được resolve, trade-off đã được document</li>
+          <li>☐ Tech stack và conventions hiện tại đã được liệt kê đầy đủ</li>
+          <li>☐ Mọi business rule ẩn đã được viết tường minh</li>
+          <li>☐ Spec có version, có owner, và không thay đổi trong sprint</li>
+          <li>☐ "Out of Scope" đã được viết — không chỉ có những gì CẦN làm</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>5 Anti-patterns Summary</h3>
+        <table class="mt" style="font-size:.78rem">
+          <thead><tr><th>#</th><th>Tên</th><th>Dấu hiệu nhận biết</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><span class="hl-r">Magic Req.</span></td><td>Tính từ không có số đo: nhanh, thông minh, tốt</td></tr>
+            <tr><td>2</td><td><span class="hl-r">Contradiction</span></td><td>Hai yêu cầu xung đột, không có tie-breaker</td></tr>
+            <tr><td>3</td><td><span class="hl-r">Context Gap</span></td><td>Thiếu tech stack, library, existing patterns</td></tr>
+            <tr><td>4</td><td><span class="hl-r">Implicit Assume</span></td><td>Business rule, regulatory req. không viết ra</td></tr>
+            <tr><td>5</td><td><span class="hl-r">Moving Target</span></td><td>Spec không có version, thay đổi mid-sprint</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="ab gold" style="margin-top:.5rem"><strong>Mindset</strong> Viết spec như viết contract pháp lý — mọi điều cần tường minh, mọi ranh giới cần rõ ràng. AI là bên thực thi hợp đồng, không phải đối tác sáng tạo.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 17 — SECTION 5.3 HEADER ==== -->
+<div class="slide sh" data-section="3">
+  <div class="sh-bg">5.3</div>
+  <h1>EARS Notation</h1>
+  <div class="sub">Vũ khí Tối thượng Chống Mơ hồ</div>
+</div>
+
+<!-- ==== SLIDE 18 — 5.3 EARS Origin ==== -->
+<div class="slide" data-section="3">
+<div class="si">
+  <h2>5.3 — EARS Notation · Nguồn gốc &amp; Định nghĩa</h2>
+  <p>Năm 2009, Alistair Mavin và nhóm kỹ sư tại <span class="hl">Rolls-Royce</span> (hàng không vũ trụ, không phải ô tô) đang đối mặt với một vấn đề sống còn: tài liệu yêu cầu cho hệ thống kiểm soát động cơ máy bay chứa hàng nghìn câu yêu cầu, và phần lớn trong số đó mơ hồ đến mức hai kỹ sư khác nhau đọc cùng một câu có thể implement theo hai cách hoàn toàn khác nhau.</p>
+  <p>Hệ quả không phải là bug — là <span class="hl-r">thảm họa hàng không</span>. Họ cần một ngôn ngữ đặc tả có cấu trúc, dễ học, và buộc người viết phải tường minh về điều kiện, hành động, và hệ thống. <span class="hl">EARS ra đời từ nhu cầu đó: Easy Approach to Requirements Syntax.</span></p>
+  <p>Mấy chục năm sau, EARS tìm được ứng dụng hoàn hảo thứ hai: viết Executable Spec cho AI Agent. Lý do giống hệt — AI không khoan nhượng với sự mơ hồ, giống như một máy bay không khoan nhượng với lỗi kỹ thuật. Nếu câu yêu cầu không rõ ràng, AI sẽ chọn một cách diễn giải tùy ý — và bạn không biết nó đã chọn cái gì.</p>
+  <div class="ab info"><strong>EARS — Định nghĩa</strong> Easy Approach to Requirements Syntax: bộ 5 mẫu câu có cấu trúc cố định để viết yêu cầu phần mềm loại bỏ hoàn toàn sự mơ hồ về điều kiện kích hoạt, chủ thể, và hành động. Mỗi mẫu trả lời: "WHEN nào? WHO/WHAT? SHALL làm gì?" Từ khóa <span class="hl">SHALL</span> là bắt buộc — phân biệt với <span class="hl-o">SHOULD</span> (khuyến nghị) hay <span class="hl-b">MAY</span> (tùy chọn).</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 19 — 5.3.1 Pattern 1 Ubiquitous ==== -->
+<div class="slide" data-section="3">
+<div class="si">
+  <h2>5.3.1 — Pattern 1: Ubiquitous (Luôn luôn đúng)</h2>
+  <p>Dùng cho các yêu cầu không có điều kiện — không trigger, không trạng thái, <span class="hl">luôn áp dụng mọi lúc</span>. Đây là hành vi nền tảng của hệ thống. Mỗi mẫu EARS được thiết kế cho một loại yêu cầu khác nhau. Việc chọn sai mẫu không chỉ là lỗi văn phong — nó che giấu thông tin quan trọng mà AI cần để implement đúng.</p>
+  <p><strong style="color:#66ffaa">Cú pháp:</strong> <code style="color:#00ff55;font-family:monospace">THE &lt;system&gt; SHALL &lt;action&gt;.</code></p>
+  <div class="cb">## Pattern 1: Ubiquitous — Không có điều kiện, luôn áp dụng
+
+<span style="color:#66ff88">✅ THE hệ thống SHALL mã hóa mọi password bằng bcrypt
+   với cost factor ≥ 12 trước khi lưu vào database.</span>
+
+<span style="color:#66ff88">✅ THE API SHALL trả về response trong định dạng JSON
+   với Content-Type: application/json.</span>
+
+<span style="color:#66ff88">✅ THE hệ thống SHALL ghi audit log cho mọi thao tác
+   thay đổi dữ liệu người dùng, bao gồm: actor,
+   action, timestamp (UTC), và object_id.</span>
+
+<span style="color:#ff6666">❌ Sai: "Passwords should be stored securely."
+   → Mơ hồ: "securely" nghĩa là gì? "should" không bắt buộc.</span></div>
+  <div class="ab info"><strong>Khi nào dùng Ubiquitous</strong> Security rules, data format standards, logging requirements, compliance rules — những điều luôn đúng bất kể trạng thái hay sự kiện nào xảy ra.</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 20 — 5.3.1 Pattern 2 Event-driven ==== -->
+<div class="slide" data-section="3">
+<div class="si">
+  <h2>5.3.1 — Pattern 2: Event-driven (Khi sự kiện xảy ra)</h2>
+  <p>Dùng khi hành vi được kích hoạt bởi một sự kiện cụ thể — <span class="hl">hành động của người dùng, signal từ hệ thống, hay thay đổi trạng thái</span>. Khác với Ubiquitous: đây là hành vi xảy ra TẠI MỘT THỜI ĐIỂM cụ thể, không phải liên tục.</p>
+  <p><strong style="color:#66ffaa">Cú pháp:</strong> <code style="color:#00ff55;font-family:monospace">WHEN &lt;event&gt;, THE &lt;system&gt; SHALL &lt;action&gt;.</code></p>
+  <div class="cb">## Pattern 2: Event-driven — Khi sự kiện kích hoạt
+
+<span style="color:#66ff88">✅ WHEN người dùng nhấn nút "Đặt hàng", THE hệ thống
+   SHALL kiểm tra tồn kho trong vòng 2 giây và hiển thị
+   trạng thái availability trước khi xác nhận.</span>
+
+<span style="color:#66ff88">✅ WHEN phiên đăng nhập hết hạn (timeout = 30 phút),
+   THE hệ thống SHALL redirect người dùng về trang login
+   và hiển thị: "Phiên đã hết hạn, vui lòng đăng nhập lại."</span>
+
+<span style="color:#66ff88">✅ WHEN file upload hoàn thành, THE hệ thống SHALL
+   gửi webhook POST đến callback_url của merchant
+   với payload: {file_id, status, size_bytes, timestamp}.</span>
+
+<span style="color:#ff6666">❌ Sai: "After login, users are redirected."
+   → Thiếu điều kiện cụ thể, thiếu chủ thể rõ ràng.</span></div>
+</div>
+</div>
+
+<!-- ==== SLIDE 21 — 5.3.1 Pattern 3 State-driven ==== -->
+<div class="slide" data-section="3">
+<div class="si">
+  <h2>5.3.1 — Pattern 3: State-driven (Khi đang ở trạng thái)</h2>
+  <p>Dùng khi hành vi phụ thuộc vào trạng thái hiện tại của hệ thống hoặc đối tượng. Khác với Event-driven: đây là <span class="hl">hành vi liên tục trong khi trạng thái tồn tại</span>, không chỉ tại thời điểm chuyển đổi. Đây là điểm khác biệt quan trọng — WHILE vs WHEN.</p>
+  <p><strong style="color:#66ffaa">Cú pháp:</strong> <code style="color:#00ff55;font-family:monospace">WHILE &lt;state&gt;, THE &lt;system&gt; SHALL &lt;action&gt;.</code></p>
+  <div class="cb">## Pattern 3: State-driven — Trong khi trạng thái tồn tại
+
+<span style="color:#66ff88">✅ WHILE đơn hàng có status = "processing",
+   THE hệ thống SHALL ngăn người dùng chỉnh sửa
+   địa chỉ giao hàng và hiển thị badge "Đang xử lý".</span>
+
+<span style="color:#66ff88">✅ WHILE kết nối mạng không khả dụng, THE ứng dụng
+   SHALL lưu tất cả thao tác ghi vào local queue
+   và hiển thị biểu tượng offline ở góc trên phải.</span>
+
+<span style="color:#66ff88">✅ WHILE video đang phát, THE trình phát SHALL
+   giữ màn hình sáng và ngăn screen lock.</span>
+
+<span style="color:#ff6666">❌ Sai: "Show loading state during API call."
+   → Không rõ "show" là gì, "during" kết thúc khi nào.</span></div>
+</div>
+</div>
+
+<!-- ==== SLIDE 22 — 5.3.1 Pattern 4+5 ==== -->
+<div class="slide" data-section="3">
+<div class="si">
+  <h2>5.3.1 — Pattern 4 &amp; 5: Optional Feature + Unwanted</h2>
+  <div class="two-col">
+    <div class="card">
+      <h4>Pattern 4 — Optional Feature (Khi tính năng được bật)</h4>
+      <p style="font-size:.85rem">Dùng cho các tính năng configurable — hành vi chỉ áp dụng khi feature flag, cài đặt, hoặc điều kiện hệ thống nhất định được kích hoạt. Rất phổ biến trong SaaS với nhiều tier.</p>
+      <p style="font-size:.8rem;color:#66ffaa;margin-bottom:.3rem"><strong>Cú pháp:</strong> <code>WHERE &lt;feature&gt; IS ENABLED, THE &lt;sys&gt; SHALL &lt;action&gt;.</code></p>
+      <div class="cb" style="font-size:.73rem"><span style="color:#66ff88">✅ WHERE two-factor authentication được bật,
+   THE hệ thống SHALL yêu cầu mã OTP
+   6 chữ số, thời gian hiệu lực 5 phút.
+
+✅ WHERE tenant thuộc gói Enterprise Plan,
+   THE API SHALL cho phép tối đa
+   10,000 requests/phút.</span>
+<span style="color:#ff6666">❌ "Enterprise users get more API calls."
+   → "More" là bao nhiêu?</span></div>
+    </div>
+    <div class="card">
+      <h4>Pattern 5 — Unwanted ★ (QUAN TRỌNG NHẤT)</h4>
+      <p style="font-size:.85rem">Đây là mẫu quan trọng nhất và thường bị bỏ qua nhất. AI rất giỏi implement happy path nhưng thường <span class="hl-r">không biết xử lý lỗi</span> trừ khi được chỉ định rõ ràng.</p>
+      <p style="font-size:.8rem;color:#66ffaa;margin-bottom:.3rem"><strong>Cú pháp:</strong> <code>WHERE &lt;error condition&gt;, THE &lt;sys&gt; SHALL &lt;response&gt;.</code></p>
+      <div class="cb" style="font-size:.73rem"><span style="color:#66ff88">✅ WHERE payment gateway thất bại sau
+   3 lần thử (cách nhau 2 giây), THE hệ
+   thống SHALL: (1) Hủy transaction,
+   (2) Ghi log lỗi, (3) Hiển thị thông
+   báo, (4) Alert Slack #payments.</span>
+<span style="color:#ff6666">❌ "Handle errors appropriately."
+   → "Appropriately" = AI tự bịa.</span></div>
+    </div>
+  </div>
+  <div class="ab danger"><strong>★ Unwanted là mẫu quan trọng nhất — đừng bỏ qua</strong> Khi review spec, đếm số Unwanted patterns. Nếu ít hơn 30% tổng yêu cầu, bạn chưa nghĩ đủ về error handling. Trong thực tế, 40–60% code production là xử lý lỗi — nhưng spec thường chỉ có 5–10% câu về lỗi.</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 23 — 5.3.2 EARS Cheat Sheet TABLE ==== -->
+<div class="slide" data-section="3">
+<div class="si">
+  <h2>5.3.2 — EARS Cheat Sheet · Tham khảo nhanh</h2>
+  <p style="margin-bottom:.7rem">Đây là bảng tham khảo nhanh để dùng ngay khi viết spec. Laminate và dán lên màn hình, hoặc thêm vào snippet của editor.</p>
+  <table class="mt">
+    <thead><tr><th>Mẫu</th><th>Cú pháp</th><th>Khi nào dùng</th><th>Ví dụ nhanh</th></tr></thead>
+    <tbody>
+      <tr><td><span class="hl">Ubiquitous</span></td><td><code>THE &lt;sys&gt; SHALL &lt;action&gt;.</code></td><td>Luôn đúng, mọi lúc</td><td>THE sys SHALL hash passwords với bcrypt ≥12.</td></tr>
+      <tr><td><span class="hl">Event-driven</span></td><td><code>WHEN &lt;event&gt;, THE &lt;sys&gt; SHALL &lt;action&gt;.</code></td><td>Phản ứng với sự kiện</td><td>WHEN user clicks "Submit", THE sys SHALL validate trong 1s.</td></tr>
+      <tr><td><span class="hl">State-driven</span></td><td><code>WHILE &lt;state&gt;, THE &lt;sys&gt; SHALL &lt;action&gt;.</code></td><td>Hành vi liên tục trong trạng thái</td><td>WHILE offline, THE app SHALL queue writes locally.</td></tr>
+      <tr><td><span class="hl">Optional</span></td><td><code>WHERE &lt;feature&gt; IS ENABLED, THE &lt;sys&gt; SHALL &lt;action&gt;.</code></td><td>Feature flag / gói dịch vụ</td><td>WHERE 2FA enabled, THE sys SHALL require OTP after login.</td></tr>
+      <tr><td><span class="hl-r">Unwanted ★</span></td><td><code>WHERE &lt;error/condition&gt;, THE &lt;sys&gt; SHALL &lt;response&gt;.</code></td><td>Xử lý lỗi &amp; edge cases</td><td>WHERE API fails 3×, THE sys SHALL refund và alert Slack.</td></tr>
+    </tbody>
+  </table>
+  <div class="ab warn" style="margin-top:.7rem"><strong>★ Unwanted là mẫu quan trọng nhất</strong> AI sẽ implement phần còn lại theo cách nó thấy "hợp lý" — điều đó không kiểm soát được. Chỉ có Unwanted patterns mới buộc AI tư duy về failure modes.</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 24 — 5.3.3 SHALL / SHOULD / MAY ==== -->
+<div class="slide" data-section="3">
+<div class="si">
+  <h2>5.3.3 — Phân cấp nghĩa vụ · SHALL / SHOULD / MAY</h2>
+  <p>Đây là chi tiết nhỏ nhưng cực kỳ quan trọng. Khi AI gặp <span class="hl">SHALL</span>, nó hiểu đây là mandatory — không implement là bug. Khi gặp <span class="hl-o">SHOULD</span>, nó có thể skip nếu thấy phức tạp. Khi gặp <span class="hl-b">MAY</span>, nó có thể implement hoặc không, tùy "cảm hứng".</p>
+  <table class="mt" style="margin-bottom:.7rem">
+    <thead><tr><th>Keyword</th><th>Nghĩa</th><th>AI behavior</th><th>Khi nào dùng</th></tr></thead>
+    <tbody>
+      <tr><td><span class="hl">SHALL</span></td><td>Bắt buộc — không thể bỏ qua</td><td>Implement 100%, thiếu = bug</td><td>Mọi yêu cầu core business logic</td></tr>
+      <tr><td><span class="hl-r">SHALL NOT</span></td><td>Bắt buộc KHÔNG làm</td><td>Không implement, nếu làm = bug</td><td>Security constraints, prohibitions</td></tr>
+      <tr><td><span class="hl-o">SHOULD</span></td><td>Khuyến nghị — tốt nếu có</td><td>Có thể skip khi khó hoặc conflicting</td><td>Best practices, non-critical quality</td></tr>
+      <tr><td><span class="hl-o">SHOULD NOT</span></td><td>Không khuyến nghị</td><td>Tránh nhưng không phải lỗi nếu vi phạm</td><td>Deprecated patterns, anti-patterns</td></tr>
+      <tr><td><span class="hl-b">MAY</span></td><td>Tùy chọn — được phép nếu muốn</td><td>Implement hoặc không, tùy context</td><td>Extensions, nice-to-have features</td></tr>
+    </tbody>
+  </table>
+  <div class="cb" style="font-size:.75rem"><span class="cm"># Ví dụ phân cấp trong cùng một spec (Password Reset)</span>
+<span style="color:#66ff88">WHEN user reset password, THE hệ thống SHALL gửi email có link hiệu lực 1 giờ.</span>
+<span style="color:#ff6666">THE reset link SHALL NOT hoạt động sau khi đã được sử dụng (one-time use).</span>
+<span style="color:#ffaa44">THE hệ thống SHOULD gửi thêm SMS nếu user đã đăng ký số điện thoại.</span>
+<span style="color:#66aaff">THE email MAY bao gồm thông tin thiết bị và vị trí của request.</span></div>
+</div>
+</div>
+
+<!-- ==== SLIDE 25 — 5.3.4 Full Login Spec ==== -->
+<div class="slide" data-section="3">
+<div class="si">
+  <h2>5.3.4 — Kết hợp 5 mẫu EARS · Full Login Spec</h2>
+  <p style="margin-bottom:.5rem">Một tính năng thực tế cần nhiều mẫu EARS kết hợp. Ví dụ sau mô tả toàn bộ tính năng "Đăng nhập" với tất cả 5 mẫu, bao gồm cả các edge case thường bị bỏ qua:</p>
+  <div class="cb" style="font-size:.73rem"><span class="cm"># SPEC: User Authentication — Login Flow
+# Version: 1.2.0 | Owner: @security-team | Status: APPROVED</span>
+
+<span style="color:#aaffaa">## Ubiquitous</span>
+THE hệ thống SHALL không lưu password dưới dạng plaintext.
+THE hệ thống SHALL không tiết lộ trong error message rằng username tồn tại hay không (prevent user enumeration).
+
+<span style="color:#aaffaa">## Event-driven</span>
+WHEN người dùng submit form đăng nhập, THE hệ thống SHALL xác thực credentials trong vòng 2 giây.
+WHEN xác thực thành công, THE hệ thống SHALL: Tạo session token (JWT, TTL=30 phút), ghi login_event {user_id, timestamp, ip, user_agent}, redirect đến dashboard hoặc intended_url.
+
+<span style="color:#aaffaa">## State-driven</span>
+WHILE tài khoản bị khoá (locked=true), THE hệ thống SHALL từ chối mọi đăng nhập và hiển thị: "Tài khoản bị khoá. Liên hệ support@company.com."
+
+<span style="color:#aaffaa">## Optional Feature</span>
+WHERE tài khoản bật 2FA, THE hệ thống SHALL redirect đến màn hình nhập OTP sau khi xác thực password. OTP hiệu lực 5 phút. Tối đa 3 lần nhập sai.
+
+<span style="color:#aaffaa">## Unwanted (xử lý lỗi)</span>
+WHERE đăng nhập thất bại lần thứ 5 liên tiếp trong 15 phút, THE hệ thống SHALL: (1) Khoá tài khoản 1h, (2) Gửi email cảnh báo, (3) Ghi security_event {type:"brute_force", user_id, ip}.
+WHERE session token hết hạn hoặc không hợp lệ, THE hệ thống SHALL redirect về login với query param ?reason=session_expired.
+WHERE request đăng nhập từ IP ngoài whitelist (Enterprise only), THE hệ thống SHALL từ chối và ghi ip_blocked_event.</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 26 — 5.3.5 Exercises ==== -->
+<div class="slide" data-section="3">
+<div class="si">
+  <h2>5.3.5 — Bài tập thực hành EARS</h2>
+  <div class="three-col" style="margin-bottom:.7rem">
+    <div class="card">
+      <h3>Bài tập 5.3.A ⭐</h3>
+      <p style="font-size:.85rem">Phân loại mẫu EARS phù hợp và viết lại theo đúng cú pháp:</p>
+      <ol class="steps">
+        <li>"If the user is logged in, show the dashboard."</li>
+        <li>"Error messages should be user-friendly."</li>
+        <li>"Premium users can export data as CSV."</li>
+        <li>"The system should handle network timeouts."</li>
+        <li>"Data is encrypted in transit."</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>Bài tập 5.3.B ⭐⭐⭐</h3>
+      <p style="font-size:.85rem">Viết Executable Spec đầy đủ cho tính năng "Quên mật khẩu" sử dụng tất cả 5 mẫu EARS.</p>
+      <p style="font-size:.82rem;color:#66ffaa">Yêu cầu tối thiểu:</p>
+      <ul class="bl tight">
+        <li>Ít nhất 3 Unwanted patterns</li>
+        <li>Phân cấp SHALL/SHOULD/MAY rõ ràng</li>
+        <li>Kèm Out of Scope cho sprint</li>
+        <li>Version + owner + status header</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Bài tập 5.3.C ⭐⭐⭐⭐</h3>
+      <p style="font-size:.85rem">Đưa spec bài 5.3.B vào Cline với prompt:</p>
+      <div class="cb" style="font-size:.72rem">Review spec này và liệt kê:
+(1) Các edge cases còn thiếu
+(2) Yêu cầu nào mơ hồ cần
+    làm rõ
+(3) Contradiction nếu có
+
+Format: numbered list.
+Không suggest giải pháp —
+chỉ chỉ ra vấn đề.</div>
+      <p style="font-size:.82rem;color:#66ffaa">Ghi lại phản hồi của AI và update spec.</p>
+    </div>
+  </div>
+  <div class="ab tip"><strong>Gợi ý đáp án 5.3.A</strong> (1) State-driven: WHILE user logged in → (2) Ubiquitous: THE system SHALL → (3) Optional: WHERE Premium plan IS ENABLED → (4) Unwanted: WHERE network timeout occurs → (5) Ubiquitous: THE system SHALL encrypt data in transit with TLS 1.3.</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 27 — SECTION 5.4 HEADER ==== -->
+<div class="slide sh" data-section="4">
+  <div class="sh-bg">5.4</div>
+  <h1>Levels of Spec Depth</h1>
+  <div class="sub">Đúng mức · Đúng chỗ · Risk × Complexity</div>
+</div>
+
+<!-- ==== SLIDE 28 — 5.4 Intro + Risk Matrix ==== -->
+<div class="slide" data-section="4">
+<div class="si">
+  <h2>5.4.1 — Risk × Complexity Matrix</h2>
+  <p>Một sai lầm phổ biến của những người mới học SDD là áp dụng cùng một mức độ chi tiết cho mọi thứ. Họ viết Formal Spec đầy đủ 8 thành phần cho một hàm tiện ích 5 dòng code, và đồng thời chỉ viết một comment mơ hồ cho luồng thanh toán xử lý hàng triệu đồng. <span class="hl-r">Cả hai đều sai.</span></p>
+  <p>Spec là đầu tư. Giống như mọi khoản đầu tư, ROI phụ thuộc vào việc đầu tư đúng chỗ. Mục tiêu là <span class="hl">calibrate: viết spec đủ để AI thực thi đúng, không phải nhiều nhất có thể.</span></p>
+  <table class="mt">
+    <thead><tr><th>Risk \ Logic</th><th>Logic Đơn giản</th><th>Logic Vừa</th><th>Logic Phức tạp</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="hl">Rủi ro Thấp</span> (Bug = annoyance)</td>
+        <td>🟢 Sketch — Prompt ngắn OK</td>
+        <td>🟡 Detailed Spec 4–5 thành phần</td>
+        <td>🟡 Detailed Spec 6–7 thành phần</td>
+      </tr>
+      <tr>
+        <td><span class="hl-o">Rủi ro Vừa</span> (Bug = mất UX/data)</td>
+        <td>🟡 Detailed Spec ngắn + test cases</td>
+        <td>🟡 Detailed Spec đầy đủ 8 thành phần</td>
+        <td>🔴 Formal Spec + State Diagram</td>
+      </tr>
+      <tr>
+        <td><span class="hl-r">Rủi ro Cao</span> (Bug = tiền/bảo mật)</td>
+        <td>🟡 Detailed Spec + security review</td>
+        <td>🔴 Formal Spec + Diagram + Review</td>
+        <td>🔴 Formal Spec + Diagram + Audit trail</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="dg g3" style="margin-top:.6rem">
+    <div class="dp"><div class="dl">Mức 1</div><div class="dv">Sketch</div><div class="ds">Prompt có cấu trúc · &lt; 3 branches · Rủi ro thấp · 5-10 phút viết</div></div>
+    <div class="dp"><div class="dl">Mức 2</div><div class="dv">Detailed</div><div class="ds">6–8 thành phần · EARS notation · 70% công việc thực tế · 30-60 phút</div></div>
+    <div class="dp"><div class="dl">Mức 3</div><div class="dv">Formal</div><div class="ds">8 thành phần + State Diagram + Security review · Thanh toán, auth · 2-4 giờ</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 29 — 5.4.2 Sketch + 5.4.3 Detailed ==== -->
+<div class="slide" data-section="4">
+<div class="si">
+  <h2>5.4.2 Mức 1 — Sketch &amp; 5.4.3 Mức 2 — Detailed</h2>
+  <div class="two-col">
+    <div class="card">
+      <h3>Mức 1 — Sketch (Phác thảo)</h3>
+      <p style="font-size:.85rem">Sketch là mức tối thiểu — một prompt có cấu trúc. Phù hợp cho utility functions, helper methods, và các đoạn code nhỏ không có business logic phức tạp.</p>
+      <p style="font-size:.82rem;color:#66ffaa"><strong>Khi nào dùng:</strong> Logic đơn giản (1–2 branch), rủi ro thấp, có thể kiểm tra output bằng mắt trong &lt; 30 giây.</p>
+      <div class="cb" style="font-size:.73rem"><span class="cm"># Sketch — formatCurrency(amount, currency)</span>
+Input: amount (number), currency (ISO 4217)
+Output: string đã format
+
+VND: 1234567 → "1.234.567 ₫"
+USD: 1234.5 → "$1,234.50" (2 decimal)
+
+Edge cases:
+- amount &lt; 0: throw Error("non-negative")
+- unsupported: throw Error("Unsupported: X")
+
+<span class="cm"># Đây là đủ — không cần EARS, không cần State Diagram</span></div>
+    </div>
+    <div class="card">
+      <h3>Mức 2 — Detailed (Chi tiết đầy đủ)</h3>
+      <p style="font-size:.85rem">Detailed Spec là mức tiêu chuẩn cho hầu hết các module tính năng. Bao gồm 6–8 thành phần, EARS notation, và Out of Scope rõ ràng. Phù hợp cho khoảng <span class="hl">70% công việc development thực tế</span>.</p>
+      <p style="font-size:.82rem;color:#66ffaa"><strong>Khi nào dùng:</strong> Module tính năng có 3–10 business rules, rủi ro vừa, cần unit test để verify.</p>
+      <div class="cb" style="font-size:.73rem"><span class="cm"># Detailed — ProductReview Module (tóm tắt)</span>
+## 3. Functional (EARS)
+WHEN buyer submit review, THE hệ thống SHALL:
+  - Validate: rating 1–5, comment 10–500 chars
+  - Check: buyer đã mua (order.status=delivered)
+  - Check: chưa có review cho order này
+
+WHERE buyer chưa mua, THE hệ thống SHALL
+  ẩn form + hiển thị "Mua sản phẩm để đánh giá."
+
+WHERE review có từ ngữ blacklist, THE hệ thống
+  SHALL từ chối + log security event.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 30 — 5.4.4 Formal + State Diagram ==== -->
+<div class="slide" data-section="4">
+<div class="si">
+  <h2>5.4.4 — Mức 3: Formal Spec + State Diagram</h2>
+  <p>Formal Spec dành cho các luồng có rủi ro cao: thanh toán, xác thực, quản lý quyền. State Diagram <span class="hl">buộc bạn liệt kê MỌI trạng thái có thể</span> — kể cả các trạng thái trung gian mà prose spec thường bỏ qua. Với AI, State Diagram đặc biệt có giá trị: nó là nguồn duy nhất để AI biết transition nào là hợp lệ, transition nào không.</p>
+  <div class="cb" style="font-size:.74rem"><span class="cm"># Formal Spec — Payment Order Flow | v2.1.0 | @payment-team | Legal: 2025-01-10</span>
+
+## STATE DIAGRAM
+[created] ──► [awaiting_payment]
+                      │
+         ┌────────────┼────────────┐
+         ▼            ▼            ▼
+  [payment_pending] [failed]  [cancelled]
+         │               │
+         ▼               ▼
+  [payment_confirmed] [expired] (sau 30 phút)
+         │
+         ▼
+  [processing] ──► [shipped] ──► [delivered]
+         │
+         ▼
+      [refunded]
+
+## VALID TRANSITIONS (explicit — AI chỉ implement những transition này)
+created → awaiting_payment: khi user confirm giỏ hàng
+awaiting_payment → payment_pending: khi gọi payment gateway
+payment_pending → payment_confirmed: khi webhook success
+payment_pending → failed: khi webhook failure
+
+## INVALID TRANSITIONS (explicit prohibition)
+<span style="color:#ff6666"># AI SHALL NOT implement: delivered → cancelled (phải qua refunded)
+# AI SHALL NOT implement: failed → processing (phải thanh toán lại)</span>
+
+## INVARIANTS
+THE hệ thống SHALL: (1) Tổng tiền order KHÔNG đổi sau created
+                    (2) Mọi transition có audit_log entry
+                    (3) Chỉ 1 active payment attempt tại một thời điểm</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 31 — 5.4.5 Decision Guide TABLE ==== -->
+<div class="slide" data-section="4">
+<div class="si">
+  <h2>5.4.5 — Hướng dẫn quyết định nhanh</h2>
+  <p style="margin-bottom:.6rem">Khi bắt đầu bất kỳ task nào, hãy đặt 3 câu hỏi: (1) Nếu AI implement sai, hậu quả là gì? (2) Có bao nhiêu branch và edge case? (3) Có ai khác cần đọc và depend vào spec này không?</p>
+  <table class="mt">
+    <thead><tr><th>Module ví dụ</th><th>Rủi ro</th><th>Logic</th><th>Mức Spec đúng</th><th>Lý do</th></tr></thead>
+    <tbody>
+      <tr><td>formatDate() helper</td><td>Thấp</td><td>Đơn giản</td><td>🟢 Sketch</td><td>Bug dễ thấy, fix nhanh</td></tr>
+      <tr><td>Search/filter products</td><td>Thấp</td><td>Vừa</td><td>🟡 Detailed</td><td>Nhiều filter combination</td></tr>
+      <tr><td>User profile update</td><td>Vừa</td><td>Vừa</td><td>🟡 Detailed</td><td>Data integrity + audit</td></tr>
+      <tr><td>Login/Auth flow</td><td><span class="hl-r">Cao</span></td><td>Vừa</td><td>🔴 Formal</td><td>Security, brute-force protection</td></tr>
+      <tr><td>Payment processing</td><td><span class="hl-r">Cao</span></td><td>Phức tạp</td><td>🔴 Formal</td><td>Tiền + state machine phức tạp</td></tr>
+      <tr><td>Notification email</td><td>Thấp</td><td>Đơn giản</td><td>🟢 Sketch</td><td>Dễ kiểm tra output</td></tr>
+      <tr><td>RBAC/Permissions</td><td><span class="hl-r">Cao</span></td><td>Phức tạp</td><td>🔴 Formal</td><td>Security + many role combos</td></tr>
+      <tr><td>Dashboard charts</td><td>Thấp</td><td>Vừa</td><td>🟡 Detailed</td><td>Nhiều data conditions</td></tr>
+    </tbody>
+  </table>
+  <div class="ab tip" style="margin-top:.6rem"><strong>5.4.6 Bài tập — Calibrating Spec Depth</strong> Cho e-commerce app: phân loại mức Spec cho: (1) Hàm tính shipping fee theo trọng lượng+tỉnh thành, (2) Module quản lý coupon nhiều điều kiện, (3) Hàm crop/resize ảnh, (4) Luồng KYC xác thực danh tính người bán, (5) Module email marketing hàng loạt, (6) Function generate unique order ID.</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 32 — SECTION 5.5 HEADER ==== -->
+<div class="slide sh" data-section="5">
+  <div class="sh-bg">5.5</div>
+  <h1>SDD Workflow</h1>
+  <div class="sub">Lập trình ở tầng ý định · 4 bước thực tế</div>
+</div>
+
+<!-- ==== SLIDE 33 — 5.5.1 4-Step Overview ==== -->
+<div class="slide" data-section="5">
+<div class="si">
+  <h2>5.5.1 — Quy trình 4 bước · Tổng quan</h2>
+  <p>Phần này là điểm hội tụ của toàn bộ chương. Quy trình SDD không phải là "write spec → paste vào AI → nhận code". Đó là một <span class="hl">vòng lặp cộng tác giữa người và máy</span>, trong đó mỗi bên đóng góp điều mà mình làm tốt nhất: con người mang ý định, kinh nghiệm, và judgment; AI mang khả năng phân tích cú pháp, tìm logic gap, và thực thi không mệt mỏi.</p>
+  <div class="cb" style="font-size:.76rem">┌──────────────────────────────────────────────────────────────┐
+│              SPEC-DRIVEN DEVELOPMENT WORKFLOW                │
+└──────────────────────────────────────────────────────────────┘
+  ┌─────────────────────────────────────────────────────────┐
+  │ BƯỚC 1: CON NGƯỜI VIẾT SPEC SƠ THẢO (không có AI)      │
+  │ • Chọn mức độ: Sketch / Detailed / Formal               │
+  │ • Dùng 8 thành phần + EARS Notation                     │
+  │ • Bao gồm Out of Scope. Output: SPEC.md (draft, v0.1)   │
+  └──────────────────────────┬──────────────────────────────┘
+                             ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │ BƯỚC 2: AI REVIEW SPEC (tìm lỗ hổng)                   │
+  │ • AI tìm logic gaps và contradictions                   │
+  │ • AI liệt kê edge cases còn thiếu                       │
+  │ • Output: Review report (list of issues). Iterate.      │
+  └──────────────────────────┬──────────────────────────────┘
+                             ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │ BƯỚC 3: CON NGƯỜI CHỐT SPEC (Source of Truth)          │
+  │ • Resolve mọi issue từ AI review                        │
+  │ • Lock spec (không thay đổi trong sprint)               │
+  │ • Output: SPEC.md (v1.0, APPROVED)                      │
+  └──────────────────────────┬──────────────────────────────┘
+                             ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │ BƯỚC 4: AI GENERATE CODE + TESTS                        │
+  │ • Implement dựa trên Spec đã locked                     │
+  │ • Unit tests cover acceptance criteria                  │
+  │ • Output: Production code + test suite                  │
+  └─────────────────────────────────────────────────────────┘</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 34 — 5.5.2 Bước 1 — Draft ==== -->
+<div class="slide" data-section="5">
+<div class="si">
+  <h2>5.5.2 — Bước 1 · Con người viết Spec sơ thảo</h2>
+  <p>Bước này <span class="hl">không có AI tham gia</span> — và đây là chủ đích. Trước khi đưa AI vào, con người phải tự suy nghĩ về bài toán. Nhiều team mắc sai lầm bỏ qua bước này — họ đi thẳng từ "có ý tưởng" đến "chat với AI". Kết quả là spec được AI "đoán" từ một mô tả mơ hồ, và toàn bộ hệ thống được xây trên nền tảng không vững.</p>
+  <div class="two-col">
+    <div class="card">
+      <h3>Story Decomposition — 5 câu hỏi trước khi viết</h3>
+      <ol class="steps">
+        <li><strong>Actor là ai?</strong> Mọi loại người dùng, role, system khác sẽ interact với feature này.</li>
+        <li><strong>Happy path là gì?</strong> Mô tả kịch bản thành công lý tưởng trong 2–3 câu.</li>
+        <li><strong>What could go wrong?</strong> Liệt kê 5–10 điều có thể sai. Đây sẽ là Unwanted patterns.</li>
+        <li><strong>Ranh giới là gì?</strong> Những gì KHÔNG thuộc scope — sẽ là Out of Scope.</li>
+        <li><strong>Khi nào "xong"?</strong> Acceptance criteria — cách verify implementation là đúng.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>SPEC.md Template khởi đầu nhanh</h3>
+      <div class="cb" style="font-size:.72rem"># [Feature Name] Spec
+# Version: 0.1 (DRAFT) | Owner: @name
+
+## 1. Context & Goal
+<!-- Tại sao feature này tồn tại? -->
+
+## 2. Actors & Roles
+- [Actor 1]: [quyền]
+
+## 3. Functional Requirements
+<!-- EARS: WHEN/WHILE/WHERE...SHALL... -->
+
+## 4. Non-functional Requirements
+<!-- Performance, Security — có số đo -->
+
+## 5. Data Model
+## 6. Error Handling
+## 7. Acceptance Criteria
+- [ ] [criterion]
+
+## 8. Out of Scope
+- Không có...
+
+## Notes / Open Questions
+<!-- Câu hỏi chưa trả lời -- cho AI hỏi lại --></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 35 — 5.5.3 Bước 2 — AI Review + Prompt ==== -->
+<div class="slide" data-section="5">
+<div class="si">
+  <h2>5.5.3 — Bước 2 · AI review Spec, tìm logic gaps</h2>
+  <p>Đây là bước nhiều người không biết đến nhưng có impact lớn nhất. Thay vì dùng AI để viết code ngay, hãy dùng AI để <span class="hl">"peer review" spec của bạn</span>. AI rất giỏi tìm ra những điều bạn bỏ qua vì quá quen thuộc với domain — những assumption ẩn, edge case bị quên, và logic inconsistency.</p>
+  <div class="two-col">
+    <div class="card">
+      <h3>Prompt mẫu cho AI Spec Review</h3>
+      <div class="cb" style="font-size:.72rem">Tôi cần bạn review spec này với tư cách là
+một kỹ sư senior. Đừng viết code.
+Chỉ phân tích spec và trả lời 4 câu hỏi:
+
+1. LOGIC GAPS: Có trạng thái/kịch bản nào
+   spec chưa xử lý? Liệt kê cụ thể:
+   "Nếu [điều kiện X], hệ thống làm gì?"
+
+2. CONTRADICTIONS: Có yêu cầu nào mâu thuẫn?
+   Trích dẫn cụ thể 2 yêu cầu conflicting.
+
+3. MISSING EDGE CASES: Liệt kê 5 edge case
+   quan trọng nhất chưa được đề cập.
+   Ưu tiên: security, data integrity,
+   concurrent access.
+
+4. AMBIGUOUS REQUIREMENTS: Yêu cầu nào mơ hồ?
+   Liệt kê và hỏi làm rõ.
+
+Format: numbered list, 1–3 câu/issue.
+Không suggest giải pháp — chỉ chỉ ra vấn đề.
+
+--- SPEC BẮT ĐẦU ---
+[Paste SPEC.md ở đây]
+--- SPEC KẾT THÚC ---</div>
+    </div>
+    <div class="card">
+      <h3>AI Review output mẫu — ProductReview</h3>
+      <div class="cb" style="font-size:.71rem"><span class="cm">## Logic Gaps (3 tìm thấy)</span>
+1. Spec không xử lý: Nếu buyer đặt 2 order
+   cho cùng 1 SP và cả 2 đã delivered —
+   buyer được phép tạo mấy review?
+2. Thiếu: WHEN buyer EDIT review, THE system
+   SHALL... Spec cho phép sửa nhưng không có
+   behavior khi edit.
+3. Concurrent: Double-click Submit → 2 review
+   đồng thời. Idempotency chưa được spec.
+
+<span class="cm">## Missing Edge Cases (5)</span>
+1. Buyer bị ban — review còn hiển thị?
+2. Product bị xóa — reviews xử lý thế nào?
+3. Admin xóa review — thông báo buyer không?
+4. Rating = null vs rating = 0 trong DB?
+5. Boundary max: 501 ký tự comment bị reject?
+
+<span class="cm">## Ambiguous (2)</span>
+1. "Rating aggregate 5 phút" — eventual OK?
+   Hay read-after-write consistency?
+2. Blacklist — ai maintain? AI detect hay list?</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 36 — 5.5.4 Bước 3 — Lock ==== -->
+<div class="slide" data-section="5">
+<div class="si">
+  <h2>5.5.4 — Bước 3 · Con người chốt Spec (Source of Truth)</h2>
+  <p>Sau khi nhận review từ AI, đây là lúc con người đưa ra judgment. Không phải mọi issue mà AI tìm thấy đều cần giải quyết ngay — đó là lý do tại sao <span class="hl">bước này không thể tự động hóa</span>. Con người phải quyết định: issue này quan trọng và cần xử lý trong spec, hay là acceptable risk và sẽ handle sau?</p>
+  <div class="two-col">
+    <div>
+      <h3 style="margin-bottom:.5rem">Decision framework cho từng AI-found issue</h3>
+      <table class="mt">
+        <thead><tr><th>Loại issue</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>Logic gap nghiêm trọng</td><td><span class="hl">Thêm vào spec NGAY</span></td></tr>
+          <tr><td>Edge case quan trọng</td><td>Thêm Unwanted pattern</td></tr>
+          <tr><td>Ambiguity có ảnh hưởng</td><td>Làm rõ trong spec</td></tr>
+          <tr><td>Out of scope (intentional)</td><td>Ghi vào Out of Scope</td></tr>
+          <tr><td>Nice to have, low risk</td><td>Ghi vào backlog</td></tr>
+          <tr><td>False positive của AI</td><td>Ignore + comment lý do</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Lock ceremony — Cam kết với Spec</h3>
+      <div class="cb" style="font-size:.72rem"><span class="cm"># Khi spec đã được approve</span>
+
+<span class="cm">## 1. Update header</span>
+# Version: 1.0.0  ← Từ 0.x lên 1.x = locked
+# Status: APPROVED ← Không còn là DRAFT
+# Approved by: @lead-dev, @product-owner
+# Locked on: 2025-01-20
+# Sprint: Sprint-15 (ends 2025-02-03)
+# RULE: Không modify trong sprint.
+#       Phát sinh → SPEC_addendum.md
+
+<span class="cm">## 2. Git commit với tag</span>
+git add SPEC.md
+git commit -m "spec(review): approve v1.0.0"
+git tag "spec/product-review/v1.0.0"
+
+<span class="cm">## 3. Slack message</span>
+# "✅ Spec [Product Review] v1.0.0 approved.
+#  AI implement dựa trên spec này.
+#  Mọi thay đổi → mở discussion trước."</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 37 — 5.5.5 Bước 4 — Generate ==== -->
+<div class="slide" data-section="5">
+<div class="si">
+  <h2>5.5.5 — Bước 4 · AI generate Code + Unit Tests</h2>
+  <p>Bước này là nơi AI thực sự tỏa sáng — nhưng chỉ khi spec ở các bước trước đã làm tốt. AI được yêu cầu <span class="hl">implement đồng thời code và unit test</span>. Hai thứ này phải được generate cùng nhau để đảm bảo test thực sự cover spec, không phải chỉ cover code.</p>
+  <div class="two-col">
+    <div class="card">
+      <h3>Prompt Code + Test generation</h3>
+      <div class="cb" style="font-size:.71rem">Implement feature theo SPEC.md đính kèm.
+Tech stack: Python 3.12, FastAPI, pytest.
+
+Yêu cầu output:
+
+1. IMPLEMENTATION FILE: src/reviews/service.py
+   - Implement đầy đủ theo tất cả SHALL
+   - Tuân thủ mọi SHALL NOT constraints
+   - Error handling theo Unwanted patterns
+   - Comment EARS tag cho mỗi business rule:
+     # EARS[Event]: WHEN user submits...
+
+2. TEST FILE: tests/reviews/test_service.py
+   - Ít nhất 1 test per Acceptance Criteria
+   - Test names: test_[criterion_description]
+   - Bao gồm: happy path, errors, boundaries
+   - pytest fixtures, không hardcode data
+
+3. TRACEABILITY MATRIX trong test file:
+   # TEST → SPEC MAPPING
+   # test_buyer_can_review → Section 3, bullet 1
+
+Nếu có yêu cầu nào không chắc cách implement,
+DỪNG LẠI và hỏi — đừng assume.
+
+--- SPEC BẮT ĐẦU ---
+[SPEC.md v1.0.0 APPROVED]
+--- SPEC KẾT THÚC ---</div>
+    </div>
+    <div class="card">
+      <h3>EARS Tags trong source code</h3>
+      <div class="cb" style="font-size:.71rem"><span class="cm"># src/reviews/service.py — với EARS tags</span>
+async def create_review(self, buyer_id,
+  order_id, product_id, rating, comment):
+
+  <span class="cm"># EARS[Ubiquitous]: Validate rating range</span>
+  if not 1 &lt;= rating &lt;= 5:
+    raise ValidationError("Rating must be 1–5")
+
+  <span class="cm"># EARS[Ubiquitous]: Validate comment length</span>
+  if not 10 &lt;= len(comment) &lt;= 500:
+    raise ValidationError("Comment 10–500 chars")
+
+  <span class="cm"># EARS[Unwanted]: WHERE buyer has not purchased</span>
+  order = await self.order_repo.get(order_id)
+  if order.status != OrderStatus.DELIVERED:
+    raise ForbiddenError("Order must be delivered")
+
+  <span class="cm"># EARS[Unwanted]: WHERE review already exists</span>
+  existing = await self.review_repo.find(order_id)
+  if existing:
+    raise ConflictError("Review already exists")
+
+  <span class="cm"># Happy path — tạo review</span>
+  return await self.review_repo.create(review)
+
+<span class="cm"># Traceability: search "EARS[" để tìm khi spec đổi</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 38 — 5.5.5 Review Checklist TABLE ==== -->
+<div class="slide" data-section="5">
+<div class="si">
+  <h2>5.5.5 — Kiểm tra chất lượng generate · Review Checklist</h2>
+  <p style="margin-bottom:.6rem">Trước khi approve code do AI generate, reviewer cần verify đầy đủ những điểm sau. Đây là trách nhiệm con người — không thể outsource cho AI tự review chính nó.</p>
+  <table class="mt">
+    <thead><tr><th>Kiểm tra</th><th>Cách verify</th><th>Fail nếu...</th></tr></thead>
+    <tbody>
+      <tr><td><span class="hl">Mọi SHALL được implement</span></td><td>So sánh spec với code line by line</td><td>Có SHALL không có code tương ứng</td></tr>
+      <tr><td><span class="hl">Mọi SHALL NOT được tuân thủ</span></td><td>Grep code cho forbidden patterns</td><td>Tìm thấy hành vi bị cấm</td></tr>
+      <tr><td><span class="hl">Mọi Acceptance Criteria có test</span></td><td>Map test names với AC list</td><td>Có AC không có test cover</td></tr>
+      <tr><td><span class="hl">Unwanted patterns được handle</span></td><td>Check error handling code</td><td>Exception bị swallow/ignore</td></tr>
+      <tr><td><span class="hl">Out of Scope được tôn trọng</span></td><td>Review nếu AI code thêm gì</td><td>Code nằm ngoài spec tồn tại</td></tr>
+      <tr><td><span class="hl">EARS tags present</span></td><td>Search for <code># EARS[</code></td><td>Nhiều business rule không có tag</td></tr>
+    </tbody>
+  </table>
+  <div class="ab gold" style="margin-top:.8rem"><strong>"Lập trình ở tầng ý định"</strong> Khi bạn viết SPEC.md, bạn không viết tài liệu — bạn đang "lập trình". Spec là chương trình. AI là compiler. Code là bytecode. Đây là sự dịch chuyển vai trò quan trọng nhất của AI era: Developer không còn là người "gõ code" — họ là người "thiết kế ý định".</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 39 — SECTION 5.6 HEADER ==== -->
+<div class="slide sh" data-section="5">
+  <div class="sh-bg">5.6</div>
+  <h1>Hands-on Capstone</h1>
+  <div class="sub">Shopping Cart · Từ Ý tưởng đến Production Code</div>
+</div>
+
+<!-- ==== SLIDE 40 — 5.6.1 Shopping Cart Phase 1-3 ==== -->
+<div class="slide" data-section="5">
+<div class="si">
+  <h2>5.6.1 — Capstone: "Shopping Cart" · Phases 1–3</h2>
+  <p style="margin-bottom:.6rem">Đây là bài tập tổng hợp kết thúc chương. Tính năng <span class="hl">Giỏ hàng cho e-commerce app</span> — tính năng phổ biến nhưng có đủ độ phức tạp để thực hành đầy đủ: nhiều actors, nhiều state, edge cases thú vị, và non-trivial business rules.</p>
+  <div class="ab warn" style="margin-bottom:.6rem"><strong>Context để bắt đầu</strong> User type: Guest (chưa đăng nhập) và Authenticated user · Cart items: product_id, variant_id (optional), quantity, unit_price · Inventory: có thể hết hàng bất cứ lúc nào · Price: có thể thay đổi sau khi đã add vào cart · Promotion: coupon code có thể apply vào cart · Guest cart: cần merge với user cart khi đăng nhập.</div>
+  <div class="two-col">
+    <div class="card">
+      <h3>Phase 1 — Bạn tự viết Spec sơ thảo (45 phút)</h3>
+      <p style="font-size:.85rem">Viết SPEC.md theo mẫu 8 thành phần. Trả lời 5 câu Story Decomposition trước khi viết.</p>
+      <p style="font-size:.82rem;color:#ffaa44"><strong>Gợi ý Unwanted patterns:</strong></p>
+      <ul class="bl tight">
+        <li>WHERE sản phẩm hết hàng sau khi đã add vào cart...</li>
+        <li>WHERE giá sản phẩm thay đổi sau khi đã add...</li>
+        <li>WHERE cùng 1 sản phẩm được add 2 lần...</li>
+        <li>WHERE quantity &gt; stock_available...</li>
+        <li>WHERE coupon code hết hạn hoặc đã dùng...</li>
+        <li>WHERE guest cart và user cart có cùng SP (merge conflict)...</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Phase 2 — AI Review (15 phút với Cline)</h3>
+      <p style="font-size:.85rem">Mở Cline trong VSCode. Paste spec sơ thảo và dùng prompt review mẫu từ Section 5.5.3. Ghi lại:</p>
+      <ol class="steps">
+        <li>AI tìm được bao nhiêu logic gaps?</li>
+        <li>AI tìm được bao nhiêu edge cases bạn bỏ qua?</li>
+        <li>Có contradiction nào không?</li>
+        <li>AI hỏi làm rõ điều gì?</li>
+      </ol>
+      <div class="ab info" style="margin-top:.5rem"><strong>Phase 3 — Update &amp; Lock (20 phút)</strong> Dựa trên review của AI, update spec và resolve mọi issue. Lock spec với version 1.0.0. Commit vào git với proper message.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ==== SLIDE 41 — 5.6.1 Phase 4-5 + Evaluation TABLE ==== -->
+<div class="slide" data-section="5">
+<div class="si">
+  <h2>5.6.1 — Phase 4–5: Generate Code &amp; Evaluation</h2>
+  <div class="card" style="margin-bottom:.7rem">
+    <h3>Phase 4 — Generate Code + Tests (với Cline)</h3>
+    <p style="font-size:.85rem">Dùng prompt từ Section 5.5.5 để yêu cầu Cline generate đầy đủ:</p>
+    <div class="dg g2" style="margin-top:.4rem">
+      <div class="dp"><div class="dl">File 1</div><div class="dv">src/cart/service.py</div><div class="ds">CartService với đầy đủ business logic + EARS tags</div></div>
+      <div class="dp"><div class="dl">File 2</div><div class="dv">src/cart/models.py</div><div class="ds">SQLAlchemy models cho Cart, CartItem</div></div>
+      <div class="dp"><div class="dl">File 3</div><div class="dv">src/cart/router.py</div><div class="ds">FastAPI endpoints: GET/POST/PUT/DELETE cart</div></div>
+      <div class="dp"><div class="dl">File 4</div><div class="dv">tests/cart/test_service.py</div><div class="ds">Unit tests với traceability matrix</div></div>
+    </div>
+  </div>
+  <h3 style="margin-bottom:.4rem">Phase 5 — Evaluation Rubric</h3>
+  <table class="mt">
+    <thead><tr><th>Tiêu chí</th><th>Điểm tối đa</th><th>Cách đánh giá</th></tr></thead>
+    <tbody>
+      <tr><td>Tất cả SHALL được implement</td><td><span class="hl">30đ</span></td><td>1đ/requirement, missing = -2đ</td></tr>
+      <tr><td>Unwanted patterns được handle</td><td><span class="hl">25đ</span></td><td>2đ/error case có handler đúng</td></tr>
+      <tr><td>Unit tests cover Acceptance Criteria</td><td><span class="hl">20đ</span></td><td>1đ/acceptance criterion có test</td></tr>
+      <tr><td>EARS tags trong code</td><td>10đ</td><td>5đ nếu ≥ 80% rules có tag</td></tr>
+      <tr><td>Out of Scope được tôn trọng</td><td>10đ</td><td>0đ nếu AI code ngoài scope</td></tr>
+      <tr><td>Code quality (readable, typed)</td><td>5đ</td><td>Subjective: type hints + naming</td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ==== SLIDE 42 — 5.6.2 Reflection + 5.6.3 Summary ==== -->
+<div class="slide" data-section="5">
+<div class="si">
+  <h2>5.6.2 Reflection &amp; 5.6.3 Tổng kết chương 5</h2>
+  <div class="two-col" style="margin-bottom:.7rem">
+    <div class="card">
+      <h3>5.6.2 — Reflection questions</h3>
+      <ol class="steps">
+        <li>Spec sơ thảo của bạn thiếu bao nhiêu edge cases trước khi AI review? "Blind spots" nói lên điều gì?</li>
+        <li>Chất lượng code AI generate khi có spec đầy đủ so với khi chỉ có mô tả ngắn khác nhau như thế nào?</li>
+        <li>Khi bạn viết Spec, bạn đang "lập trình ở tầng ý định" — vai trò developer thay đổi như thế nào?</li>
+        <li>Phần nào của quy trình SDD tốn nhiều thời gian nhất? Phần nào có thể tối ưu thêm?</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>5.6.3 — Tổng kết — Tools &amp; Concepts</h3>
+      <table class="mt" style="font-size:.78rem">
+        <thead><tr><th>Khái niệm</th><th>Điểm cốt lõi</th><th>Công cụ</th></tr></thead>
+        <tbody>
+          <tr><td>Spec = Interface</td><td>Tách "Cái gì" khỏi "Như thế nào"</td><td>SPEC.md template</td></tr>
+          <tr><td>8 Thành phần</td><td>Out of Scope quan trọng như In Scope</td><td>8-component checklist</td></tr>
+          <tr><td>EARS Notation</td><td>5 patterns loại bỏ mơ hồ</td><td>EARS Cheat Sheet</td></tr>
+          <tr><td>Levels of Depth</td><td>Calibrate theo Risk × Complexity</td><td>Risk Matrix</td></tr>
+          <tr><td>SDD Workflow</td><td>Draft → Review → Lock → Generate</td><td>SPEC.md lifecycle</td></tr>
+          <tr><td>Anti-patterns</td><td>5 "tử huyệt" khiến AI hallucinate</td><td>Pre-spec checklist</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="ab gold"><strong>Mindset shift quan trọng nhất</strong> Bạn không còn là người "gõ code" hay "chat với AI". Bạn là người <span class="hl">"thiết kế ý định"</span> — người sở hữu spec chính là người sở hữu sản phẩm. Kỹ năng viết Executable Spec là kỹ năng quan trọng nhất của developer trong thời đại AI. Chương 6 sẽ đào sâu hơn: Test-Driven Specification — BDD Given-When-Then, test suite trước code.</div>
+</div>
+</div>
+
+<!-- ==== SLIDE 43 — NEXT CHAPTER ==== -->
+<div class="slide" data-section="0">
+<div class="si ts">
+  <div class="badge">Tiếp theo</div>
+  <h1>Chương 6</h1>
+  <p style="margin-top:.8rem;color:#66ffaa;font-size:1rem;letter-spacing:.05em">Test-Driven Specification</p>
+  <div class="card" style="max-width:640px;margin:1rem auto 0;text-align:left">
+    <h3>Preview nội dung chương 6</h3>
+    <ul class="bl tight">
+      <li>Acceptance Criteria theo <span class="hl">Given-When-Then (BDD)</span></li>
+      <li>AI generate test suite <span class="hl">trước khi viết code</span></li>
+      <li>Cursor, Cline, Copilot làm "test automation partner"</li>
+      <li>Contract Testing cho microservices</li>
+      <li>Property-based Testing với AI</li>
+    </ul>
+  </div>
+  <div style="margin-top:1.2rem;color:rgba(0,255,85,.45);font-size:.78rem;letter-spacing:.1em">
+    PHÍM ← → để điều hướng · 1-5 để nhảy section · ↑↓ để scroll · ESC reset scroll
+  </div>
+</div>
+</div>
+
+<!-- ==== NAV ==== -->
+<div id="nav">
+  <button class="nb" onclick="prev()">← Prev</button>
+  <button class="nb" onclick="jmp(1)">§5.1</button>
+  <button class="nb" onclick="jmp(2)">§5.2</button>
+  <button class="nb" onclick="jmp(3)">§5.3</button>
+  <button class="nb" onclick="jmp(4)">§5.4</button>
+  <button class="nb" onclick="jmp(5)">§5.5</button>
+  <button class="nb" onclick="next()">Next →</button>
+</div>
+<div id="sc">1 / 43</div>
+
+<script>
+// ── Matrix rain ──────────────────────────────────────────────────────
+(function(){
+  const c=document.getElementById('rain');
+  const ctx=c.getContext('2d');
+  let W,H,cols,drops;
+  const chars='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホ0123456789ABCDEF'.split('');
+  function init(){
+    W=c.width=window.innerWidth;H=c.height=window.innerHeight;
+    cols=Math.floor(W/16);drops=Array(cols).fill(1);
+  }
+  function draw(){
+    ctx.fillStyle='rgba(1,21,0,0.05)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#00ff55';ctx.font='14px monospace';
+    drops.forEach((y,i)=>{
+      ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*16,y*16);
+      if(y*16>H&&Math.random()>0.975)drops[i]=0;
+      drops[i]++;
+    });
+  }
+  init();setInterval(draw,50);window.addEventListener('resize',init);
+})();
+
+// ── Slideshow ────────────────────────────────────────────────────────
+const slides=document.querySelectorAll('.slide');
+const pb=document.getElementById('pb');
+const sc=document.getElementById('sc');
+let cur=0;
+
+const secMap={};
+slides.forEach((s,i)=>{
+  const sec=parseInt(s.dataset.section||0);
+  if(sec>0&&!secMap[sec])secMap[sec]=i;
+});
+
+function show(n){
+  slides[cur].classList.remove('active');
+  cur=Math.max(0,Math.min(n,slides.length-1));
+  slides[cur].classList.add('active');
+  const si=slides[cur].querySelector('.si');
+  if(si)si.scrollTop=0;
+  pb.style.width=((cur/(slides.length-1))*100)+'%';
+  sc.textContent=(cur+1)+' / '+slides.length;
+}
+function next(){show(cur+1);}
+function prev(){show(cur-1);}
+function jmp(sec){if(secMap[sec]!==undefined)show(secMap[sec]);}
+
+document.addEventListener('keydown',function(e){
+  const si=slides[cur].querySelector('.si');
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();next();}
+  else if(e.key==='ArrowLeft'){e.preventDefault();prev();}
+  else if(e.key==='ArrowDown'&&si){e.preventDefault();si.scrollBy(0,130);}
+  else if(e.key==='ArrowUp'&&si){e.preventDefault();si.scrollBy(0,-130);}
+  else if(e.key==='Escape'&&si){e.preventDefault();si.scrollTop=0;}
+  else if(e.key>='1'&&e.key<='5'){e.preventDefault();jmp(parseInt(e.key));}
+});
+
+let tx=0;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx;
+  if(Math.abs(dx)>50){dx<0?next():prev();}
+},{passive:true});
+
+// ── Anti-copy protection ──────────────────────────────────────────────
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('selectstart',e=>e.preventDefault());
+document.addEventListener('dragstart',e=>e.preventDefault());
+document.addEventListener('copy',e=>e.preventDefault());
+document.addEventListener('keydown',function(e){
+  if(e.key==='F12'){e.preventDefault();return;}
+  if(e.ctrlKey||e.metaKey){
+    const k=e.key.toLowerCase();
+    if(e.shiftKey&&(k==='i'||k==='j'||k==='k')){e.preventDefault();return;}
+    if(['c','u','s','a','p','f'].includes(k)){e.preventDefault();return;}
+  }
+},true);
+</script>
+</body>
+</html>

@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chương 8 — Phân Tích Phê Bình về SDD | LinhNDM</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#011500;
+  --accent:#00ff55;
+  --text:#ffffff;
+  --text-sub:#ccffcc;
+  --text-muted:#7de87d;
+  --card-border:rgba(0,255,65,0.5);
+  --card-bg:rgba(0,255,65,0.09);
+  --table-header:rgba(0,255,65,0.18);
+  --hl:#00ff55;
+  --hl-r:#ff7070;
+  --hl-o:#ffc844;
+  --hl-b:#55ccff;
+}
+body{
+  background:var(--bg);
+  background:radial-gradient(ellipse at 50% 0%,#022800,#011500,#010f00);
+  color:var(--text);
+  font-family:'Josefin Sans',sans-serif;
+  overflow:hidden;height:100vh;width:100vw;
+  user-select:none;-webkit-user-select:none;
+}
+#matrix-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.09;}
+body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:1;}
+#progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#00ff55,#00cc44);z-index:100;transition:width 0.4s ease;box-shadow:0 0 8px #00ff55;}
+#counter{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);font-family:'Josefin Sans',sans-serif;font-size:13px;letter-spacing:2px;color:var(--text-muted);z-index:100;}
+#watermark{position:fixed;bottom:18px;right:28px;font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(0,255,85,0.35);letter-spacing:1px;z-index:100;}
+#nav{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:flex;gap:16px;z-index:100;}
+.nav-btn{background:var(--card-bg);border:1px solid var(--card-border);color:var(--accent);font-family:'Josefin Sans',sans-serif;font-size:13px;letter-spacing:2px;padding:8px 22px;cursor:pointer;transition:all 0.2s;}
+.nav-btn:hover{background:rgba(0,255,65,0.2);box-shadow:0 0 12px rgba(0,255,65,0.4);}
+#slides{position:relative;z-index:2;width:100vw;height:100vh;}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;justify-content:center;align-items:center;padding:60px 80px 80px;opacity:0;animation:fadeIn 0.5s ease forwards;overflow:hidden;}
+.slide.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.slide.scrollable{justify-content:flex-start;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--card-border) transparent;}
+.slide.scrollable::-webkit-scrollbar{width:4px;}
+.slide.scrollable::-webkit-scrollbar-thumb{background:var(--card-border);border-radius:2px;}
+/* TITLE */
+.slide-title-wrapper{text-align:center;max-width:900px;}
+.chapter-badge{display:inline-block;border:1px solid var(--accent);color:var(--accent);font-size:12px;letter-spacing:4px;padding:6px 18px;margin-bottom:32px;}
+h1.main-title{font-family:'Cormorant Garamond',serif;font-size:clamp(44px,6.5vw,80px);font-weight:700;color:var(--text);text-shadow:0 0 40px rgba(0,255,85,0.35),0 0 80px rgba(0,255,85,0.15);line-height:1.1;margin-bottom:20px;}
+.subtitle{font-family:'Josefin Sans',sans-serif;font-size:clamp(16px,1.7vw,22px);color:var(--text-sub);letter-spacing:1px;margin-bottom:40px;font-weight:300;}
+.title-footer{font-size:13px;color:var(--text-muted);letter-spacing:3px;text-transform:uppercase;}
+/* SECTION HEADER */
+.section-num{font-family:'Cormorant Garamond',serif;font-size:clamp(120px,18vw,200px);font-weight:700;color:rgba(0,255,85,0.05);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);line-height:1;pointer-events:none;}
+.section-header-content{text-align:center;position:relative;z-index:2;}
+h2.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,4.5vw,60px);color:var(--accent);text-shadow:0 0 30px rgba(0,255,85,0.4);margin-bottom:16px;font-weight:700;}
+.section-desc{font-size:clamp(16px,1.7vw,22px);color:var(--text-sub);max-width:700px;line-height:1.6;font-weight:300;}
+/* CONTENT */
+.slide-tag{font-size:11px;letter-spacing:4px;color:var(--text-muted);text-transform:uppercase;margin-bottom:14px;text-align:center;width:100%;}
+h2.content-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,3.4vw,48px);color:var(--accent);text-shadow:0 0 20px rgba(0,255,85,0.3);margin-bottom:28px;text-align:center;font-weight:700;}
+.content-body{width:100%;max-width:1100px;}
+p.body-text{font-size:clamp(16px,1.7vw,22px);color:var(--text-sub);line-height:1.7;margin-bottom:18px;}
+/* CARD */
+.card{border-left:3px solid var(--accent);background:var(--card-bg);padding:18px 24px;margin-bottom:16px;border-radius:0 4px 4px 0;}
+.card-title{font-size:13px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:12px;}
+/* TWO-COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;}
+@media(max-width:768px){.two-col{grid-template-columns:1fr;}}
+/* BULLET */
+ul.bullet-list{list-style:none;padding:0;}
+ul.bullet-list li{font-size:clamp(15px,1.6vw,20px);color:var(--text-sub);padding:5px 0 5px 24px;position:relative;line-height:1.5;}
+ul.bullet-list li::before{content:'▸';color:var(--accent);position:absolute;left:0;}
+/* BLOCKQUOTE */
+blockquote.matrix-quote{border-left:3px solid var(--accent);background:rgba(0,255,85,0.06);padding:16px 24px;margin:16px 0;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(17px,1.8vw,24px);color:var(--text-sub);}
+/* BIG QUOTE */
+.big-quote{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,3.2vw,44px);color:var(--accent);text-align:center;text-shadow:0 0 30px rgba(0,255,85,0.3);line-height:1.4;max-width:800px;font-style:italic;}
+/* TABLE */
+table.matrix-table{width:100%;border-collapse:collapse;font-size:clamp(13px,1.3vw,16px);margin:8px 0;}
+table.matrix-table th{background:var(--table-header);color:var(--accent);font-family:'Josefin Sans',sans-serif;letter-spacing:1.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border:1px solid rgba(0,255,65,0.25);font-size:12px;}
+table.matrix-table td{padding:9px 14px;border:1px solid rgba(0,255,65,0.15);color:var(--text-sub);vertical-align:top;line-height:1.5;}
+table.matrix-table tr:hover td{background:rgba(0,255,65,0.05);}
+/* ALERT */
+.alert-box{padding:14px 20px;border-radius:2px;margin:12px 0;font-size:clamp(15px,1.5vw,18px);line-height:1.6;}
+.alert-box.info{border-left:3px solid var(--hl-b);background:rgba(85,204,255,0.08);color:#a8e8ff;}
+.alert-box.warn{border-left:3px solid var(--hl-o);background:rgba(255,200,68,0.08);color:#ffe8a0;}
+.alert-box.danger{border-left:3px solid var(--hl-r);background:rgba(255,112,112,0.08);color:#ffb0b0;}
+.alert-box.tip{border-left:3px solid var(--accent);background:var(--card-bg);color:var(--text-sub);}
+.alert-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;font-weight:700;}
+/* DATA GRID */
+.data-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;width:100%;margin:12px 0;}
+.data-point{background:var(--card-bg);border:1px solid var(--card-border);padding:20px 16px;text-align:center;}
+.data-point .num{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,4vw,52px);color:var(--accent);text-shadow:0 0 20px rgba(0,255,85,0.4);font-weight:700;display:block;}
+.data-point .label{font-size:12px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-top:6px;}
+/* TOC */
+.toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:900px;}
+.toc-item{background:var(--card-bg);border:1px solid var(--card-border);padding:16px 20px;cursor:pointer;transition:all 0.2s;}
+.toc-item:hover{background:rgba(0,255,65,0.15);border-color:var(--accent);}
+.toc-num{font-size:11px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:6px;}
+.toc-name{font-family:'Cormorant Garamond',serif;font-size:clamp(16px,1.8vw,22px);color:var(--text);}
+.toc-sub{font-size:12px;color:var(--text-muted);margin-top:4px;}
+/* CODE */
+pre.code-block{background:rgba(0,0,0,0.6);border:1px solid rgba(0,255,65,0.2);border-left:3px solid var(--accent);padding:16px 20px;font-family:'Courier New',monospace;font-size:clamp(11px,1.1vw,14px);color:#a8ffb0;line-height:1.6;overflow-x:auto;margin:10px 0;border-radius:0 4px 4px 0;white-space:pre-wrap;word-break:break-word;}
+.code-label{font-size:10px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;}
+/* HIGHLIGHTS */
+.hl{color:var(--hl);font-weight:600;}
+.hl-r{color:var(--hl-r);}
+.hl-o{color:var(--hl-o);}
+.hl-b{color:var(--hl-b);}
+/* DIVIDER */
+.divider{width:60px;height:2px;background:linear-gradient(90deg,var(--accent),transparent);margin:16px auto;}
+/* NEXT CHAPTER */
+.next-chapter-box{border:1px solid rgba(0,255,65,0.3);background:rgba(0,255,65,0.05);padding:18px 28px;margin-top:24px;text-align:center;}
+.next-chapter-box .label{font-size:11px;letter-spacing:3px;color:var(--text-muted);margin-bottom:6px;}
+.next-chapter-box .title{font-family:'Cormorant Garamond',serif;font-size:clamp(18px,2vw,26px);color:var(--accent);}
+/* VERDICT BOX */
+.verdict-box{border:1px solid var(--accent);background:rgba(0,255,85,0.07);padding:20px 28px;margin-top:20px;text-align:center;}
+.verdict-box p{font-family:'Cormorant Garamond',serif;font-size:clamp(18px,2vw,26px);color:var(--accent);font-style:italic;line-height:1.5;}
+</style>
+</head>
+<body>
+<canvas id="matrix-canvas"></canvas>
+<div id="progress"></div>
+<div id="slides">
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 0 — TITLE -->
+<div class="slide active" id="s0">
+  <div class="slide-title-wrapper">
+    <div class="chapter-badge">PLAYBOOK SDD + ADD &nbsp;·&nbsp; CHƯƠNG 8</div>
+    <h1 class="main-title">Phân Tích Phê Bình<br>về SDD</h1>
+    <p class="subtitle">Ưu, Nhược và Ranh Giới — The Human in the Loop</p>
+    <div class="divider"></div>
+    <p class="title-footer">© 2025 &nbsp;·&nbsp; LinhNDM &nbsp;·&nbsp; Nguyễn Đình Mạnh Linh</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 1 — LỜI MỞ ĐẦU -->
+<div class="slide" id="s1">
+  <div class="slide-tag">Lời mở đầu</div>
+  <h2 class="content-title">Tại sao cần một chương phê bình?</h2>
+  <div class="content-body">
+    <p class="body-text">Bảy chương trước đã xây dựng SDD từ nền tảng triết lý đến công cụ thực chiến. Nhưng một cuốn sách trung thực không thể kết thúc ở đó. Mọi phương pháp, dù hiệu quả đến đâu, đều có giới hạn — và người dùng thông minh là người biết cả hai: <span class="hl">khi nào nên áp dụng</span> và <span class="hl">khi nào nên đặt xuống</span>.</p>
+    <p class="body-text">Chương này cố tình mang tông giọng khác. Không phải hướng dẫn, không phải tutorial — mà là <span class="hl">đối thoại</span>. Chúng ta sẽ nhìn SDD qua mắt những người phê bình nó, qua dữ liệu thực tế, và qua những câu hỏi khó nhất.</p>
+    <div class="alert-box info">
+      <div class="alert-label">Điểm nhìn trung lập</div>
+      Chương này không cố thuyết phục bạn SDD là câu trả lời cho mọi thứ. Nó cũng không cố thuyết phục bạn ngược lại.<br>
+      Mục tiêu: trang bị đủ góc nhìn để bạn tự đưa ra phán xét cho hoàn cảnh của mình.<br>
+      <span class="hl">"Công cụ tốt nhất là công cụ bạn hiểu đủ sâu để biết khi nào KHÔNG dùng nó."</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 2 — TOC -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Mục lục</div>
+  <h2 class="content-title">Nội dung Chương 8</h2>
+  <div class="toc-grid">
+    <div class="toc-item" onclick="goToSlide(3)">
+      <div class="toc-num">8.1</div>
+      <div class="toc-name">Điểm mạnh thực sự của SDD</div>
+      <div class="toc-sub">Reproducibility · Quality Gates · Knowledge · Speed</div>
+    </div>
+    <div class="toc-item" onclick="goToSlide(11)">
+      <div class="toc-num">8.2</div>
+      <div class="toc-name">Những chỉ trích hợp lý</div>
+      <div class="toc-sub">Waterfall · Context Blindness · Over-spec · Overhead</div>
+    </div>
+    <div class="toc-item" onclick="goToSlide(19)">
+      <div class="toc-num">8.3</div>
+      <div class="toc-name">Khi nào SDD KHÔNG phù hợp</div>
+      <div class="toc-sub">R&D · Ma trận Project Type × Team Size</div>
+    </div>
+    <div class="toc-item" onclick="goToSlide(23)">
+      <div class="toc-num">8.4</div>
+      <div class="toc-name">Góc nhìn đa chiều — Cộng đồng</div>
+      <div class="toc-sub">Thoughtworks · GitHub · Marmelab · Pragmatic SDD</div>
+    </div>
+    <div class="toc-item" onclick="goToSlide(28)" style="grid-column:span 2;">
+      <div class="toc-num">8.5</div>
+      <div class="toc-name">"The Cost of a Bad Spec"</div>
+      <div class="toc-sub">Anatomy · Case Study · GIGO · Defensive Writing · Fix vs Rewrite</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 3 — 8.1 SECTION HEADER -->
+<div class="slide" id="s3">
+  <div class="section-num">8.1</div>
+  <div class="section-header-content">
+    <div class="slide-tag">Section 8.1</div>
+    <h2 class="section-title">Điểm mạnh thực sự của SDD</h2>
+    <div class="divider"></div>
+    <p class="section-desc">Những lợi ích có thể đo lường được, có dữ liệu thực tế, và quan trọng hơn — có cơ chế giải thích rõ ràng tại sao chúng xảy ra</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 4 — 8.1.1 Reproducibility -->
+<div class="slide scrollable" id="s4">
+  <div class="slide-tag">8.1.1 — Reproducibility</div>
+  <h2 class="content-title">Kết quả nhất quán từ cùng một Spec</h2>
+  <div class="content-body">
+    <p class="body-text">Đây là lợi ích ít được nói đến nhất nhưng có <span class="hl">giá trị kỹ thuật cao nhất</span>. Khi có SPEC.md rõ ràng, hai developer khác nhau (hoặc hai AI sessions khác nhau) implement cùng feature sẽ tạo ra code có <span class="hl">behavior giống nhau</span> — ngay cả khi implementation details khác nhau.</p>
+    <div class="code-label">Reproducibility — Không có SDD vs Có SDD</div>
+    <pre class="code-block"># KHÔNG có SDD:
+# Dev A: "Validate email" → kiểm tra format + DNS lookup
+# Dev B: "Validate email" → chỉ kiểm tra có @ hay không
+# AI session 1: regex /^[^@]+@[^@]+\.[^@]+$/
+# AI session 2: dùng thư viện validator.js
+# → 4 cách implement, 4 behavior khác nhau, 4 test expectation khác nhau
+
+# CÓ SDD (SPEC.md §3):
+# "WHEN user submits email, THE system SHALL validate:
+#   1. Format: regex RFC 5322 compliant
+#   2. Domain: MX record lookup (async)
+#   3. Disposition: not in blacklist (sync)
+#   Response time: < 500ms total"
+# → Mọi implementation đều phải thỏa 3 điều kiện này
+# → Testable, verifiable, reproducible</pre>
+    <div class="alert-box tip">
+      <div class="alert-label">Key Insight</div>
+      Spec là <span class="hl">"bản hợp đồng"</span> đảm bảo behavior — không phải implementation style. Điều này đặc biệt quan trọng khi AI models thay đổi hoặc khi cần onboard người mới.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 5 — 8.1.2 Quality Gates TABLE -->
+<div class="slide scrollable" id="s5">
+  <div class="slide-tag">8.1.2 — Quality Gates</div>
+  <h2 class="content-title">Lỗi bị chặn ở tầng Spec, không phải tầng Code</h2>
+  <div class="content-body">
+    <p class="body-text">IBM Systems Sciences Institute: chi phí sửa lỗi <span class="hl-r">tăng exponentially</span> theo giai đoạn phát hiện. SDD đẩy quality check về giai đoạn sớm nhất — <span class="hl">giảm cost of bug fix tối đa 1000×</span>.</p>
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Giai đoạn phát hiện</th><th>Relative cost</th><th>SDD giảm tần suất?</th><th>Cơ chế</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="hl">Requirements / Spec</span></td><td class="hl">1×</td><td class="hl">✅ Tăng (AI Review)</td><td>Clarification Trigger tìm gaps</td></tr>
+        <tr><td>Design / Architecture</td><td class="hl-b">3–6×</td><td class="hl">✅ Tăng (PLAN.md review)</td><td>AI hỏi Questions for Human</td></tr>
+        <tr><td>Coding</td><td class="hl-o">10×</td><td class="hl-o">⚠ Giảm một phần</td><td>EARS tags buộc align với spec</td></tr>
+        <tr><td>Testing</td><td class="hl-o">15–40×</td><td class="hl">✅ Giảm đáng kể</td><td>Acceptance Criteria → test cases</td></tr>
+        <tr><td>Production</td><td class="hl-r">40–1,000×</td><td class="hl">✅ Giảm nhiều</td><td>Constitution gates + Validation</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 6 — McKinsey Data -->
+<div class="slide" id="s6">
+  <div class="slide-tag">8.1.2 — Dữ liệu thực tế</div>
+  <h2 class="content-title">McKinsey 2025 — Bằng chứng từ Industry</h2>
+  <div class="content-body">
+    <div class="data-grid">
+      <div class="data-point">
+        <span class="num">20–45%</span>
+        <span class="label">Giảm defect density</span>
+      </div>
+      <div class="data-point">
+        <span class="num">75–85%</span>
+        <span class="label">Sprint delivery rate (vs 40–60%)</span>
+      </div>
+      <div class="data-point">
+        <span class="num">30–40%</span>
+        <span class="label">Giảm AI code cần rework (GitHub)</span>
+      </div>
+    </div>
+    <blockquote class="matrix-quote" style="margin-top:20px;">
+      "Teams using structured specification approaches before AI code generation reported 20–45% reduction in defect density compared to prompt-only workflows. The primary mechanism: errors caught at spec review stage, not testing stage."
+      <div style="margin-top:8px;font-size:14px;color:var(--text-muted);font-style:normal;">— McKinsey, "The State of AI in Software Development", 2025</div>
+    </blockquote>
+    <div class="alert-box warn" style="margin-top:14px;">
+      <div class="alert-label">Lưu ý quan trọng</div>
+      Con số 20–45% có range rộng vì <span class="hl-o">phụ thuộc nhiều vào quality của spec</span>. Bad spec không chỉ không giúp ích — nó có thể tệ hơn không có spec.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 7 — 8.1.3 Team Alignment -->
+<div class="slide scrollable" id="s7">
+  <div class="slide-tag">8.1.3 — Team Alignment</div>
+  <h2 class="content-title">Ngôn ngữ chung cho cả team</h2>
+  <div class="content-body">
+    <p class="body-text">SPEC.md tạo ra một <span class="hl">source of truth duy nhất</span> mà mọi người — từ PM đến dev đến AI — đều làm việc từ đó. Khi có tranh luận về behavior, câu trả lời không phải <span class="hl-r">"tôi nghĩ là..."</span> mà là <span class="hl">"spec nói gì?"</span>. Đây là sự dịch chuyển quan trọng từ opinion-driven sang evidence-driven development.</p>
+    <div class="code-label">Team Alignment — Sprint Planning có và không có SDD</div>
+    <pre class="code-block"># KHÔNG có SDD — Sprint planning meeting:
+# PM:  "Feature này đơn giản thôi, 2 ngày là xong"
+# Dev: [nghĩ về 10 edge cases chưa được nói đến] "Hmm..."
+# QA:  [chưa biết test cái gì] "OK"
+# → Mỗi người có mental model khác nhau. Conflict khi demo.
+
+# CÓ SDD — Sprint planning với SPEC.md v1.0.0 đã approved:
+# PM:  "Feature này có 8 EARS requirements và 7 acceptance criteria"
+# Dev: "Task breakdown đã có, T004 cần clarify thêm Q2"
+# QA:  "Tôi sẽ test theo acceptance criteria, đặc biệt 3 Unwanted patterns"
+# → Cùng mental model. Ít surprise. Ít rework.
+
+# Measurable: team velocity variance
+# Không có SDD: sprint delivery rate varies 40–60% of commitments
+# Có SDD:       sprint delivery rate improves to 75–85% (GitHub, 2024)</pre>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 8 — 8.1.4 Knowledge Persistence TABLE -->
+<div class="slide scrollable" id="s8">
+  <div class="slide-tag">8.1.4 — Knowledge Persistence</div>
+  <h2 class="content-title">Tri thức không rời đi cùng con người</h2>
+  <div class="content-body">
+    <div class="alert-box info" style="margin-bottom:16px;">
+      <div class="alert-label">Business Value</div>
+      Theo LinkedIn 2024: average tenure trong tech là <span class="hl">2.1 năm</span>. Dự án trung bình kéo dài 3–5 năm. Trung bình mỗi dự án thay đổi <span class="hl">100% team</span>. SDD đảm bảo knowledge tồn tại độc lập với con người — đây là competitive advantage không nhìn thấy được nhưng rất thực.
+    </div>
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Kịch bản</th><th>Không có SDD</th><th>Có SDD</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="hl-r">Dev senior nghỉ việc</span></td><td>Team mất 3–6 tháng để "rediscover" business logic</td><td class="hl">SPEC.md chứa reasoning + edge cases. Onboard trong 1 tuần</td></tr>
+        <tr><td>Onboard junior mới</td><td>Học bằng cách "hỏi senior" và "đọc code"</td><td class="hl">Đọc SPEC.md hierarchy, hiểu context trong 2 ngày</td></tr>
+        <tr><td>Bug report từ production</td><td>"Tại sao code này làm vậy?" — không ai nhớ</td><td class="hl">Trace EARS tag → spec section → business decision</td></tr>
+        <tr><td>Compliance audit</td><td>"Hệ thống xử lý PII như thế nào?" — phải đọc code</td><td class="hl">data-governance.md → đọc spec → trả lời trong giờ</td></tr>
+        <tr><td>AI model thay đổi</td><td>Mỗi session mới AI lại "đoán" context</td><td class="hl">SPEC.md + CONTEXT.md = AI luôn có đủ context</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 9 — 8.1.5 Time-to-Market -->
+<div class="slide scrollable" id="s9">
+  <div class="slide-tag">8.1.5 — Time-to-Market</div>
+  <h2 class="content-title">Song song hóa nhờ Spec</h2>
+  <div class="content-body">
+    <p class="body-text">Một trong những lợi ích ít hiển nhiên nhất của SDD là khả năng <span class="hl">parallel implementation</span> — chạy nhiều việc cùng lúc khi spec đã được chốt.</p>
+    <div class="code-label">Parallel development với locked SPEC.md</div>
+    <pre class="code-block"># TRADITIONAL (sequential):
+# Week 1: Dev A viết CartService
+# Week 2: Dev B viết CartRouter (chờ A xong)
+# Week 3: Dev C viết CartTests (chờ B xong)
+# Week 4: Integration + fixes
+# Total: 4 weeks
+
+# SDD (parallel — spec locked TRƯỚC khi ai bắt đầu code):
+# Week 1 (parallel):
+#   Dev A: CartService     (theo SPEC.md §3, PLAN.md components)
+#   Dev B: CartRouter      (theo API contract trong PLAN.md)
+#   Dev C: CartTests       (theo Acceptance Criteria trong SPEC.md §7)
+#   AI:    DB migrations   (theo Data section SPEC.md §5)
+#
+# Integration ít friction vì:
+# - Dev A và B đồng thuận về interface qua PLAN.md
+# - Dev C viết tests từ spec, không từ implementation
+# Total: 1.5 weeks (vs 4 weeks) cho cùng feature
+
+# ⚠ Điều kiện: spec phải THỰC SỰ locked trước khi ai bắt đầu code.
+# Nếu spec còn thay đổi → parallel becomes chaos.</pre>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 10 — 8.1 Summary Data Points -->
+<div class="slide" id="s10">
+  <div class="slide-tag">8.1 — Tổng kết điểm mạnh</div>
+  <h2 class="content-title">5 Lợi ích Thực chất của SDD</h2>
+  <div class="content-body">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Reproducibility</div>
+        <p style="font-size:clamp(14px,1.4vw,17px);color:var(--text-sub);line-height:1.6;">Spec là "bản hợp đồng" behavior — mọi implementation phải thỏa mãn cùng requirements. Không phụ thuộc vào người làm hay AI model nào.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Quality Gates sớm hơn</div>
+        <p style="font-size:clamp(14px,1.4vw,17px);color:var(--text-sub);line-height:1.6;">Lỗi bị chặn ở tầng spec (cost 1×) thay vì production (cost 1,000×). McKinsey: 20–45% giảm defect density.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Team Alignment</div>
+        <p style="font-size:clamp(14px,1.4vw,17px);color:var(--text-sub);line-height:1.6;">Single source of truth. Từ opinion-driven sang evidence-driven. Sprint delivery: 40–60% → 75–85%.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Knowledge Persistence</div>
+        <p style="font-size:clamp(14px,1.4vw,17px);color:var(--text-sub);line-height:1.6;">Tri thức không rời đi khi nhân sự thay đổi. Onboard từ tháng xuống tuần. Business logic có thể audit.</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:0;">
+      <div class="card-title">Time-to-Market</div>
+      <p style="font-size:clamp(14px,1.4vw,17px);color:var(--text-sub);line-height:1.6;">Parallel implementation khi spec locked. Feature 4 tuần sequential → 1.5 tuần parallel. Spec đủ rõ = mọi thành phần được build độc lập.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 11 — 8.2 SECTION HEADER -->
+<div class="slide" id="s11">
+  <div class="section-num">8.2</div>
+  <div class="section-header-content">
+    <div class="slide-tag">Section 8.2</div>
+    <h2 class="section-title">Những chỉ trích hợp lý</h2>
+    <div class="divider"></div>
+    <p class="section-desc">Nhìn thẳng vào điểm yếu — những chỉ trích đến từ người đã dùng SDD, thấy vấn đề, và phản biện có cơ sở</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 12 — 8.2.1 Waterfall Quote -->
+<div class="slide" id="s12">
+  <div class="slide-tag">8.2.1 — Chỉ trích 1</div>
+  <h2 class="content-title">"SDD là Waterfall trá hình"</h2>
+  <div class="content-body">
+    <p class="body-text">Nguồn: <span class="hl">Marmelab blog</span> "Spec-Driven Development — The New Waterfall?" (2024). Lập luận: SDD yêu cầu viết spec đầy đủ trước khi code, giống hệt Waterfall. Chỉ khác là agent thực hiện thay vì developer.</p>
+    <blockquote class="matrix-quote">
+      "SDD replicates the fundamental assumption of Waterfall: that you can know what you need before you build it. History has shown this to be false for most software. Requirements change. Users surprise you. The market shifts. <span class="hl-o">Locking specs before coding is optimism masquerading as rigor.</span>"
+      <div style="margin-top:8px;font-size:14px;color:var(--text-muted);font-style:normal;">— Marmelab, 2024</div>
+    </blockquote>
+    <div class="alert-box warn" style="margin-top:16px;">
+      <div class="alert-label">Phân tích</div>
+      Marmelab <span class="hl-o">đúng một phần</span>: mô tả đúng SDD khi bị áp dụng sai — chốt spec toàn bộ dự án trước khi code. Đó thực sự là Waterfall với tên mới. Nhưng đây là cách dùng <span class="hl-r">SAI SDD</span>, không phải cách SDD được thiết kế.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 13 — 8.2.1 Waterfall vs SDD TABLE -->
+<div class="slide scrollable" id="s13">
+  <div class="slide-tag">8.2.1 — Phân tích so sánh</div>
+  <h2 class="content-title">Waterfall vs "SDD Sai" vs "SDD Đúng"</h2>
+  <div class="content-body">
+    <table class="matrix-table">
+      <thead>
+        <tr><th></th><th>Waterfall</th><th class="hl-r">"SDD sai cách"</th><th class="hl">"SDD đúng cách" (Spec-per-Feature)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Spec scope</td><td>Toàn bộ dự án trước khi code</td><td class="hl-r">Module toàn bộ trước khi code</td><td class="hl">Chỉ feature đang build trong sprint này</td></tr>
+        <tr><td>Spec timing</td><td>6 tháng đầu dự án</td><td class="hl-r">Trước khi team bắt đầu sprint</td><td class="hl">Ngày 1 của sprint, chỉ feature này</td></tr>
+        <tr><td>Spec immutability</td><td>Locked vĩnh viễn</td><td class="hl-r">Locked trong project</td><td class="hl">Locked trong sprint (2 tuần)</td></tr>
+        <tr><td>Respond to change</td><td>Khó — change request process</td><td class="hl-r">Khó — renegotiate spec</td><td class="hl">Dễ — spec thay đổi theo sprint</td></tr>
+        <tr><td>Agile compatibility</td><td class="hl-r">❌ Không tương thích</td><td class="hl-o">⚠ Căng thẳng</td><td class="hl">✅ Tương thích hoàn toàn</td></tr>
+      </tbody>
+    </table>
+    <div class="alert-box tip" style="margin-top:14px;">
+      <div class="alert-label">Phản biện — "Spec-per-Feature là Agile trên Steroid"</div>
+      Khi áp dụng đúng nguyên lý Spec-per-Feature, SDD không mâu thuẫn với Agile — nó <span class="hl">tăng cường Agile</span>. Không có "frozen requirements" — chỉ có "frozen spec cho sprint này". Spec thay đổi theo sprint, không theo dự án.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 14 — 8.2.1 SDD + Agile Code -->
+<div class="slide scrollable" id="s14">
+  <div class="slide-tag">8.2.1 — SDD + Agile thực tế</div>
+  <h2 class="content-title">Spec-per-Feature trong Sprint</h2>
+  <div class="content-body">
+    <div class="code-label">Agile + SDD: Spec-per-Feature trong thực tế</div>
+    <pre class="code-block"># SPRINT PLANNING (Thứ 2):
+# Backlog item: "As a user, I want to save multiple addresses"
+# → Pha 0: Context Discovery                  (2h)
+# → Pha 1: Write SPEC.md draft → AI review → Lock spec (2h + 30min + 30min)
+# → Pha 2–3: PLAN.md + TASKS.md              (1h via AI)
+# → Total spec overhead: ~6h = 1 working day
+
+# SPRINT EXECUTION (Thứ 3 → Thứ 6):
+# 4 ngày implement từ locked spec + tasks
+# Không có ambiguity. Không có "what did you mean by X?"
+
+# SPRINT REVIEW (Thứ 6):
+# Demo dựa trên acceptance criteria từ spec
+# "Test case 3: cart merge đúng không?" → Demo → Verify
+
+# ĐIỀU CHỈNH CHO SPRINT TIẾP THEO:
+# Business thay đổi requirement → Spec MỚI cho sprint tới
+# Không có "frozen requirements" — chỉ có "frozen spec cho sprint này"
+
+# → Đây KHÔNG phải Waterfall. Đây là Agile với higher quality gate.</pre>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 15 — 8.2.2 Context Blindness -->
+<div class="slide scrollable" id="s15">
+  <div class="slide-tag">8.2.2 — Chỉ trích 2</div>
+  <h2 class="content-title">Context Blindness — Mù ngữ cảnh</h2>
+  <div class="content-body">
+    <p class="body-text">Đây là chỉ trích kỹ thuật <span class="hl-r">quan trọng nhất và ít có phản biện dễ dàng</span>. AI chỉ biết những gì được viết trong spec. Nếu spec thiếu ràng buộc ngầm định — thường là những thứ mọi developer trong team "đương nhiên biết" — AI sẽ tạo ra code <span class="hl">đúng theo spec nhưng sai theo thực tế</span>.</p>
+    <div class="alert-box danger">
+      <div class="alert-label">Ví dụ thực tế — Context Blindness</div>
+      Spec nói: "cache product data với TTL 5 phút".<br>
+      AI implement Redis cache hoàn hảo theo spec.<br>
+      Vấn đề: <span class="hl-r">Legacy system dùng custom event bus không broadcast cache invalidation</span> — spec không đề cập vì team "đương nhiên biết".<br>
+      Kết quả: Stale data bug xuất hiện sau 5 phút mỗi product update.
+    </div>
+    <p class="body-text">Có những loại context mà con người biết một cách hiển nhiên nhưng rất khó verbalize:</p>
+    <ul class="bullet-list">
+      <li><span class="hl-o">Tacit knowledge:</span> "Hệ thống này khi load cao thì X thường xảy ra"</li>
+      <li><span class="hl-o">Historical context:</span> "Module Y bị vá lỗi như vậy vì incident năm ngoái"</li>
+      <li><span class="hl-o">Environmental quirks:</span> "Redis cluster này có latency spike vào 2–4am"</li>
+      <li><span class="hl-o">Implicit performance model:</span> "Query này đủ fast với 10k rows nhưng fail với 1M"</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 16 — 8.2.2 Context Blindness TABLE -->
+<div class="slide scrollable" id="s16">
+  <div class="slide-tag">8.2.2 — Giảm thiểu Context Blindness</div>
+  <h2 class="content-title">Quản lý, không giải quyết hoàn toàn</h2>
+  <div class="content-body">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Loại context bị thiếu</th><th>Giảm thiểu SDD</th><th>Không giải quyết được</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Explicit constraints thiếu</td><td class="hl">CONTEXT.md section, Clarification-First</td><td class="hl-r">Constraints bạn không biết là mình không biết</td></tr>
+        <tr><td>Legacy system quirks</td><td class="hl">Document trong constitution.md</td><td class="hl-r">Undocumented behaviors chưa được khám phá</td></tr>
+        <tr><td>Performance context</td><td class="hl">Non-functional requirements với numbers</td><td class="hl-r">Real-world load patterns khó spec trước</td></tr>
+        <tr><td>Org knowledge</td><td class="hl">Context Document + stakeholder input</td><td class="hl-r">Political context, unstated priorities</td></tr>
+      </tbody>
+    </table>
+    <div class="alert-box info" style="margin-top:14px;">
+      <div class="alert-label">Kết luận trung thực</div>
+      SDD làm giảm context blindness đáng kể nhưng <span class="hl-o">không loại bỏ hoàn toàn</span>. Đây là lý do <span class="hl">Human-in-the-Loop không phải là tính năng optional</span> của SDD — đó là thành phần bắt buộc. AI generate code, nhưng con người với full context phải review mọi output.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 17 — 8.2.3 Over-specification -->
+<div class="slide" id="s17">
+  <div class="slide-tag">8.2.3 — Chỉ trích 3</div>
+  <h2 class="content-title">Over-specification — Analysis Paralysis</h2>
+  <div class="content-body">
+    <p class="body-text">Chỉ trích này đến từ những engineer có kinh nghiệm với <span class="hl-r">"analysis paralysis"</span>: team dành nhiều thời gian viết spec hơn là implement. Khi mọi người mới học SDD, xu hướng tự nhiên là "viết càng chi tiết càng tốt" — điều này <span class="hl-r">phản tác dụng</span>.</p>
+    <div class="alert-box warn">
+      <div class="alert-label">Dấu hiệu Over-specification</div>
+      <ul class="bullet-list" style="margin-top:8px;color:var(--hl-o);">
+        <li>SPEC.md <span class="hl-r">&gt; 500 dòng</span> cho một feature sprint-size</li>
+        <li>Spec describe <span class="hl-r">implementation details</span> thay vì behavior ("dùng Redis hash" thay vì "cache product")</li>
+        <li>Team mất <span class="hl-r">&gt; 30% sprint time</span> để viết và review spec</li>
+        <li>AI generate code hoàn toàn đúng spec nhưng code <span class="hl-r">không thể maintain được</span></li>
+      </ul>
+    </div>
+    <div class="alert-box tip" style="margin-top:12px;">
+      <div class="alert-label">Giải pháp</div>
+      Risk Matrix từ Chương 5 (Sketch / Detailed / Formal) là câu trả lời. Không phải mọi thứ cần cùng level of detail. <span class="hl">Spec behavior, không phải implementation.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 18 — 8.2.4 Overhead TABLE -->
+<div class="slide scrollable" id="s18">
+  <div class="slide-tag">8.2.4 — Chỉ trích 4</div>
+  <h2 class="content-title">Overhead không tương xứng cho dự án nhỏ</h2>
+  <div class="content-body">
+    <p class="body-text">Một developer làm một website cá nhân trong cuối tuần không cần 8-component SPEC.md với EARS notation. <span class="hl">Overhead của full SDD chỉ justify được khi scale đủ lớn.</span></p>
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Project type</th><th>Full SDD overhead</th><th>Benefit</th><th>Kết luận</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1-person, &lt; 1 tuần</td><td>6h/feature cho spec</td><td>~2h code faster</td><td class="hl-r">ROI âm — đừng dùng</td></tr>
+        <tr><td>2-3 người, 1 tháng</td><td>6h/feature cho spec</td><td>~10h saved in rework</td><td class="hl-o">ROI dương, tùy loại feature</td></tr>
+        <tr><td>5+ người, 6+ tháng</td><td>6h/feature cho spec</td><td>~40h saved per feature</td><td class="hl">ROI rõ ràng, nên dùng</td></tr>
+        <tr><td>Enterprise, 2+ years</td><td>6h/feature cho spec</td><td>Hundreds of hours saved</td><td class="hl">Không dùng là sai sót lớn</td></tr>
+      </tbody>
+    </table>
+    <div class="alert-box info" style="margin-top:14px;">
+      <div class="alert-label">Kết luận</div>
+      Chỉ trích về overhead là <span class="hl">đúng trong context phù hợp</span>. SDD không được thiết kế cho mọi loại dự án — phần 8.3 sẽ đi sâu hơn về khi nào KHÔNG dùng SDD.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 19 — 8.3 SECTION HEADER -->
+<div class="slide" id="s19">
+  <div class="section-num">8.3</div>
+  <div class="section-header-content">
+    <div class="slide-tag">Section 8.3</div>
+    <h2 class="section-title">Khi nào SDD KHÔNG phù hợp</h2>
+    <div class="divider"></div>
+    <p class="section-desc">Biết khi nào dừng lại quan trọng không kém biết khi nào bắt đầu</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 20 — 8.3.1 R&D / Exploration -->
+<div class="slide scrollable" id="s20">
+  <div class="slide-tag">8.3.1 — R&D / Exploration Tasks</div>
+  <h2 class="content-title">Khi bạn không biết mình muốn gì</h2>
+  <div class="content-body">
+    <p class="body-text">SDD giả định bạn có thể define <span class="hl">"Cái gì"</span> trước khi AI implement <span class="hl">"Như thế nào"</span>. Nhưng có những loại công việc mà "cái gì" chính là điều bạn đang cố tìm ra. Yêu cầu viết Spec trước là <span class="hl-r">yêu cầu biết đáp án trước khi đặt câu hỏi.</span></p>
+    <div class="alert-box warn">
+      <div class="alert-label">Khi Spec triệt tiêu sáng tạo</div>
+      <ul class="bullet-list" style="margin-top:8px;color:var(--hl-o);">
+        <li><span class="hl">"The fastest spec is no spec"</span> — đúng trong context exploration</li>
+        <li>Khi prototype UX, mỗi lần dùng thử có thể đảo ngược toàn bộ assumption</li>
+        <li>Nếu có SPEC.md, thay đổi trở thành <span class="hl-r">"spec violation"</span> thay vì <span class="hl">"learning"</span></li>
+        <li>Trong R&D, sai là thông tin quý giá. Locked spec biến sai thành nợ.</li>
+      </ul>
+    </div>
+    <p class="body-text" style="margin-top:14px;">Nhận biết khi nào là Exploration:</p>
+    <ul class="bullet-list">
+      <li>Không có precedent — bạn không biết user sẽ tương tác thế nào</li>
+      <li>Hypothesis-driven — mục tiêu là validate giả định, không phải implement requirement</li>
+      <li>Time-boxed throwaway — kết quả là learning, không phải production code</li>
+      <li>Metric còn chưa defined — bạn chưa biết "thành công" trông như thế nào</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 21 — 8.3.1 EXPERIMENT.md -->
+<div class="slide scrollable" id="s21">
+  <div class="slide-tag">8.3.1 — Giải pháp thay thế</div>
+  <h2 class="content-title">EXPERIMENT.md — Thay thế SPEC.md cho R&D</h2>
+  <div class="content-body">
+    <div class="code-label">EXPERIMENT.md — Template nhẹ cho exploration</div>
+    <pre class="code-block">## Hypothesis
+Chúng tôi tin rằng [hành vi X] sẽ dẫn đến [outcome Y].
+
+## What we are testing
+[Mô tả rõ cái gì được test trong 1-2 câu]
+
+## Success metric
+[Cách đo: "user completes flow in < 30 seconds without assistance"]
+
+## Time box
+[2 days max — nếu quá thì stop, không phải extend]
+
+## NOT a spec
+Đây không phải spec. Code từ experiment này sẽ được THROW AWAY.
+Nếu hypothesis validate → viết SPEC.md thực sự.
+Nếu hypothesis fail → document learning, move on.
+
+# Cách dùng với AI:
+# "Build a quick prototype to test this hypothesis.
+#  Code không cần clean. Không cần tests.
+#  Focus vào making the interaction visible."
+# → AI biết đây là throwaway, không over-engineer</pre>
+    <div class="alert-box tip" style="margin-top:12px;">
+      <div class="alert-label">Key Distinction</div>
+      EXPERIMENT.md không phải là spec nhẹ hơn — đây là <span class="hl">document với mục đích khác hoàn toàn</span>. Spec mô tả requirements. Experiment mô tả hypothesis. Spec tạo ra production code. Experiment tạo ra learning.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 22 — 8.3.2 Ma trận TABLE -->
+<div class="slide scrollable" id="s22">
+  <div class="slide-tag">8.3.2 — Ma trận Project Type × Team Size</div>
+  <h2 class="content-title">Hướng dẫn thực tế — Khi nào dùng SDD</h2>
+  <div class="content-body">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Loại dự án</th><th>SDD Score</th><th>SDD Level</th><th>Ghi chú</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="hl">Hệ thống Tài chính / ERP / Banking</span></td><td class="hl">10/10 ★★★★★</td><td>Formal (Mức 3)</td><td>Cần chính xác tuyệt đối. Mọi edge case phải spec.</td></tr>
+        <tr><td><span class="hl">Refactor Legacy Code</span></td><td class="hl">9/10 ★★★★½</td><td>Detailed</td><td>Spec đảm bảo không mất behavior cũ khi refactor.</td></tr>
+        <tr><td><span class="hl">API / Backend Service (production)</span></td><td class="hl">9/10 ★★★★½</td><td>Detailed</td><td>Nhiều consumer phụ thuộc → contract stability.</td></tr>
+        <tr><td>SaaS Product (B2B)</td><td class="hl-b">8/10 ★★★★</td><td>Detailed/Formal</td><td>Customer SLA, compliance, reliability.</td></tr>
+        <tr><td>Mobile App (complex)</td><td class="hl-b">7/10 ★★★½</td><td>Detailed</td><td>UX may evolve, nhưng business logic cần spec.</td></tr>
+        <tr><td>Internal Tools / Admin panels</td><td class="hl-o">5/10 ★★½</td><td>Sketch/Detailed</td><td>Balance: cần đủ spec nhưng tránh over-engineer.</td></tr>
+        <tr><td>Game Prototyping</td><td class="hl-o">4/10 ★★</td><td>Sketch chỉ</td><td>Game feel requires iteration. Spec sẽ gây cản trở.</td></tr>
+        <tr><td>Landing Page / Marketing site</td><td class="hl-r">2/10 ★</td><td>Prompt trực tiếp</td><td>Over-engineering. Prompt + iterate nhanh hơn.</td></tr>
+        <tr><td>Personal project &lt; 1 tuần</td><td class="hl-r">1/10 ★</td><td>Không cần</td><td>You are spec. Overhead &gt; benefit.</td></tr>
+        <tr><td><span class="hl-r">Hackathon (&lt; 48h)</span></td><td class="hl-r">0/10 ✗</td><td>Skip hoàn toàn</td><td>Time is the constraint. Ship anything that works.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 23 — 8.3.2 Quick Decision -->
+<div class="slide" id="s23">
+  <div class="slide-tag">8.3.2 — Nguyên tắc quyết định nhanh</div>
+  <h2 class="content-title">3 Câu hỏi trước khi bắt đầu</h2>
+  <div class="content-body">
+    <p class="body-text">Nếu không chắc chắn, hãy đặt 3 câu hỏi này:</p>
+    <div class="card">
+      <div class="card-title">Câu hỏi 1</div>
+      <p style="font-size:clamp(16px,1.7vw,22px);color:var(--text-sub);line-height:1.6;">Nếu AI implement sai, tôi có <span class="hl">phát hiện ra ngay</span> không?<br><span class="hl-r">Không phát hiện ngay = cần spec</span></p>
+    </div>
+    <div class="card">
+      <div class="card-title">Câu hỏi 2</div>
+      <p style="font-size:clamp(16px,1.7vw,22px);color:var(--text-sub);line-height:1.6;">Có người khác (dev, QA, AI session khác) cần <span class="hl">hiểu cùng context</span> này không?<br><span class="hl-r">Có = cần spec</span></p>
+    </div>
+    <div class="card">
+      <div class="card-title">Câu hỏi 3</div>
+      <p style="font-size:clamp(16px,1.7vw,22px);color:var(--text-sub);line-height:1.6;">Feature này sẽ được <span class="hl">maintain hơn 3 tháng</span> không?<br><span class="hl-r">Có = cần spec</span></p>
+    </div>
+    <div class="alert-box tip" style="margin-top:12px;">
+      <div class="alert-label">Quy tắc</div>
+      Trả lời <span class="hl-r">"không"</span> cho cả 3 câu → bỏ qua SDD, dùng prompt trực tiếp.<br>
+      Trả lời <span class="hl">"có"</span> cho ≥ 2 câu → dùng ít nhất Sketch level.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 24 — 8.4 SECTION HEADER -->
+<div class="slide" id="s24">
+  <div class="section-num">8.4</div>
+  <div class="section-header-content">
+    <div class="slide-tag">Section 8.4</div>
+    <h2 class="section-title">Góc nhìn đa chiều</h2>
+    <div class="divider"></div>
+    <p class="section-desc">SDD trong mắt cộng đồng — Thoughtworks, GitHub, Marmelab, Indie Developers, và Pragmatic SDD</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 25 — 8.4.1 Thoughtworks + GitHub -->
+<div class="slide scrollable" id="s25">
+  <div class="slide-tag">8.4.1 — Bốn góc nhìn tiêu biểu (1/2)</div>
+  <h2 class="content-title">Thoughtworks & GitHub Research</h2>
+  <div class="content-body">
+    <div class="card">
+      <div class="card-title">Thoughtworks Technology Radar 2025 — "Ủng hộ có điều kiện"</div>
+      <p style="font-size:clamp(14px,1.5vw,18px);color:var(--text-sub);line-height:1.6;margin-bottom:10px;">Đặt Specification-Driven approaches vào category <span class="hl">"Adopt"</span> nhưng với caveats rõ ràng. SDD có giá trị cao nhất khi AI được dùng như một "pair programmer" review spec trước khi implement.</p>
+      <blockquote class="matrix-quote" style="margin:0;">"The spec is a living document, not a contract. Teams that treat it as immutable are setting themselves up for the same problems as waterfall. Teams that use it as a <span class="hl">communication tool and quality gate</span> are seeing real benefits."</blockquote>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:6px;font-style:italic;">Bài học: Spec là công cụ giao tiếp. Khi nó trở thành bureaucracy, nó mất đi giá trị.</p>
+    </div>
+    <div class="card" style="margin-top:0;">
+      <div class="card-title">GitHub (Microsoft Research) — "Spec Kit như first-class citizen"</div>
+      <blockquote class="matrix-quote" style="margin:0;">"We see Spec Kit as the missing layer between user stories and code. Teams that adopt it see <span class="hl">30–40% reduction in AI-generated code that needs significant rework.</span>" — GitHub Engineering Blog, 2024</blockquote>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:6px;font-style:italic;">Bài học: Spec là code artifact, không phải documentation. Treat it accordingly.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 26 — 8.4.1 Marmelab + Indie -->
+<div class="slide scrollable" id="s26">
+  <div class="slide-tag">8.4.1 — Bốn góc nhìn tiêu biểu (2/2)</div>
+  <h2 class="content-title">Marmelab & Indie Developer Community</h2>
+  <div class="content-body">
+    <div class="card">
+      <div class="card-title">Marmelab — "Phản biện chính thống"</div>
+      <blockquote class="matrix-quote" style="margin:0 0 8px 0;">"SDD works beautifully for teams building financial systems or regulated software. <span class="hl-o">For a startup trying to find product-market fit, it's the wrong tool at the wrong time.</span>"</blockquote>
+      <p style="font-size:clamp(14px,1.4vw,17px);color:var(--text-sub);line-height:1.5;">Lập luận core: complexity của SDD không scale down — designed cho enterprise nhưng được marketing cho mọi người. Nhiều indie dev và startup áp dụng sai context, gặp overhead mà không có benefit tương ứng.</p>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:6px;font-style:italic;">Bài học: Sự phê bình của Marmelab thực ra là về việc áp dụng sai context, không phải về SDD bản thân nó.</p>
+    </div>
+    <div class="card" style="margin-top:0;">
+      <div class="card-title">Indie Developer Community — "Pha trộn thực dụng"</div>
+      <blockquote class="matrix-quote" style="margin:0 0 8px 0;">"I don't do full SDD but I always write the <span class="hl">EARS requirements</span> before giving anything to Claude. That one habit alone cut my rework by half." — dev.to, Hacker News (paraphrased)</blockquote>
+      <p style="font-size:12px;color:var(--text-muted);font-style:italic;">Bài học: SDD không phải all-or-nothing. <span class="hl">Các thành phần riêng lẻ có giá trị độc lập.</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 27 — 8.4.2 Pragmatic SDD -->
+<div class="slide scrollable" id="s27">
+  <div class="slide-tag">8.4.2 — Pragmatic SDD</div>
+  <h2 class="content-title">Cách tiếp cận thực dụng</h2>
+  <div class="content-body">
+    <div class="alert-box tip" style="margin-bottom:16px;">
+      <div class="alert-label">Pragmatic SDD — 3 Nguyên tắc</div>
+      <ul class="bullet-list" style="margin-top:8px;">
+        <li><span class="hl">Spec cho những gì quan trọng.</span> Không phải mọi thứ cần spec bằng nhau. Module rủi ro cao → Detailed/Formal. CRUD boilerplate → Sketch hoặc prompt trực tiếp.</li>
+        <li><span class="hl">EARS bất kể level.</span> Dù Sketch hay Formal, dùng EARS cho requirements. Đây là component ROI cao nhất của SDD. Standalone. Không cần toàn bộ framework.</li>
+        <li><span class="hl">Clarification trước mọi thứ phức tạp.</span> Trước khi AI implement bất cứ điều gì có &gt;5 business rules hoặc &gt;3 edge cases, chạy Clarification Trigger.</li>
+      </ul>
+    </div>
+    <div class="code-label">Pragmatic SDD Decision Tree</div>
+    <pre class="code-block">┌─ Đây là task gì? ──────────────────────────────────────────┐
+│                                                             │
+│  Hackathon / Prototype / "Tôi chưa biết mình muốn gì"      │
+│  → SKIP SPEC. Prompt trực tiếp. Iterate.                    │
+│                                                             │
+│  Landing page / Marketing copy / UI chỉnh sửa màu sắc      │
+│  → SKIP SPEC. Prompt + in-context instruction.              │
+│                                                             │
+│  Utility function đơn giản (< 20 lines, 0-1 edge cases)    │
+│  → SKETCH: 5-10 dòng, không cần EARS.                       │
+│                                                             │
+│  Feature với 3–10 business rules, rủi ro vừa               │
+│  → DETAILED SPEC: 8 thành phần + EARS + Clarification       │
+│                                                             │
+│  Payment / Auth / Compliance / Legacy refactor              │
+│  → FORMAL SPEC: Detailed + State Diagram + Constitution     │
+└─────────────────────────────────────────────────────────────┘
+
+# Luôn làm bất kể level:
+# ✅ Chạy Clarification Trigger nếu > 5 business rules
+# ✅ Dùng EARS notation cho requirements
+# ✅ Viết Out of Scope rõ ràng</pre>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 28 — 8.5 SECTION HEADER -->
+<div class="slide" id="s28">
+  <div class="section-num">8.5</div>
+  <div class="section-header-content">
+    <div class="slide-tag">Section 8.5</div>
+    <h2 class="section-title">"The Cost of a Bad Spec"</h2>
+    <div class="divider"></div>
+    <p class="section-desc">Nguy hiểm nhất không phải là khi bạn KHÔNG có spec — mà là khi bạn CÓ spec sai nhưng không biết nó sai</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 29 — 8.5 Opening Warning -->
+<div class="slide" id="s29">
+  <div class="slide-tag">8.5 — Cảnh báo quan trọng nhất</div>
+  <h2 class="content-title">Spec sai nhưng nghe có vẻ đúng</h2>
+  <div class="content-body">
+    <p class="body-text">Đây là cảnh báo quan trọng nhất trong toàn bộ cuốn sách. Và nó đối lập hoàn toàn với những gì bạn có thể expect:</p>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title" style="color:var(--hl-b);">Developer không có Spec</div>
+        <ul class="bullet-list">
+          <li>Code cẩn thận</li>
+          <li>Hỏi nhiều câu hỏi</li>
+          <li>Deliver dần từng phần</li>
+          <li>Tự nhận ra khi không chắc</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left-color:var(--hl-r);">
+        <div class="card-title" style="color:var(--hl-r);">AI với Bad Spec</div>
+        <ul class="bullet-list">
+          <li>Code <span class="hl-r">tự tin</span></li>
+          <li><span class="hl-r">Không hỏi</span> gì cả</li>
+          <li>Deliver 1,000 dòng code sai <span class="hl-r">một cách hoàn hảo</span></li>
+          <li>False confidence không có giới hạn</li>
+        </ul>
+      </div>
+    </div>
+    <div class="verdict-box">
+      <p>"Đây là thứ chúng ta cần sợ hơn là 'AI không có spec'."</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 30 — 8.5.1 Anatomy TABLE -->
+<div class="slide scrollable" id="s30">
+  <div class="slide-tag">8.5.1 — Anatomy của một Bad Spec</div>
+  <h2 class="content-title">5 Loại Bad Spec thường gặp</h2>
+  <div class="content-body">
+    <table class="matrix-table">
+      <thead>
+        <tr><th>Loại Bad Spec</th><th>Biểu hiện</th><th>AI behavior</th><th>Hậu quả</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="hl-r">Internally inconsistent</span></td>
+          <td>Section 3 nói "max 10 items" nhưng Section 7 test case "add 15 items"</td>
+          <td>Chọn một version, bỏ qua cái còn lại</td>
+          <td>Feature pass spec review nhưng fail production</td>
+        </tr>
+        <tr>
+          <td><span class="hl-r">Domain error</span></td>
+          <td>"Payment confirmed" → "ship order" (thiếu bước inventory check)</td>
+          <td>Implement đúng spec → code sai business</td>
+          <td>Oversell, lost orders, angry customers</td>
+        </tr>
+        <tr>
+          <td><span class="hl-o">Ambiguous threshold</span></td>
+          <td>"Validate email format" mà không define "format"</td>
+          <td>Pick một cách, thường là không đủ strict</td>
+          <td>Invalid emails pass, valid emails blocked</td>
+        </tr>
+        <tr>
+          <td><span class="hl-r">Missing invariant</span></td>
+          <td>Không mention rằng user_id không thể thay đổi sau create</td>
+          <td>Implement update endpoint allow all fields</td>
+          <td>Security vulnerability, data corruption</td>
+        </tr>
+        <tr>
+          <td><span class="hl-r">Wrong actor</span></td>
+          <td>Spec nói "user can approve" nhưng thực ra chỉ admin được approve</td>
+          <td>Implement với wrong role check</td>
+          <td>Privilege escalation bug</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 31 — 8.5.2 Bad Spec Case Study -->
+<div class="slide scrollable" id="s31">
+  <div class="slide-tag">8.5.2 — Case Study</div>
+  <h2 class="content-title">1,000 dòng code sai hoàn hảo — Loan Repayment</h2>
+  <div class="content-body">
+    <div class="code-label">THE BAD SPEC INCIDENT — Câu chuyện cảnh báo</div>
+    <pre class="code-block">## Bối cảnh
+# Fintech startup. Feature: Loan repayment processing.
+# PM viết spec 3 trang, nhìn đầy đủ, có EARS notation.
+# Spec approved. AI (Cline) implement. 1,200 dòng code.
+# Code review pass. Tests green. Deploy to staging.
+
+## The Bad Spec (excerpt):
+# SPEC §3: Functional
+# WHEN borrower makes payment, THE system SHALL:
+#   1. Deduct amount from outstanding_balance
+#   2. Update payment_status to "completed"
+#   3. Generate receipt
+#   4. Notify borrower via email
+# → Looks correct, right?
+
+## What was missing (không ai nghĩ đến):
+# Thiếu 1: Payment allocation logic
+#   Loan có principal + interest + fees. Khi borrower trả 500K:
+#   Trả fees trước? Hay principal? Hay pro-rata?
+#   Spec chỉ nói "deduct from outstanding_balance" (một số đơn giản)
+#   AI implement: deduct từ principal (vì đó là số lớn nhất)
+#   Business rule thực: fees first, then interest, then principal
+#   → Mọi payment trong staging đều allocated sai
+
+# Thiếu 2: Concurrent payment protection
+#   Spec không mention idempotency
+#   User double-click "Pay" → 2 payments submitted simultaneously
+#   → Race condition: both pass "check balance >= amount"
+
+# Thiếu 3: Partial payment behavior
+#   Nếu amount > outstanding_balance, xử lý thế nào?
+#   AI implement: allow overpayment (generate negative balance)
+#   Business rule: reject với message "amount exceeds outstanding"</pre>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 32 — 8.5.2 Hậu quả -->
+<div class="slide" id="s32">
+  <div class="slide-tag">8.5.2 — Hậu quả & Root Cause</div>
+  <h2 class="content-title">Phát hiện sau 3 ngày, Rewrite toàn bộ</h2>
+  <div class="content-body">
+    <div class="data-grid">
+      <div class="data-point">
+        <span class="num" style="color:var(--hl-r);">3</span>
+        <span class="label">Ngày phát hiện trong staging</span>
+      </div>
+      <div class="data-point">
+        <span class="num" style="color:var(--hl-r);">1,200</span>
+        <span class="label">Dòng code phải rewrite (không phải fix)</span>
+      </div>
+      <div class="data-point">
+        <span class="num" style="color:var(--hl-r);">2 weeks</span>
+        <span class="label">Delay cho launch</span>
+      </div>
+      <div class="data-point">
+        <span class="num" style="color:var(--hl-r);">$15K</span>
+        <span class="label">Cost estimate (dev time + delay)</span>
+      </div>
+    </div>
+    <div class="alert-box danger" style="margin-top:16px;">
+      <div class="alert-label">Root Cause</div>
+      Spec viết đúng syntax, đúng format, nhưng <span class="hl-r">sai domain</span>.<br>
+      AI không có domain knowledge để phát hiện thiếu sót.<br>
+      Human reviewer không catch vì <span class="hl-r">"spec nhìn có vẻ đủ"</span>.<br><br>
+      → Đây là lý do <span class="hl">Domain Expert Walk-through</span> là bắt buộc cho high-risk spec.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 33 — 8.5.3 GIGO -->
+<div class="slide scrollable" id="s33">
+  <div class="slide-tag">8.5.3 — Garbage In, Garbage Out</div>
+  <h2 class="content-title">Nguyên lý bất biến của SDD</h2>
+  <div class="content-body">
+    <div class="code-label">GIGO trong SDD context</div>
+    <pre class="code-block">f(spec) = code
+quality(code) ≤ quality(spec)
+
+# Cụ thể hơn:
+# Good Spec + Good AI  →  Good Code
+# Good Spec + Bad AI   →  Mediocre Code (still better than no spec)
+# Bad Spec  + Good AI  →  Bad Code (executed PERFECTLY — nguy hiểm nhất)
+# Bad Spec  + Bad AI   →  Very Bad Code
+# No Spec   + Good AI  →  Unpredictable Code
+
+# Kết luận ngược chiều:
+# Cải thiện AI model ít quan trọng hơn cải thiện Spec quality.
+# Nếu spec quality không thay đổi:
+#   dùng model tốt hơn 2× = code tốt hơn ~5%
+# Nếu spec quality tăng gấp đôi:
+#   dùng model cũ      = code tốt hơn ~80%
+
+# → Đầu tư vào KỸ NĂNG VIẾT SPEC là ROI cao hơn
+#   đầu tư vào AI model tốt hơn</pre>
+    <div class="alert-box tip" style="margin-top:12px;">
+      <div class="alert-label">Takeaway</div>
+      Thay vì hỏi <span class="hl">"AI nào tốt nhất?"</span>, hãy hỏi <span class="hl">"Spec của tôi có đủ tốt không?"</span>. Đó là đòn bẩy có ROI cao hơn nhiều.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 34 — 8.5.4 Defensive Writing Overview -->
+<div class="slide" id="s34">
+  <div class="slide-tag">8.5.4 — Defensive Spec Writing</div>
+  <h2 class="content-title">4 Kỹ thuật — Viết spec như không tin mình</h2>
+  <div class="content-body">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Kỹ thuật 1 — Devil's Advocate Review</div>
+        <p style="font-size:clamp(14px,1.4vw,17px);color:var(--text-sub);line-height:1.6;">Đọc spec với tư cách là người muốn implement <span class="hl-r">sai mà vẫn đúng spec</span>. Mỗi câu "THE system SHALL X", hỏi: "Nếu tôi implement theo nghĩa đen nhất có thể, điều gì xảy ra?"</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Kỹ thuật 2 — Domain Expert Walk-through</div>
+        <p style="font-size:clamp(14px,1.4vw,17px);color:var(--text-sub);line-height:1.6;">Đọc spec cho người có <span class="hl">domain expertise sâu</span> (không phải developer). Domain expert thường ngay lập tức nhận ra business rule bị thiếu mà developer không nhìn thấy.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Kỹ thuật 3 — Pre-mortem</div>
+        <p style="font-size:clamp(14px,1.4vw,17px);color:var(--text-sub);line-height:1.6;">Tưởng tượng ngày hôm nay là <span class="hl">3 tháng sau khi launch</span>. Feature đã gây ra incident production nghiêm trọng. Viết ít nhất 3 scenario "spec failure" trước khi lock spec.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Kỹ thuật 4 — AI Adversarial Review</div>
+        <p style="font-size:clamp(14px,1.4vw,17px);color:var(--text-sub);line-height:1.6;">Yêu cầu AI đóng vai <span class="hl-r">developer muốn tạo code sai nhất có thể mà vẫn technically correct</span>. Đây là "hardest test" cho spec của bạn.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 35 — 8.5.4 Devil's Advocate CODE -->
+<div class="slide scrollable" id="s35">
+  <div class="slide-tag">8.5.4 — Kỹ thuật 1: Devil's Advocate</div>
+  <h2 class="content-title">Ví dụ Devil's Advocate Review</h2>
+  <div class="content-body">
+    <div class="code-label">Phát hiện ambiguity bằng cách nghĩ như "devil's advocate"</div>
+    <pre class="code-block"># Spec: "THE system SHALL validate user age"
+# Devil's Advocate: validate thế nào? >= 18? Phải là integer?
+#   Input "200" có valid không?
+# Fix: "THE system SHALL validate age: integer, 18 ≤ age ≤ 120"
+
+# Spec: "THE system SHALL send confirmation email"
+# Devil's Advocate: gửi khi nào? Bất đồng bộ hay đồng bộ?
+#   Retry nếu fail? Nếu email không tồn tại thì sao?
+# Fix: "WHEN order confirmed, THE system SHALL asynchronously send
+#       email to user (retry: 3 attempts, 60s apart).
+#       Email delivery failure SHALL NOT block order confirmation."
+
+# Spec: "THE system SHALL display error message"
+# Devil's Advocate: message nào? Cho user hay cho developer?
+#   Tiếng Việt hay tiếng Anh? Có include error code không?
+# Fix: specify exact message, language, user-facing vs technical detail</pre>
+    <div class="alert-box tip" style="margin-top:12px;">
+      <div class="alert-label">Quy tắc vàng</div>
+      Nếu một câu trong spec có thể được implement theo <span class="hl-r">nhiều hơn 1 cách</span> mà tất cả đều "technically correct" — câu đó chưa đủ cụ thể. Viết lại.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 36 — 8.5.4 Adversarial Review Prompt -->
+<div class="slide scrollable" id="s36">
+  <div class="slide-tag">8.5.4 — Kỹ thuật 4: AI Adversarial Review</div>
+  <h2 class="content-title">Prompt: "Hardest Test" cho Spec</h2>
+  <div class="content-body">
+    <div class="code-label">Adversarial Spec Review Prompt</div>
+    <pre class="code-block">Tôi muốn bạn đóng vai một developer MUỐN làm đúng spec
+nhưng MUỐN tạo ra code sai nhất có thể mà vẫn technically correct.
+
+Đọc spec này và liệt kê:
+1. 5 cách implement "đúng spec" nhưng SAI business intent
+2. 3 edge cases mà spec không cover rõ ràng,
+   cho phép behavior tùy ý
+3. 2 invariants bị thiếu mà nếu missing
+   sẽ gây ra security issue
+
+Với mỗi item, chỉ ra line/section trong spec cần update.
+
+--- SPEC ---
+[Paste spec]
+--- END ---
+
+# Đây là "hardest test" cho spec của bạn.
+# Nếu AI tìm được NHIỀU → spec cần serious revision.
+# Nếu AI tìm được ÍT   → spec tương đối robust.
+# Chạy prompt này TRƯỚC KHI lock spec, không phải sau.</pre>
+    <div class="alert-box danger" style="margin-top:12px;">
+      <div class="alert-label">Warning</div>
+      Nếu bạn cảm thấy <span class="hl-r">không thoải mái</span> khi chạy Adversarial Review vì "AI sẽ tìm ra quá nhiều vấn đề" — đó chính xác là lý do bạn phải chạy nó, và chạy trước khi code bắt đầu.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 37 — 8.5.5 Fix vs Rewrite TABLE -->
+<div class="slide scrollable" id="s37">
+  <div class="slide-tag">8.5.5 — Fix hay Rewrite?</div>
+  <h2 class="content-title">Khi nào "Start Over" thay vì "Fix"</h2>
+  <div class="content-body">
+    <table class="matrix-table" style="margin-bottom:14px;">
+      <thead>
+        <tr><th>Tình huống</th><th>Fix hay Rewrite?</th><th>Lý do</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>&lt; 20% code cần thay đổi, bugs ở behavior detail</td><td class="hl">Fix code</td><td>Structural foundation còn good</td></tr>
+        <tr><td>Domain model sai (wrong entities, relationships)</td><td class="hl-r">Rewrite</td><td>Structural fix không khả thi</td></tr>
+        <tr><td>Security vulnerability trong architecture</td><td class="hl-r">Rewrite</td><td>Patch security trên foundation sai = whack-a-mole</td></tr>
+        <tr><td>&gt; 50% tests fail sau spec correction</td><td class="hl-r">Rewrite</td><td>Spec đã thay đổi đến mức code không còn relevant</td></tr>
+        <tr><td>Business logic incorrectly distributed</td><td class="hl-r">Rewrite</td><td>Refactoring distributed logic &gt; rewrite</td></tr>
+      </tbody>
+    </table>
+    <div class="alert-box warn">
+      <div class="alert-label">Rule of thumb — "The 40% Rule"</div>
+      Nếu fixing bad spec generated code yêu cầu thay đổi <span class="hl-r">&gt; 40% codebase</span>, rewrite từ corrected spec thường nhanh hơn và kết quả tốt hơn.<br>
+      Lý do: code được viết để implement bad spec thường có <span class="hl-r">assumptions sai ngầm trong toàn bộ structure</span> — không phải chỉ ở surface level.<br>
+      <span class="hl-o">"Fixing" thường chỉ di chuyển bugs từ nơi này sang nơi khác.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 38 — 8.5.6 TỔNG KẾT -->
+<div class="slide scrollable" id="s38">
+  <div class="slide-tag">8.5.6 — Tổng kết Chương 8</div>
+  <h2 class="content-title">Ánh sáng đầy đủ về SDD</h2>
+  <div class="content-body">
+    <table class="matrix-table" style="margin-bottom:18px;">
+      <thead>
+        <tr><th>Phần</th><th>Thông điệp cốt lõi</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="hl">8.1 — Điểm mạnh</span></td><td>Reproducibility, quality gates, knowledge persistence, parallel execution là lợi ích thực, đo được</td></tr>
+        <tr><td><span class="hl-o">8.2 — Chỉ trích</span></td><td>Waterfall chỉ đúng khi dùng sai. Context blindness là thực và không giải quyết hoàn toàn được</td></tr>
+        <tr><td><span class="hl-r">8.3 — Ranh giới</span></td><td>Exploration/R&D, hackathon, personal projects ngắn, landing pages: bỏ qua SDD</td></tr>
+        <tr><td><span class="hl-b">8.4 — Góc nhìn</span></td><td>Pragmatic SDD: EARS + Clarification cho mọi thứ phức tạp. Full SDD cho rủi ro cao</td></tr>
+        <tr><td><span class="hl-r">8.5 — Bad Spec</span></td><td>Bad spec + good AI = perfect execution of wrong thing. Invest in spec quality over AI model quality</td></tr>
+      </tbody>
+    </table>
+    <div class="verdict-box">
+      <p>"SDD không phải là câu trả lời cho câu hỏi 'làm sao tôi build phần mềm tốt hơn?'.<br>Nó là câu trả lời cho câu hỏi cụ thể hơn:<br>'làm sao tôi và AI cộng tác hiệu quả để build phần mềm phức tạp một cách đáng tin cậy?'"</p>
+    </div>
+    <div class="next-chapter-box" style="margin-top:16px;">
+      <div class="label">Kết thúc</div>
+      <div class="title">Playbook SDD + ADD — Chương 8 / 8</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slides -->
+
+<div id="counter">1 / 39</div>
+<div id="watermark">LinhNDM · Nguyễn Đình Mạnh Linh</div>
+<div id="nav">
+  <button class="nav-btn" onclick="prevSlide()">← PREV</button>
+  <button class="nav-btn" onclick="nextSlide()">NEXT →</button>
+</div>
+
+<script>
+// ANTI-COPY
+document.addEventListener('keydown', e => {
+  if(e.key==='F12' ||
+     (e.ctrlKey && e.shiftKey && ['I','J','K'].includes(e.key.toUpperCase())) ||
+     (e.ctrlKey && ['u','s','a','c','p','f'].includes(e.key.toLowerCase()))
+  ) e.preventDefault();
+});
+['contextmenu','selectstart','dragstart','copy'].forEach(ev =>
+  document.addEventListener(ev, e => e.preventDefault())
+);
+
+// MATRIX RAIN
+(function(){
+  const canvas = document.getElementById('matrix-canvas');
+  const ctx = canvas.getContext('2d');
+  function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+  resize();
+  window.addEventListener('resize',resize);
+  const chars='アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789ABCDEF';
+  const fontSize=14;
+  let cols=Math.floor(canvas.width/fontSize);
+  let drops=Array(cols).fill(1);
+  function draw(){
+    ctx.fillStyle='rgba(1,21,0,0.05)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#00ff41';
+    ctx.font=fontSize+'px monospace';
+    for(let i=0;i<drops.length;i++){
+      const c=chars[Math.floor(Math.random()*chars.length)];
+      ctx.fillText(c,i*fontSize,drops[i]*fontSize);
+      if(drops[i]*fontSize>canvas.height&&Math.random()>0.975) drops[i]=0;
+      drops[i]++;
+    }
+  }
+  setInterval(draw,50);
+  window.addEventListener('resize',()=>{resize();cols=Math.floor(canvas.width/fontSize);drops=Array(cols).fill(1);});
+})();
+
+// SLIDESHOW
+const TOTAL=39;
+let current=0;
+function showSlide(n){
+  document.querySelectorAll('.slide').forEach(s=>s.classList.remove('active'));
+  current=((n%TOTAL)+TOTAL)%TOTAL;
+  const el=document.getElementById('s'+current);
+  if(el){el.classList.add('active');el.scrollTop=0;}
+  document.getElementById('counter').textContent=(current+1)+' / '+TOTAL;
+  document.getElementById('progress').style.width=((current+1)/TOTAL*100)+'%';
+}
+function nextSlide(){showSlide(current+1);}
+function prevSlide(){showSlide(current-1);}
+function goToSlide(n){showSlide(n);}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ') nextSlide();
+  else if(e.key==='ArrowLeft') prevSlide();
+  else if(e.key>='1'&&e.key<='5'){
+    const m={'1':3,'2':11,'3':19,'4':24,'5':28};
+    if(m[e.key]) showSlide(m[e.key]);
+  }
+});
+
+let tx=0,ty=0;
+document.addEventListener('touchstart',e=>{tx=e.changedTouches[0].screenX;ty=e.changedTouches[0].screenY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].screenX-tx;
+  const dy=e.changedTouches[0].screenY-ty;
+  if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50){if(dx<0)nextSlide();else prevSlide();}
+},{passive:true});
+
+showSlide(0);
+</script>
+</body>
+</html>

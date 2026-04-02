@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chương 2 — Mô Hình Tư Duy Mới</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g: #00ff55;
+  --gm: #00e64a;
+  --gd: #00bb38;
+  --gdim: #008f2a;
+  --bg: #011500;
+  --card-bg: rgba(0,255,65,0.07);
+  --card-b: rgba(0,255,65,0.45);
+  --code-bg: rgba(0,0,0,0.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 0%,#022800 0%,#011500 60%,#010f00 100%);
+  color:#fff;
+  font-family:'Josefin Sans',sans-serif;
+  user-select:none;
+  -webkit-user-select:none;
+}
+canvas#rain{position:fixed;top:0;left:0;width:100%;height:100%;opacity:.03;pointer-events:none;z-index:0}
+#progress-bar{position:fixed;top:0;left:0;height:3px;background:var(--g);z-index:100;transition:width .4s ease;box-shadow:0 0 8px var(--g)}
+#slideshow{position:fixed;inset:0;z-index:1}
+
+/* SLIDES */
+.slide{
+  display:none;position:absolute;inset:0;
+  padding:clamp(10px,2vh,20px) clamp(20px,3vw,48px) clamp(40px,5vh,56px);
+  overflow-y:auto;overflow-x:hidden;
+  animation:fadeIn .45s ease;
+}
+.slide.active{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.slide.active .card,.slide.active .card-grid,.slide.active table,.slide.active .tbl-wrap,.slide.active .flow,.slide.active blockquote,.slide.active .code-block,.slide.active ul,.slide.active .warning-box,.slide.active .chk-item,.slide.active .num-grid,.slide.active .toc-grid,.slide.active p{text-align:left}
+.slide.active .card-grid,.slide.active .tbl-wrap,.slide.active .flow,.slide.active .num-grid,.slide.active .toc-grid{width:100%}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* TYPOGRAPHY */
+h1.hero{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(52px,7.5vw,96px);
+  font-weight:700;
+  color:var(--g);
+  text-shadow:0 0 30px rgba(0,255,85,.4);
+  line-height:1.1;
+  letter-spacing:.04em;
+  text-align:center;
+}
+h1.hero .sub{
+  display:block;
+  font-size:clamp(20px,2.6vw,36px);
+  font-weight:300;
+  color:rgba(255,255,255,.7);
+  letter-spacing:.12em;
+  margin-top:14px;
+  text-align:center;
+}
+h2.sec-label{
+  font-family:'Josefin Sans',sans-serif;
+  font-size:clamp(12px,1.1vw,15px);
+  letter-spacing:.3em;
+  text-transform:uppercase;
+  color:var(--gd);
+  margin-bottom:10px;
+  text-align:center;
+}
+h2.slide-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(32px,4.2vw,62px);
+  font-weight:600;
+  color:var(--g);
+  line-height:1.2;
+  margin-bottom:clamp(14px,2.5vh,28px);
+  text-align:center;
+}
+h2.section-hero{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(42px,6vw,80px);
+  font-weight:700;
+  color:var(--g);
+  text-shadow:0 0 24px rgba(0,255,85,.35);
+  text-align:center;
+}
+h3{
+  font-family:'Josefin Sans',sans-serif;
+  font-size:clamp(16px,1.8vw,23px);
+  font-weight:600;
+  color:var(--gm);
+  margin-bottom:8px;
+}
+p,li{font-size:clamp(17px,1.9vw,24px);line-height:1.7;color:rgba(255,255,255,.88)}
+ul{padding-left:1.3em}
+li{margin-bottom:6px}
+li::marker{color:var(--g)}
+strong{color:var(--g);font-weight:600}
+
+/* CARDS */
+.card{
+  background:var(--card-bg);
+  border:1px solid var(--card-b);
+  border-radius:6px;
+  padding:clamp(12px,2vh,20px) clamp(14px,2vw,24px);
+  margin-bottom:14px;
+}
+.card-grid{display:grid;gap:14px}
+.card-grid.cols2{grid-template-columns:1fr 1fr}
+.card-grid.cols3{grid-template-columns:1fr 1fr 1fr}
+
+/* QUOTE */
+blockquote{
+  border-left:3px solid var(--g);
+  padding:16px 22px;
+  background:rgba(0,255,85,.06);
+  border-radius:0 6px 6px 0;
+  font-style:italic;
+  font-size:clamp(16px,1.85vw,24px);
+  color:rgba(255,255,255,.9);
+  margin:14px 0;
+}
+.big-quote{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(24px,3vw,44px);
+  font-weight:600;
+  color:var(--g);
+  text-shadow:0 0 20px rgba(0,255,85,.3);
+  text-align:center;
+  line-height:1.3;
+  padding:20px 0;
+}
+
+/* TABLES */
+.tbl-wrap{overflow-x:auto;margin:14px 0}
+table{width:100%;border-collapse:collapse;font-size:clamp(13px,1.35vw,17px)}
+th{background:rgba(0,255,85,.12);color:var(--g);padding:8px 10px;border:1px solid rgba(0,255,85,.3);text-align:left;font-weight:600;letter-spacing:.05em}
+td{padding:7px 10px;border:1px solid rgba(0,255,85,.15);color:rgba(255,255,255,.85);vertical-align:top}
+tr:nth-child(even) td{background:rgba(0,255,85,.04)}
+
+/* CODE */
+.code-block{
+  background:var(--code-bg);
+  border:1px solid rgba(0,255,85,.2);
+  border-radius:6px;
+  padding:14px 18px;
+  font-family:'Courier New',monospace;
+  font-size:clamp(10px,1.05vw,13px);
+  color:#a8ffb0;
+  white-space:pre;
+  overflow-x:auto;
+  line-height:1.55;
+  margin:10px 0;
+}
+.code-block .cm{color:#4a7a4a}
+.code-block .kw{color:#00ff55}
+.code-block .bad{color:#ff6b6b}
+.code-block .good{color:#00ff99}
+
+/* BADGES */
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.badge-g{background:rgba(0,255,85,.15);border:1px solid var(--g);color:var(--g)}
+.badge-r{background:rgba(255,80,80,.1);border:1px solid #ff5050;color:#ff8080}
+.badge-y{background:rgba(255,200,0,.1);border:1px solid #ffc800;color:#ffc800}
+
+/* DIVIDER */
+.divider{width:60px;height:2px;background:var(--g);margin:14px 0;box-shadow:0 0 6px var(--g)}
+
+/* NUMBER CALLOUT */
+.num-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px}
+.num-item{text-align:center;padding:16px 12px;background:var(--card-bg);border:1px solid var(--card-b);border-radius:6px}
+.num-item .num{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,3.5vw,48px);font-weight:700;color:var(--g)}
+.num-item .lbl{font-size:clamp(11px,1.1vw,13px);color:rgba(255,255,255,.7);margin-top:4px}
+
+/* CHECKLIST */
+.chk-item{display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,255,85,.08)}
+.chk-item .chk{color:var(--g);font-size:16px;flex-shrink:0;margin-top:2px}
+.chk-item .chk-bad{color:#ff6b6b;font-size:16px;flex-shrink:0;margin-top:2px}
+
+/* SECTION HEADER STYLE */
+.sec-num{
+  font-family:'Josefin Sans',sans-serif;
+  font-size:clamp(11px,1.05vw,14px);
+  letter-spacing:.35em;
+  text-transform:uppercase;
+  color:var(--gdim);
+  margin-bottom:12px;
+  text-align:center;
+}
+.sec-desc{font-size:clamp(16px,1.7vw,21px);color:rgba(255,255,255,.65);margin-top:16px;max-width:760px;line-height:1.7;text-align:center;margin-left:auto;margin-right:auto}
+
+/* NAV */
+#nav{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:16px;
+  background:rgba(0,20,0,.85);
+  border:1px solid rgba(0,255,85,.2);
+  border-radius:30px;padding:8px 20px;z-index:50;
+  backdrop-filter:blur(8px);
+}
+#nav button{
+  background:none;border:none;color:var(--g);cursor:pointer;
+  font-size:18px;padding:4px 10px;border-radius:4px;transition:all .2s;
+}
+#nav button:hover{background:rgba(0,255,85,.15)}
+#slide-counter{font-size:13px;color:rgba(255,255,255,.5);min-width:60px;text-align:center;letter-spacing:.05em}
+
+/* TOC */
+.toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+.toc-item{
+  background:var(--card-bg);border:1px solid var(--card-b);border-radius:6px;
+  padding:16px 18px;cursor:pointer;transition:all .2s;
+}
+.toc-item:hover{background:rgba(0,255,85,.12);border-color:var(--g)}
+.toc-item .toc-num{font-size:11px;letter-spacing:.25em;color:var(--gdim);text-transform:uppercase;margin-bottom:4px}
+.toc-item .toc-title{font-size:clamp(13px,1.3vw,16px);font-weight:600;color:#fff}
+
+/* WARNING */
+.warning-box{
+  background:rgba(255,80,80,.08);
+  border:1px solid rgba(255,80,80,.4);
+  border-left:3px solid #ff5050;
+  border-radius:6px;
+  padding:14px 18px;margin:12px 0;
+}
+.warning-box p{color:rgba(255,200,200,.9)}
+
+/* FLOW STEPS */
+.flow{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;margin:14px 0}
+.flow-step{
+  flex:1;min-width:100px;
+  background:var(--card-bg);border:1px solid var(--card-b);border-radius:6px;
+  padding:12px 14px;text-align:center;
+  font-size:clamp(11px,1.1vw,13px);
+}
+.flow-arrow{display:flex;align-items:center;color:var(--gdim);font-size:18px;padding:0 2px}
+
+/* HIGHLIGHT */
+.hl{color:var(--g);font-weight:600}
+.hl-red{color:#ff8080}
+.hl-yellow{color:#ffd700}
+
+/* COLUMNS */
+.cols{display:grid;gap:20px}
+.cols2{grid-template-columns:1fr 1fr}
+.cols3{grid-template-columns:1fr 1fr 1fr}
+
+/* RESPONSIVE */
+@media(max-width:800px){
+  .toc-grid,.cols2,.cols3,.card-grid.cols2,.card-grid.cols3{grid-template-columns:1fr}
+  .flow{flex-direction:column}
+  .flow-arrow{transform:rotate(90deg)}
+}
+#author{position:fixed;bottom:10px;left:20px;z-index:200;font-family:'Josefin Sans',sans-serif;
+  font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(0,255,65,.35);
+  pointer-events:none;user-select:none}
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<div id="progress-bar"></div>
+<div id="author">LinhNDM &mdash; Nguyễn Đình Mạnh Linh</div>
+<div id="slideshow">
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 1: TITLE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide active" id="s1">
+  <div class="sec-num">SDD Bootcamp Playbook — Chương 2 / 78 trang</div>
+  <h1 class="hero">Mô Hình Tư Duy Mới<span class="sub">Developer Như Kiến Trúc Sư + Nhạc Trưởng</span></h1>
+  <div class="divider"></div>
+  <p style="max-width:680px;color:rgba(255,255,255,.65);font-size:clamp(14px,1.5vw,18px);margin-top:16px;line-height:1.7">
+    Khi AI viết code thay bạn, kỹ năng có giá trị không còn là <em>gõ code nhanh</em> — mà là <strong>thiết kế giải pháp, chỉ huy AI, và kiểm chứng kết quả</strong>.
+  </p>
+  <div class="num-grid" style="margin-top:32px;max-width:700px">
+    <div class="num-item"><div class="num">5</div><div class="lbl">Sections chính</div></div>
+    <div class="num-item"><div class="num">78</div><div class="lbl">Trang nội dung</div></div>
+    <div class="num-item"><div class="num">58</div><div class="lbl">Slides trình bày</div></div>
+    <div class="num-item"><div class="num">12+</div><div class="lbl">Bài tập thực hành</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 2: OVERVIEW -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <h2 class="sec-label">Tổng Quan</h2>
+  <h2 class="slide-title">Chương 2 Dạy Gì?</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Vấn đề cốt lõi</h3>
+      <p>AI có thể viết code, nhưng code AI tạo ra có thể <strong>trông đúng mà logic sai</strong>, thiếu security, không nhất quán giữa modules. Bạn cần tư duy mới để làm chủ AI — không phải để AI làm chủ bạn.</p>
+    </div>
+    <div class="card">
+      <h3>Bạn sẽ học được</h3>
+      <ul>
+        <li>Chuyển từ <strong>Code Writer → Outcome Engineer</strong></li>
+        <li>T-Shape model cho AI era</li>
+        <li>Context Engineering — quản lý AI như infrastructure</li>
+        <li>Debug & verify code AI tạo</li>
+        <li>Trách nhiệm đạo đức & bảo mật</li>
+      </ul>
+    </div>
+  </div>
+  <blockquote style="margin-top:20px">"AI không thay thế developer — nó thay thế developer <strong>không biết dùng AI</strong>. Và developer biết dùng AI mà không có nền tảng kỹ thuật thì như nhạc trưởng không biết đọc nhạc."</blockquote>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 3: MỤC LỤC -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <h2 class="sec-label">Mục Lục</h2>
+  <h2 class="slide-title">Nội Dung Chương 2</h2>
+  <div class="toc-grid">
+    <div class="toc-item">
+      <div class="toc-num">2.1</div>
+      <div class="toc-title">Từ Code Writer sang Outcome Engineer</div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">2.2</div>
+      <div class="toc-title">T-Shape Model cho AI-Augmented Developer</div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">2.3</div>
+      <div class="toc-title">Cognitive Load & Context Engineering</div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">2.4</div>
+      <div class="toc-title">Debugging & Verification — Kỹ Năng Sống Còn</div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">2.5</div>
+      <div class="toc-title">Ethical Considerations: Trách Nhiệm & Bảo Mật</div>
+    </div>
+    <div class="toc-item" style="border-color:rgba(0,255,85,.2)">
+      <div class="toc-num">Case Study</div>
+      <div class="toc-title">Code Writer vs. Outcome Engineer — Login Feature</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 4: 2.1 SECTION HEADER -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="sec-num">Section 2.1</div>
+  <h2 class="section-hero">Từ Code Writer<br>sang Outcome Engineer</h2>
+  <div class="divider"></div>
+  <p class="sec-desc">Khi AI viết code, giá trị của bạn không còn nằm ở khả năng gõ code nhanh. Giá trị của bạn nằm ở khả năng <strong>định nghĩa vấn đề, chỉ huy AI, và kiểm chứng kết quả</strong>. Đây là sự chuyển dịch từ <em>how</em> sang <em>why & what</em>.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 5: VÌ SAO THAY ĐỔI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s5">
+  <h2 class="sec-label">2.1.1 — Bối Cảnh</h2>
+  <h2 class="slide-title">Vì Sao Tư Duy Phải Thay Đổi?</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Thị trường đang thay đổi</h3>
+      <ul>
+        <li>GitHub Copilot: 1.8 triệu developers dùng hàng ngày</li>
+        <li>Stack Overflow: lần đầu tiên traffic <strong>giảm</strong> khi AI coding tools tăng</li>
+        <li>Khảo sát McKinsey: <strong>30-40%</strong> coding tasks có thể được AI thực hiện</li>
+        <li>Emerging: "AI-native" engineering teams không có junior coder</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Những gì không thể tự động hoá</h3>
+      <ul>
+        <li><strong>Hiểu business context</strong> — tại sao feature này quan trọng</li>
+        <li><strong>Quyết định trade-offs</strong> — performance vs maintainability</li>
+        <li><strong>Domain knowledge</strong> — quy tắc kế toán, y tế, pháp lý</li>
+        <li><strong>Chịu trách nhiệm</strong> — khi hệ thống lỗi, AI không bị sa thải</li>
+      </ul>
+    </div>
+  </div>
+  <blockquote style="margin-top:14px">Câu hỏi không còn là "AI có thể thay thế developer không?" mà là "Developer nào sẽ bị thay thế và developer nào sẽ trở nên không thể thiếu?"</blockquote>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 6: 3 KỸ NĂNG MỚI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s6">
+  <h2 class="sec-label">2.1.2 — 3 Kỹ Năng Mới</h2>
+  <h2 class="slide-title">Intent → Specification → Verification</h2>
+  <div class="card-grid cols3">
+    <div class="card">
+      <h3>① Intent Definition</h3>
+      <p style="margin-bottom:10px">Định nghĩa <strong>tại sao</strong> (Why) và <strong>cái gì</strong> (What) trước khi lo <em>như thế nào</em> (How).</p>
+      <p style="font-size:clamp(12px,1.1vw,14px);color:rgba(255,255,255,.6)">Framework: Why-What-How. Không thể viết spec tốt nếu không hiểu intent.</p>
+    </div>
+    <div class="card">
+      <h3>② Specification Writing</h3>
+      <p style="margin-bottom:10px">Viết spec đủ để AI implement đúng <strong>không cần hỏi thêm</strong>. Acceptance criteria testable, constraints rõ ràng, edge cases được nghĩ đến.</p>
+      <p style="font-size:clamp(12px,1.1vw,14px);color:rgba(255,255,255,.6)">Spec tốt = AI output tốt. Spec mơ hồ = AI hallucinate.</p>
+    </div>
+    <div class="card">
+      <h3>③ Outcome Verification</h3>
+      <p style="margin-bottom:10px">Kiểm chứng <strong>3 tầng</strong>: Tests pass → Logic đúng → Architecture phù hợp. Không chỉ chạy được mà phải đúng.</p>
+      <p style="font-size:clamp(12px,1.1vw,14px);color:rgba(255,255,255,.6)">Automation bias: đừng tin code AI chỉ vì nó chạy.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 7: WHY-WHAT-HOW -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s7">
+  <h2 class="sec-label">2.1.2 — Intent Definition</h2>
+  <h2 class="slide-title">Framework: Why — What — How</h2>
+  <div class="card-grid cols3">
+    <div class="card">
+      <h3 style="color:#ffd700">WHY — Mục đích</h3>
+      <ul>
+        <li>Business problem cần giải quyết</li>
+        <li>Ai sẽ dùng feature này?</li>
+        <li>Nếu không làm thì sao?</li>
+        <li>Measure of success là gì?</li>
+      </ul>
+      <div style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.5)">Ví dụ: "User quên mật khẩu → mất access → revenue loss"</div>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--g)">WHAT — Yêu cầu</h3>
+      <ul>
+        <li>Acceptance Criteria (AC) cụ thể, testable</li>
+        <li>Non-functional requirements</li>
+        <li>Constraints và giới hạn</li>
+        <li>Edge cases và error states</li>
+      </ul>
+      <div style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.5)">Ví dụ: "AC-1: Email reset link hết hạn sau 15 phút"</div>
+    </div>
+    <div class="card">
+      <h3 style="color:#a0c8ff">HOW — Hướng dẫn kỹ thuật</h3>
+      <ul>
+        <li>Tech stack và patterns bắt buộc</li>
+        <li>Files sẽ tạo/sửa</li>
+        <li>API contracts</li>
+        <li>Performance targets cụ thể</li>
+      </ul>
+      <div style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.5)">Ví dụ: "Dùng nodemailer, bcrypt token, Redis TTL"</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px;background:rgba(255,215,0,.05);border-color:rgba(255,215,0,.3)">
+    <p style="color:rgba(255,255,255,.8)">💡 <strong style="color:#ffd700">Quy tắc ngón tay cái:</strong> Nếu bạn không thể điền đầy đủ Why và What, bạn chưa sẵn sàng để code — dù tự code hay dùng AI.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 8: OUTCOME VERIFICATION -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s8">
+  <h2 class="sec-label">2.1.2 — Outcome Verification</h2>
+  <h2 class="slide-title">Kiểm Chứng 3 Tầng</h2>
+  <div class="flow" style="flex-direction:column;gap:12px">
+    <div class="card" style="border-left:3px solid #00ff99">
+      <h3 style="color:#00ff99">Tầng 1 — Tests Pass</h3>
+      <p>Unit tests, integration tests, E2E tests đều pass. Nhưng đây chỉ là điều kiện cần, <strong>không phải đủ</strong>. Tests có thể pass mà logic vẫn sai nếu tests kém chất lượng.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3>Tầng 2 — Logic Đúng</h3>
+      <p>Walk through code với realistic data. Hỏi: "Code này xử lý gì khi input là null? Khi có concurrent access? Khi timezone khác nhau?" Đây là tầng cần <strong>domain knowledge</strong> của bạn.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #a0c8ff">
+      <h3 style="color:#a0c8ff">Tầng 3 — Architecture Đúng</h3>
+      <p>Code có theo đúng patterns không? Service layer tách biệt? Error handling nhất quán? Không có N+1 queries? Không hardcode secrets? Đây là tầng cần <strong>technical depth</strong>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 9: BẢNG 2.2 — SO SÁNH -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s9">
+  <h2 class="sec-label">Bảng 2.2</h2>
+  <h2 class="slide-title">Code Writer vs. Outcome Engineer</h2>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Khía cạnh</th><th>Code Writer (Cũ)</th><th>Outcome Engineer (Mới)</th></tr>
+      <tr><td>Trọng tâm</td><td>Cú pháp & ngôn ngữ</td><td><strong>Logic & kiến trúc hệ thống</strong></td></tr>
+      <tr><td>Câu hỏi đầu tiên</td><td>"Viết code thế nào?"</td><td><strong>"Tại sao cần feature này?"</strong></td></tr>
+      <tr><td>Công cụ chính</td><td>IDE & Compiler</td><td><strong>AI Agents & Context Management</strong></td></tr>
+      <tr><td>Giá trị cốt lõi</td><td>Viết code nhanh, ít lỗi</td><td><strong>Thiết kế giải pháp & Kiểm chứng</strong></td></tr>
+      <tr><td>Xử lý lỗi</td><td>Debug thủ công từng dòng</td><td><strong>Verify logic & Chỉ dẫn AI fix</strong></td></tr>
+      <tr><td>Kỹ năng cao nhất</td><td>Thuộc API, nắm patterns</td><td><strong>Viết spec, đánh giá trade-offs</strong></td></tr>
+      <tr><td>Trách nhiệm</td><td>Code mình viết</td><td><strong>Mọi code (kể cả AI tạo)</strong></td></tr>
+      <tr><td>Đo lường</td><td>Lines of code / ngày</td><td><strong>Features shipped & quality</strong></td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 10: BÀI TẬP WHY-WHAT-HOW -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s10">
+  <h2 class="sec-label">2.1.3 — Bài Tập</h2>
+  <h2 class="slide-title">🛠 Thực Hành Why-What-How</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Đề bài</h3>
+      <p style="margin-bottom:10px">Chọn 1 trong 3 tình huống:</p>
+      <ul>
+        <li>Feature <strong>đặt lịch khám bệnh</strong> cho phòng khám 50 bác sĩ</li>
+        <li>Feature <strong>tìm kiếm sách</strong> cho thư viện 20.000 đầu sách tiếng Việt</li>
+        <li>Feature <strong>mượn/trả sách</strong> với phí phạt trễ hạn</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Yêu cầu</h3>
+      <p style="margin-bottom:8px">Trong <strong>15 phút</strong>, viết ra:</p>
+      <ul>
+        <li><span class="hl-yellow">Why:</span> Business context (3-5 câu)</li>
+        <li><span class="hl">What:</span> 5 Acceptance Criteria testable</li>
+        <li><span class="hl" style="color:#a0c8ff">How:</span> Tech stack + pattern + 2 constraints</li>
+        <li>2 edge cases không rõ ràng</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3>Tiêu chí đánh giá Spec tốt</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+      <div class="chk-item"><span class="chk">✓</span><span>AC có thể viết test tự động không?</span></div>
+      <div class="chk-item"><span class="chk">✓</span><span>Constraints có cụ thể (số, đơn vị) không?</span></div>
+      <div class="chk-item"><span class="chk">✓</span><span>Edge cases có realistic không?</span></div>
+      <div class="chk-item"><span class="chk">✓</span><span>Có "Out of Scope" để giới hạn không?</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 10B: 2.1.4 — 5 MỨC ĐỘ INTENT -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s10b">
+  <h2 class="sec-label">2.1.4 — Phân Tích Intent</h2>
+  <h2 class="slide-title">5 Mức Độ Chi Tiết Của Intent</h2>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Mức</th><th>Mô tả</th><th>Ví dụ prompt</th><th>Rủi ro</th></tr>
+      <tr><td><strong>M1: Rất mơ hồ</strong></td><td>Chỉ nói chức năng chung</td><td>"Làm login cho tôi"</td><td>AI đoán sai business rules</td></tr>
+      <tr><td><strong>M2: Có mục tiêu</strong></td><td>Biết người dùng và mục đích</td><td>"Login cho sinh viên truy cập dashboard"</td><td>Thiếu constraints kỹ thuật</td></tr>
+      <tr><td><strong>M3: Có AC</strong></td><td>Nêu acceptance criteria testable</td><td>"AC: lockout sau 10 lần sai"</td><td>Bỏ sót edge cases</td></tr>
+      <tr><td><strong>M4: Có constraints</strong></td><td>Thêm bảo mật, performance, kiến trúc</td><td>"JWT 15 phút, query parameterized, zod validate"</td><td>Dễ thiếu out-of-scope</td></tr>
+      <tr><td><strong>M5: Sẵn sàng triển khai</strong></td><td>Đủ Why-What-How + test + out-of-scope</td><td>"Spec đầy đủ để agent làm không hỏi lại"</td><td>Thấp nhất</td></tr>
+    </table>
+  </div>
+  <blockquote style="margin-top:12px">Từ M3 trở lên mới đủ ổn định để giao cho agent thực thi ở mức production-like.</blockquote>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 10C: 2.1.5 — FRAMEWORK KIỂM CHỨNG -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s10c">
+  <h2 class="sec-label">2.1.5 — 3-Layer Verification</h2>
+  <h2 class="slide-title">Framework Kiểm Chứng Kết Quả</h2>
+  <div class="card-grid cols3">
+    <div class="card">
+      <h3>Tầng 1: Functional</h3>
+      <ul>
+        <li>Unit + integration + E2E pass</li>
+        <li>Coverage đạt ngưỡng đội đặt ra</li>
+        <li>AC nào chưa test được phải ghi rõ</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Tầng 2: Logical</h3>
+      <ul>
+        <li>Walkthrough với dữ liệu thực tế</li>
+        <li>Kiểm tra edge cases bắt buộc</li>
+        <li>Trace data flow từ input đến DB</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Tầng 3: Architectural</h3>
+      <ul>
+        <li>Đúng pattern (controller-service-repo)</li>
+        <li>Không hardcode secret/config</li>
+        <li>Không tạo nợ kỹ thuật ngắn hạn</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px;background:rgba(0,255,85,.05);border-left:3px solid var(--g)">
+    <p><strong>Definition of Done mới:</strong> Không phải "chạy được", mà là "qua đủ 3 tầng".</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 11: 2.2 T-SHAPE HEADER -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s11">
+  <div class="sec-num">Section 2.2</div>
+  <h2 class="section-hero">T-Shape Model<br>cho AI-Augmented Dev</h2>
+  <div class="divider"></div>
+  <p class="sec-desc">T-Shape không mới — nhưng hình dạng chữ T đã thay đổi. <strong>Chiều ngang</strong> mở rộng: bạn cần sử dụng AI xuyên suốt toàn bộ SDLC. <strong>Chiều dọc</strong> sâu hơn: fundamentals quan trọng hơn bao giờ hết vì AI khuếch đại cả kiến thức lẫn sự thiếu hiểu biết của bạn.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 12: CHIỀU NGANG — AI ACROSS SDLC -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s12">
+  <h2 class="sec-label">2.2.1 — Chiều Ngang</h2>
+  <h2 class="slide-title">AI Across SDLC — Từ Planning đến Deploy</h2>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>SDLC Phase</th><th>AI Role</th><th>Bạn Làm Gì</th><th>Kết quả</th></tr>
+      <tr><td><strong>Planning</strong></td><td>Business Analyst</td><td>Cung cấp context, validate output</td><td>Requirements rõ, risks xác định</td></tr>
+      <tr><td><strong>Design</strong></td><td>Architecture Consultant</td><td>Đánh giá trade-offs, chọn approach</td><td>Architecture document</td></tr>
+      <tr><td><strong>Coding</strong></td><td>Implementation Agent</td><td>Review code, enforce patterns</td><td>Code đúng spec</td></tr>
+      <tr><td><strong>Testing</strong></td><td>QA Engineer</td><td>Viết test cases, review coverage</td><td>Test suite đầy đủ</td></tr>
+      <tr><td><strong>Documentation</strong></td><td>Technical Writer</td><td>Review accuracy, update spec</td><td>Docs đồng bộ code</td></tr>
+      <tr><td><strong>Deploy</strong></td><td>DevOps Assistant</td><td>Review configs, approve pipeline</td><td>CI/CD chạy đúng</td></tr>
+    </table>
+  </div>
+  <div class="card" style="margin-top:14px;background:rgba(255,215,0,.05);border-color:rgba(255,215,0,.3)">
+    <p>💡 <strong style="color:#ffd700">Critical Thinking không thể tắt:</strong> Ở mỗi phase, bạn phải đặt câu hỏi "AI có hiểu đúng context không?", "Output có hợp lý không?", "Có điều gì bị bỏ qua không?"</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 13: CHIỀU DỌC — FUNDAMENTALS -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s13">
+  <h2 class="sec-label">2.2.2 — Chiều Dọc</h2>
+  <h2 class="slide-title">Fundamentals — Sâu Hơn Bao Giờ</h2>
+  <div class="card-grid cols2">
+    <div>
+      <div class="card">
+        <h3>DSA — Data Structures & Algorithms</h3>
+        <p>AI không tự thêm index. AI tạo N+1 queries. AI dùng array khi nên dùng Set. <strong>Bạn cần biết để nhận ra</strong> — không phải để implement từ đầu.</p>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h3>Design Patterns</h3>
+        <p>AI thường pha trộn patterns hoặc không dùng pattern nào. Nếu bạn không chỉ định rõ trong spec, mỗi phiên agent cho một kiến trúc khác nhau. <strong>Bạn phải ra lệnh</strong>, không phải hy vọng.</p>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>System Design</h3>
+        <p>Scalability, caching, message queues, database indexing, load balancing — AI không tự thêm vào trừ khi bạn yêu cầu. <strong>Vòng luẩn quẩn</strong>: không biết → không yêu cầu → AI không làm.</p>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h3>Domain Knowledge — Vũ Khí Bí Mật</h3>
+        <p>AI biết viết code xử lý thanh toán, nhưng <strong>không biết quy định kế toán kép</strong>. AI biết đọc file FASTQ, nhưng không biết Phred score nghĩa là gì. Domain knowledge là lợi thế bền vững nhất.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 14: DESIGN PATTERNS TABLE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s14">
+  <h2 class="sec-label">2.2.2 — Patterns Bạn Cần Biết</h2>
+  <h2 class="slide-title">6 Design Patterns Quan Trọng Nhất</h2>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Pattern</th><th>Khi nào dùng</th><th>Ví dụ trong spec</th></tr>
+      <tr><td><strong>Repository</strong></td><td>Tách data access khỏi business logic</td><td>"Mọi database query phải qua Repository layer"</td></tr>
+      <tr><td><strong>Service Layer</strong></td><td>Business logic tập trung</td><td>"Mọi business logic nằm trong /services"</td></tr>
+      <tr><td><strong>Factory</strong></td><td>Tạo objects phức tạp</td><td>"Dùng factory cho tạo Order với nhiều loại"</td></tr>
+      <tr><td><strong>Observer</strong></td><td>Event-driven communication</td><td>"Dùng event emitter cho cross-module comm"</td></tr>
+      <tr><td><strong>Strategy</strong></td><td>Algorithm có thể thay đổi</td><td>"Pricing calculator dùng Strategy pattern"</td></tr>
+      <tr><td><strong>Middleware</strong></td><td>Cross-cutting concerns</td><td>"Auth, logging, error handling dùng middleware"</td></tr>
+    </table>
+  </div>
+  <blockquote style="margin-top:14px">Nếu không chỉ định pattern trong spec, AI sẽ tạo code không theo pattern nào cụ thể, hoặc <strong>pha trộn nhiều patterns mâu thuẫn</strong>. Module A dùng Repository, Module B truy vấn DB trực tiếp trong controller.</blockquote>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 15: SKILL MATRIX -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s15">
+  <h2 class="sec-label">Bảng 2.4 — 2.2.3</h2>
+  <h2 class="slide-title">Ma Trận Tự Đánh Giá Kỹ Năng</h2>
+  <p style="margin-bottom:12px;color:rgba(255,255,255,.7)">Thang điểm: <strong>1</strong>=Chưa biết | <strong>2</strong>=Nhận biết | <strong>3</strong>=Cơ bản | <strong>4</strong>=Thành thạo | <strong>5</strong>=Chuyên gia</p>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Kỹ năng</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+      <tr><td colspan="6" style="background:rgba(0,255,85,.08);color:var(--gd);font-weight:600;letter-spacing:.05em">CHIỀU NGANG: AI TOOLING</td></tr>
+      <tr><td>Prompt Engineering</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td></tr>
+      <tr><td>Sử dụng AI coding agent (Claude Code / Cursor)</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td></tr>
+      <tr><td>Viết Spec / User Story / Intent</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td></tr>
+      <tr><td>Review và đánh giá code AI tạo</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td></tr>
+      <tr><td>AGENTS.md / CLAUDE.md / .cursorrules</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td></tr>
+      <tr><td>Git + CI/CD cơ bản</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td></tr>
+      <tr><td colspan="6" style="background:rgba(0,255,85,.08);color:var(--gd);font-weight:600;letter-spacing:.05em">CHIỀU DỌC: FUNDAMENTALS</td></tr>
+      <tr><td>Cấu trúc dữ liệu & Thuật toán</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td></tr>
+      <tr><td>Design Patterns</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td></tr>
+      <tr><td>Database Design & SQL</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td></tr>
+      <tr><td>Security fundamentals</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td></tr>
+      <tr><td>Domain Knowledge (dự án)</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td><td>/5</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 16: SDLC PHASE 1 — PLANNING -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s16">
+  <h2 class="sec-label">2.2.4 — Thực Hành SDLC</h2>
+  <h2 class="slide-title">Phase 1: Planning — AI Như Business Analyst</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Prompt 1 — Brainstorm Requirements</h3>
+      <div class="code-block">"Tôi đang xây dựng hệ thống quản lý thư viện
+trực tuyến cho trường đại học 5000 sinh viên.
+Hãy liệt kê:
+1. 15 functional requirements chính
+   (chia theo actor: SV, thủ thư, admin)
+2. 10 non-functional requirements
+3. 5 rủi ro kỹ thuật lớn nhất với mitigation
+4. Đề xuất 3 milestones cho 20 tuần"</div>
+    </div>
+    <div class="card">
+      <h3>Prompt 2 — Phê Bình Spec</h3>
+      <div class="code-block">"Tôi đã viết spec cho tính năng Mượn Sách.
+Hãy đóng vai Senior Developer phê bình:
+- Tìm 10 chỗ mơ hồ hoặc thiếu chi tiết
+- Tìm 5 edge cases chưa được đề cập
+- Đánh giá AC: có testable không?
+- Gợi ý cải thiện cụ thể.
+[Dán spec vào đây]"</div>
+      <p style="margin-top:8px;font-size:12px;color:rgba(255,255,255,.55)">Hiệu quả nhất: AI đóng vai reviewer thay vì creator → phát hiện author blindness</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 17: SDLC PHASE 2-3 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s17">
+  <h2 class="sec-label">2.2.4 — Thực Hành SDLC</h2>
+  <h2 class="slide-title">Phase 2: Design — Phase 3: Coding</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Prompt 3 — So sánh kiến trúc</h3>
+      <div class="code-block" style="font-size:10px">"Dự án thư viện: React + Node.js + PostgreSQL.
+So sánh 3 phương án tìm kiếm:
+A) PostgreSQL FTS (tsvector + GIN index)
+B) PostgreSQL LIKE + unaccent extension
+C) Elasticsearch riêng biệt
+Bối cảnh: 20K sách, 5K users, tiếng Việt,
+đồ án sinh viên 20 tuần (không có ops team).
+→ Phân tích performance, tiếng Việt, độ phức
+tạp, chi phí, và recommendation."</div>
+    </div>
+    <div class="card">
+      <h3>Prompt 4 — Implement từ Spec</h3>
+      <div class="code-block" style="font-size:10px">"Implement tính năng Mượn Sách theo spec.
+Constraints:
+- Pattern: Controller → Service → Repository
+- Error handling: throw custom AppError
+- Validation: dùng zod schema
+- Naming: camelCase, files kebab-case
+- Mỗi function < 30 dòng
+
+Trước khi code, liệt kê các files sẽ tạo/sửa
+và chờ tôi duyệt."</div>
+      <p style="margin-top:6px;font-size:11px;color:rgba(255,255,255,.55)">Plan-first approach → nhất quán hơn nhiều</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 18: SDLC PHASE 4-5 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s18">
+  <h2 class="sec-label">2.2.4 — Thực Hành SDLC</h2>
+  <h2 class="slide-title">Phase 4: Testing — Phase 5: Docs</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Prompt 5 — Generate Test Cases</h3>
+      <div class="code-block" style="font-size:10px">"Viết test suite cho BorrowService.borrowBook():
+1. Happy path (mượn thành công)
+2. Validation errors (sách không tồn tại)
+3. Business rule violations (quá 5 cuốn)
+4. Edge cases (concurrent borrow)
+5. Error handling (database timeout)
+Dùng Jest + supertest. Mock database."</div>
+      <p style="margin-top:8px;font-size:11px;color:rgba(255,255,255,.55)">Cách đánh giá: Mutation test — thay đổi logic xem tests có FAIL không?</p>
+    </div>
+    <div class="card">
+      <h3>Prompt 6 — Generate API Docs</h3>
+      <div class="code-block" style="font-size:10px">"Từ code BorrowController, tạo API docs
+theo format OpenAPI 3.0 bao gồm:
+- Endpoints với HTTP method và path
+- Request body schema + validation rules
+- Response schema (success & error)
+- Authentication requirements
+- Rate limiting info
+- Ví dụ request/response"</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px;background:rgba(255,215,0,.05);border-color:rgba(255,215,0,.3)">
+    <p>💡 <strong style="color:#ffd700">Coverage ≠ Quality:</strong> 80% coverage với tests có nghĩa tốt hơn 100% coverage với tests vô nghĩa.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 19: DSA INTRO -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s19">
+  <h2 class="sec-label">2.2.5 — DSA & Performance</h2>
+  <h2 class="slide-title">Tại Sao DSA Quan Trọng Hơn Khi Có AI?</h2>
+  <blockquote>"Nhiều sinh viên hỏi: <em>'Nếu AI viết code được, tại sao phải học DSA?'</em> Câu trả lời: DSA không để viết code — mà để <strong>đánh giá code AI tạo có hiệu quả không</strong>."</blockquote>
+  <div class="card-grid cols3" style="margin-top:18px">
+    <div class="card" style="text-align:center">
+      <div style="font-size:clamp(20px,2.5vw,32px);font-weight:700;color:var(--g)">N+1</div>
+      <p style="font-size:13px;color:rgba(255,255,255,.65)">Queries — lỗi phổ biến nhất AI tạo</p>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:clamp(20px,2.5vw,32px);font-weight:700;color:#ffd700">O(n²)</div>
+      <p style="font-size:13px;color:rgba(255,255,255,.65)">→ O(n) khi dùng Hash Map đúng cách</p>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:clamp(20px,2.5vw,32px);font-weight:700;color:#ff8080">5000x</div>
+      <p style="font-size:13px;color:rgba(255,255,255,.65)">chênh lệch tốc độ với 10K records</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <p>Bạn <strong>không cần</strong> thuộc cách implement Red-Black Tree hay Dijkstra.<br>
+    Bạn <strong>CẦN biết</strong>: khi nào dùng hash map thay vì nested loop, khi nào cần index, khi nào query N+1 xảy ra, khi nào cần pagination.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 20: VÍ DỤ 1 & 2 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s20">
+  <h2 class="sec-label">2.2.5 — Ví Dụ 1 & 2</h2>
+  <h2 class="slide-title">Nested Loop vs Hash Map — N+1 Queries</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Ví dụ 1: O(n²) → O(n)</h3>
+      <div class="code-block"><span class="bad">// AI tạo — O(n²)</span>
+for (const book1 of list1) {
+  for (const book2 of list2) {
+    if (book1.isbn === book2.isbn)
+      duplicates.push(book1);
+  }
+}
+<span class="good">// Tối ưu — O(n+m) — dùng Set</span>
+const isbnSet = new Set(
+  list2.map(b => b.isbn)
+);
+return list1.filter(
+  b => isbnSet.has(b.isbn)
+);
+<span class="cm">// 10K sách: 5000x nhanh hơn</span></div>
+    </div>
+    <div class="card">
+      <h3>Ví dụ 2: N+1 Queries</h3>
+      <div class="code-block"><span class="bad">// AI tạo — 101 queries!</span>
+const books = await db.query(
+  'SELECT * FROM books'    <span class="cm">// 1</span>
+);
+for (const book of books) {
+  book.author = await db.query(
+    'SELECT * FROM authors ...'
+  );   <span class="cm">// N queries</span>
+}
+<span class="good">// Tối ưu — 1 query với JOIN</span>
+SELECT b.*, a.name
+FROM books b
+JOIN authors a ON b.author_id = a.id</div>
+      <p style="font-size:11px;color:rgba(255,255,255,.55);margin-top:6px">Trông đúng, chạy đúng, nhưng cực kỳ chậm với dữ liệu thực</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 21: VÍ DỤ 3 4 5 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s21">
+  <h2 class="sec-label">2.2.5 — Ví Dụ 3, 4 & 5</h2>
+  <h2 class="slide-title">Index — Pagination — Data Structure</h2>
+  <div class="card-grid cols3">
+    <div class="card">
+      <h3>Ví dụ 3: Missing Index</h3>
+      <div class="code-block" style="font-size:10px"><span class="bad">-- Không có index</span>
+SELECT * FROM borrow_records
+WHERE user_id = 123
+ORDER BY borrowed_at DESC;
+<span class="cm">-- Full scan: 100-500ms</span>
+
+<span class="good">-- Thêm index</span>
+CREATE INDEX idx_borrow
+ON borrow_records
+(user_id, borrowed_at DESC);
+<span class="cm">-- B-tree: 1-5ms</span></div>
+    </div>
+    <div class="card">
+      <h3>Ví dụ 4: No Pagination</h3>
+      <div class="code-block" style="font-size:10px"><span class="bad">// AI: load toàn bộ</span>
+const books = await db.query(
+  'SELECT * FROM books'
+);
+<span class="cm">// 20K records = ~10MB JSON!</span>
+
+<span class="good">// Tối ưu: cursor pagination</span>
+const { cursor, limit=20 } = req;
+const books = await db.query(
+  `SELECT * FROM books
+   WHERE id > $1 LIMIT $2`,
+  [cursor || 0, limit]
+);</div>
+    </div>
+    <div class="card">
+      <h3>Ví dụ 5: Array vs Set</h3>
+      <div class="code-block" style="font-size:10px"><span class="bad">// AI dùng array</span>
+const cats = [];
+for (const b of books) {
+  if (!cats.includes(b.cat)) {
+    cats.push(b.cat); // O(n)!
+  }
+}
+<span class="cm">// Tổng: O(n²)</span>
+
+<span class="good">// Đúng: dùng Set</span>
+return [...new Set(
+  books.map(b => b.category)
+)]; // O(n)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 22: 2.2.6 — 6 PATTERNS DEEP DIVE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s22">
+  <h2 class="sec-label">2.2.6 — Repository & Service Patterns</h2>
+  <h2 class="slide-title">Pattern 1-2: Repository + Service Layer</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Pattern 1: Repository</h3>
+      <div class="code-block" style="font-size:10px"><span class="bad">// FAT CONTROLLER (sai)</span>
+app.get('/api/users/:id', async (req, res) => {
+  const user = await db.query(    // ✗ DB trong ctrl
+    'SELECT * FROM users WHERE id = $1',
+    [req.params.id]
+  );
+  ...
+});
+
+<span class="good">// Đúng pattern</span>
+app.get('/api/users/:id', async (req, res) => {
+  const user = await userService     // ✓
+    .getUserWithStats(req.params.id);
+  res.json(user);
+});</div>
+    </div>
+    <div class="card">
+      <h3>Pattern 2: Service Layer</h3>
+      <div class="code-block" style="font-size:10px"><span class="cm">// Quy tắc phân biệt:</span>
+<span class="cm">// if/else về business rule → Service</span>
+<span class="cm">// DB query → Repository</span>
+<span class="cm">// Parse request/format res → Controller</span>
+
+async function borrowBook(userId, bookId) {
+  const user = await userRepo.findById(userId);
+  if (!user || user.status !== 'active')
+    throw new AppError(403, 'Not eligible');
+
+  const borrows = await borrowRepo
+    .countActive(userId);
+  if (borrows >= 5)
+    throw new AppError(400, 'Max limit');
+  ...
+}</div>
+    </div>
+  </div>
+  <div class="flow" style="margin-top:12px">
+    <div class="flow-step"><strong>Controller</strong><br><span style="font-size:11px;color:rgba(255,255,255,.55)">Request/Response</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><strong>Service</strong><br><span style="font-size:11px;color:rgba(255,255,255,.55)">Business Logic</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><strong>Repository</strong><br><span style="font-size:11px;color:rgba(255,255,255,.55)">DB Queries</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 22B: 2.2.7 — PATTERN POLICE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s22b">
+  <h2 class="sec-label">2.2.7 — Bài Tập</h2>
+  <h2 class="slide-title">Pattern Police: Review Code Theo Pattern</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Đề bài (15 phút)</h3>
+      <ul>
+        <li>Chọn 1 module có AI-generated code</li>
+        <li>Đánh dấu ranh giới Controller/Service/Repository</li>
+        <li>Tìm chỗ "leak pattern" (DB trong controller, logic trong route)</li>
+        <li>Viết lại prompt/spec để ép AI sửa đúng pattern</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Checklist chấm điểm</h3>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+        <div class="chk-item"><span class="chk">□</span><span>Business rule nằm trong Service</span></div>
+        <div class="chk-item"><span class="chk">□</span><span>Mọi query qua Repository</span></div>
+        <div class="chk-item"><span class="chk">□</span><span>Error handling nhất quán</span></div>
+        <div class="chk-item"><span class="chk">□</span><span>Không duplicate logic giữa files</span></div>
+        <div class="chk-item"><span class="chk">□</span><span>Spec đã cập nhật để ngăn tái phạm</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 23: 2.3 HEADER -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s23">
+  <div class="sec-num">Section 2.3</div>
+  <h2 class="section-hero">Cognitive Load &<br>Context Engineering</h2>
+  <div class="divider"></div>
+  <p class="sec-desc">Khi làm việc với AI, có hai bộ nhớ cần quản lý: <strong>context window của AI</strong> và <strong>cognitive load của bạn</strong>. Cả hai đều hữu hạn, cả hai đều dễ bị quá tải. Quản lý chúng như infrastructure — không phải để mặc kệ và hy vọng.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 24: CONTEXT WINDOW -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s24">
+  <h2 class="sec-label">2.3.1 — Context Window</h2>
+  <h2 class="slide-title">Context Window — RAM Của AI (2026)</h2>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Model</th><th>Context Window</th><th>Ước tính trang sách</th><th>Ghi chú</th></tr>
+      <tr><td><strong>Claude Opus 4.6</strong></td><td>200K tokens</td><td>~300 trang</td><td>Dùng trong Claude Code</td></tr>
+      <tr><td><strong>Claude Sonnet 4.6</strong></td><td>200K tokens</td><td>~300 trang</td><td>Nhanh hơn, rẻ hơn Opus</td></tr>
+      <tr><td><strong>GPT-4o</strong></td><td>128K tokens</td><td>~190 trang</td><td>Dùng trong Copilot</td></tr>
+      <tr><td><strong>Gemini 2.5 Pro</strong></td><td>1M tokens</td><td>~1500 trang</td><td>Dùng trong Kiro</td></tr>
+      <tr><td><strong>Codex CLI (OpenAI)</strong></td><td>128K tokens</td><td>~190 trang</td><td>Open-source</td></tr>
+    </table>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3>Phép tính thực tế — Claude Code session:</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;font-size:clamp(12px,1.1vw,14px)">
+      <div>System prompt + tools: ~10K</div><div>AGENTS.md + CLAUDE.md: ~3K</div>
+      <div>Code files agent đọc (10 files): ~30K</div><div>Lịch sử chat (20 messages): ~40K</div>
+      <div>Agent's reasoning (thinking): ~30K</div><div>Code agent tạo: ~20K</div>
+    </div>
+    <div style="border-top:1px solid rgba(0,255,85,.2);margin-top:10px;padding-top:10px">
+      <strong>Tổng: ~133K / 200K = 66% đã dùng → Chỉ còn 67K tokens cho việc tiếp theo</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 25: KHI CONTEXT ĐẦY -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s25">
+  <h2 class="sec-label">2.3.1 — Triệu Chứng</h2>
+  <h2 class="slide-title">Khi Context Gần Đầy — AI Xuống Cấp</h2>
+  <div class="card-grid cols2" style="gap:12px">
+    <div class="warning-box">
+      <h3 style="color:#ff8080">① "Quên" hướng dẫn</h3>
+      <p>Instructions ở đầu phiên bị "đẩy ra" khỏi vùng chú ý của AI khi context dài.</p>
+    </div>
+    <div class="warning-box">
+      <h3 style="color:#ff8080">② Nhầm lẫn giữa files</h3>
+      <p>Đặc biệt khi có nhiều files có tên hoặc cấu trúc tương tự nhau.</p>
+    </div>
+    <div class="warning-box">
+      <h3 style="color:#ff8080">③ Code không nhất quán</h3>
+      <p>Code tạo sau không khớp với code tạo trước trong cùng phiên.</p>
+    </div>
+    <div class="warning-box">
+      <h3 style="color:#ff8080">④ Hallucinate</h3>
+      <p>Bịa ra API, function, hoặc library không tồn tại. Xảy ra nhiều hơn khi context bị nhiễu.</p>
+    </div>
+    <div class="warning-box" style="grid-column:1/-1">
+      <h3 style="color:#ff8080">⑤ Vòng lặp vô tận</h3>
+      <p>Agent sửa code rồi lại hỏng, sửa lại rồi lại hỏng — không thoát ra được. <strong>Dấu hiệu rõ nhất:</strong> nên bắt đầu phiên mới ngay.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 26: 4 NGUYÊN TẮC CONTEXT ENGINEERING -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s26">
+  <h2 class="sec-label">2.3.2 — Context Engineering</h2>
+  <h2 class="slide-title">4 Nguyên Tắc Cốt Lõi</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>① Selection — Chọn Lọc</h3>
+      <p style="margin-bottom:8px">Không dump toàn bộ codebase. Chỉ cung cấp files liên quan trực tiếp.</p>
+      <div style="font-size:12px">
+        <span class="good">✓ CẦN: </span> Service file, interface, caller, test, error log<br>
+        <span class="bad">✗ KHÔNG: </span> Files không liên quan, lịch sử chat cũ
+      </div>
+    </div>
+    <div class="card">
+      <h3>② Structure — Cấu Trúc</h3>
+      <p>Thông tin có cấu trúc hiệu quả hơn thông tin rời rạc. Thay vì paste 10 đoạn chat, tổng hợp thành 1 file ngắn gọn. <strong>AGENTS.md và CLAUDE.md</strong> là công cụ cấu trúc context.</p>
+    </div>
+    <div class="card">
+      <h3>③ Clean — Làm Sạch</h3>
+      <p>Loại bỏ thông tin lỗi thời, dead code, comments cũ.</p>
+      <ul style="margin-top:8px;font-size:12px">
+        <li>Bắt đầu conversation mới cho mỗi task</li>
+        <li>Nếu phiên &gt; 30 messages → bắt đầu phiên mới</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>④ Layer — Phân Tầng</h3>
+      <div style="font-size:12px;margin-top:6px">
+        <div class="chk-item"><span class="chk">→</span><span><strong>Tầng 1: Foundation</strong> — AGENTS.md, CLAUDE.md — LUÔN có mặt</span></div>
+        <div class="chk-item"><span class="chk">→</span><span><strong>Tầng 2: Feature</strong> — Spec của feature đang làm</span></div>
+        <div class="chk-item"><span class="chk">→</span><span><strong>Tầng 3: Task</strong> — Code, errors, tests cụ thể</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 27: BẢNG 2.6 CONTEXT VS RAM -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s27">
+  <h2 class="sec-label">Bảng 2.6</h2>
+  <h2 class="slide-title">Context Engineering vs. Quản Lý RAM</h2>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Khía cạnh</th><th>Quản lý RAM (máy tính)</th><th>Context Engineering (AI)</th></tr>
+      <tr><td>Tài nguyên</td><td>RAM (GB)</td><td>Context window (tokens)</td></tr>
+      <tr><td>Giới hạn</td><td>Hết RAM → swap/crash</td><td>Hết context → <strong>hallucinate/quên</strong></td></tr>
+      <tr><td>Chiến lược</td><td>Load on demand, cache, GC</td><td>Chọn lọc, cấu trúc, làm sạch, phân tầng</td></tr>
+      <tr><td>Tối ưu</td><td>Memory profiling, heap analysis</td><td>Token counting, fresh sessions</td></tr>
+      <tr><td>Anti-pattern</td><td>Memory leak, dangling pointers</td><td><strong>Context pollution</strong> (dump mọi thứ)</td></tr>
+      <tr><td>Tool hỗ trợ</td><td>Task Manager, htop, Valgrind</td><td>AGENTS.md, CLAUDE.md, memory.md</td></tr>
+      <tr><td>Mục tiêu</td><td>Chương trình chạy ổn định</td><td><strong>AI output chính xác và nhất quán</strong></td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 28: 5 KỸ THUẬT COGNITIVE LOAD -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s28">
+  <h2 class="sec-label">2.3.3 — Cognitive Load</h2>
+  <h2 class="slide-title">5 Kỹ Thuật Giảm Tải Nhận Thức</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="card">
+      <h3>① Modularization</h3>
+      <p>Chia thành modules nhỏ, mỗi module = 1 phiên agent riêng. Mỗi phiên nên tạo <strong>không quá 300-500 dòng</strong> code mới.</p>
+    </div>
+    <div class="card">
+      <h3>② Fresh Conversations</h3>
+      <p>Phiên mới cho mỗi task. Phiên &gt; 30 messages → bắt đầu phiên mới với summary. Phiên sạch = AI và bạn đều tập trung hơn.</p>
+    </div>
+    <div class="card">
+      <h3>③ Plan-First Approach</h3>
+      <div class="code-block" style="font-size:10px">"Trước khi code, lên kế hoạch:
+- Files cần tạo/sửa
+- Thứ tự làm
+- Dependencies
+Chờ tôi approve plan trước."</div>
+    </div>
+    <div class="card">
+      <h3>④ Checklists</h3>
+      <p>Não bộ chỉ giữ được <strong>4±2 items</strong> trong working memory (Miller, 1956). Checklist ngoại hóa trí nhớ, đảm bảo không bỏ sót.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px;background:rgba(0,255,85,.05);border-left:3px solid var(--g)">
+    <h3>⑤ Time-Boxing (Pomodoro)</h3>
+    <p>25 phút review → nghỉ 5 phút. Não bộ review hiệu quả nhất trong 25 phút đầu. Đừng review 2000 dòng code trong 1 phiên liên tục.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 29: 3 TÌNH HUỐNG THỰC HÀNH -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s29">
+  <h2 class="sec-label">2.3.4 — Thực Hành</h2>
+  <h2 class="slide-title">3 Tình Huống Context Engineering</h2>
+  <div class="card-grid cols3">
+    <div class="card">
+      <h3>Tình huống 1: Đầu ngày</h3>
+      <p style="font-size:12px;margin-bottom:8px">Mỗi sáng, AI không nhớ gì từ hôm qua. "Load context" như load save game:</p>
+      <div class="code-block" style="font-size:9.5px">"Hôm nay tôi làm feature Auth.
+Spec: .spec/auth-spec.md.
+Hôm qua xong: login + rate limit.
+Hôm nay: refresh token + lockout."</div>
+      <p style="font-size:11px;color:rgba(255,255,255,.5);margin-top:6px">Phiên mới + summary ngắn = context sạch</p>
+    </div>
+    <div class="card">
+      <h3>Tình huống 2: Agent "lạc"</h3>
+      <p style="font-size:12px;margin-bottom:8px">Triệu chứng: agent lặp lại code cũ, dùng sai naming, "quên" constraints → <strong>Context Reset Protocol:</strong></p>
+      <ul style="font-size:12px">
+        <li>Dừng lại ngay</li>
+        <li>Save progress</li>
+        <li>Mở phiên MỚI với summary</li>
+        <li>Tiếp tục từ điểm dừng</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Tình huống 3: Nhóm 5 người</h3>
+      <p style="font-size:12px;margin-bottom:8px">Mỗi người dùng AI riêng → code không nhất quán → <strong>Shared Context Layer:</strong></p>
+      <div class="code-block" style="font-size:9.5px">project-root/
+├─ .spec/
+│  ├─ constitution.md ← bất biến
+│  ├─ architecture.md
+│  └─ api-contracts.md
+├─ AGENTS.md    ← mọi agent đọc
+└─ CLAUDE.md</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 29B: 2.3.5 — CASE STUDY -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s29b">
+  <h2 class="sec-label">2.3.5 — Case Study</h2>
+  <h2 class="slide-title">Một Ngày Làm Việc Với AI: Quản Lý Context</h2>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Thời điểm</th><th>Hành động</th><th>Mục tiêu context</th></tr>
+      <tr><td>09:00</td><td>Khởi tạo phiên mới + nạp summary hôm qua</td><td>Context sạch, đúng task</td></tr>
+      <tr><td>10:30</td><td>Chốt plan trước khi code</td><td>Giảm drift, tránh sửa lan</td></tr>
+      <tr><td>13:30</td><td>Tách task thành 2 phiên nhỏ</td><td>Giữ focus theo module</td></tr>
+      <tr><td>15:00</td><td>Agent bắt đầu lặp/sai naming, reset session</td><td>Khôi phục signal/noise ratio</td></tr>
+      <tr><td>17:00</td><td>Lưu artifact: spec, decisions, retro notes</td><td>Tái sử dụng cho ngày sau</td></tr>
+    </table>
+  </div>
+  <blockquote style="margin-top:12px">Thực hành tốt không nằm ở prompt "thần thánh", mà ở kỷ luật quản lý context xuyên suốt ngày làm việc.</blockquote>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 30: TEMPLATE AGENTS.MD -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s30">
+  <h2 class="sec-label">2.3.6 — Template</h2>
+  <h2 class="slide-title">AGENTS.md — Template Cho Đồ Án</h2>
+  <div class="card-grid cols2">
+    <div class="code-block" style="font-size:10px"><span class="kw"># AGENTS.md</span>
+<span class="cm">## Project Overview</span>
+Hệ thống quản lý thư viện XYZ.
+5000 sinh viên, 20000 đầu sách.
+
+<span class="cm">## Tech Stack</span>
+- Frontend: React 18 + TypeScript
+- Backend: Node.js 20 + Express
+- Database: PostgreSQL 16 + Prisma
+- Testing: Jest + Supertest
+
+<span class="cm">## Architecture Pattern</span>
+Controller → Service → Repository
+KHÔNG đặt DB queries ngoài *.repository.ts</div>
+    <div class="code-block" style="font-size:10px"><span class="cm">## Coding Conventions</span>
+- camelCase cho functions/variables
+- PascalCase cho types/classes
+- kebab-case cho file names
+- AppError cho mọi errors
+- Mọi function < 30 dòng
+
+<span class="cm">## Security Rules</span>
+- NEVER hardcode secrets
+- NEVER paste .env vào prompt
+- Parameterized queries BẮT BUỘC
+- zod cho mọi user input
+
+<span class="cm">## Git Workflow</span>
+- Branch: feature/XX-description
+- PR phải có 1 reviewer approve</div>
+  </div>
+  <p style="margin-top:10px;font-size:clamp(12px,1.15vw,14px);color:rgba(255,255,255,.65)">File này là <strong>"nguồn sự thật"</strong> cho cả team. Khi thay đổi convention → cập nhật AGENTS.md trước, commit, thông báo nhóm.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 30B: 2.3.7 — TEMPLATE CLAUDE.MD -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s30b">
+  <h2 class="sec-label">2.3.7 — Template</h2>
+  <h2 class="slide-title">CLAUDE.md Với Auto-Memory</h2>
+  <div class="card-grid cols2">
+    <div class="code-block" style="font-size:10px"><span class="kw"># CLAUDE.md</span>
+<span class="cm">## Current Sprint Focus</span>
+- Auth hardening + token rotation
+- Refactor borrow flow theo Service pattern
+
+<span class="cm">## Current Constraints</span>
+- Không thêm dependency mới
+- Không đổi DB schema trong sprint này
+- Ưu tiên backward compatibility
+
+<span class="cm">## Active Decisions</span>
+- Access token 15m, refresh 7d
+- Rate limit 5 req/min/IP
+- Logging format chuẩn JSON</div>
+    <div class="code-block" style="font-size:10px"><span class="cm">## Known Pitfalls</span>
+- Tránh sửa file ngoài scope task
+- Không đổi naming conventions hiện tại
+- Không paste secrets vào prompts
+
+<span class="cm">## Handoff Notes</span>
+- API /auth/refresh đang dùng controller cũ
+- Cần chuyển validation về middleware tuần sau
+- Pending: test cho concurrent refresh
+
+<span class="cm">## Update Rule</span>
+Sau mỗi ngày: cập nhật mục
+"Current Sprint Focus" và "Handoff Notes".</div>
+  </div>
+  <p style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.65)"><code>AGENTS.md</code> giữ luật ổn định; <code>CLAUDE.md</code> giữ trạng thái sống theo tuần/ngày.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 31: 3 TEAM CEREMONIES -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s31">
+  <h2 class="sec-label">2.3.8 — Làm Việc Nhóm</h2>
+  <h2 class="slide-title">3 Team Ceremonies — Đồng Bộ Nhóm Với AI</h2>
+  <div class="card-grid cols3">
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3 style="color:#ffd700">Monday Spec Review<br><span style="font-weight:300;font-size:13px">30 phút</span></h3>
+      <p>Review tất cả specs cho tasks tuần này. Mọi người hiểu <strong>ai làm gì và API giữa các modules</strong>. Giảm xung đột khi merge cuối tuần.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3 style="color:#ffd700">Wednesday Pair Programming<br><span style="font-weight:300;font-size:13px">60 phút</span></h3>
+      <p>2 người cùng ngồi với 1 phiên AI. Người 1 viết prompt, Người 2 kiểm tra logic. <strong>Rotation hàng tuần</strong> để mọi người hiểu code của nhau.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3 style="color:#ffd700">Friday Demo + Retro<br><span style="font-weight:300;font-size:13px">45 phút</span></h3>
+      <p>Demo những gì đã làm tuần này. Retro: cái gì tốt, cái gì cần cải thiện. <strong>Cập nhật AGENTS.md</strong> và constitution nếu cần.</p>
+    </div>
+  </div>
+  <blockquote style="margin-top:16px">Với AI, mỗi người có thể tạo code RẤT NHANH và RẤT NHIỀU. Nhưng nếu 5 người tạo code theo hướng khác nhau, kết quả là hỗn loạn. Ceremonies là <strong>mutex trong teamwork</strong> — ngăn race conditions.</blockquote>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 32: 2.4 HEADER -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s32">
+  <div class="sec-num">Section 2.4</div>
+  <h2 class="section-hero">Debugging &<br>Verification</h2>
+  <div class="divider"></div>
+  <p class="sec-desc">Khi phần lớn code được AI tạo, bạn sẽ dành nhiều thời gian <strong>đọc và kiểm tra code của "người khác"</strong> hơn là viết code của mình. Đây là kỹ năng mới — ít khi được dạy trong trường đại học.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 33: 4 ĐẶC TRƯNG CODE AI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s33">
+  <h2 class="sec-label">2.4.1 — Đọc Code AI</h2>
+  <h2 class="slide-title">4 Đặc Trưng Code AI Cần Nhận Biết</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>① Trông chuyên nghiệp nhưng sai logic</h3>
+      <p>AI viết code sạch, đặt tên biến tốt, cấu trúc rõ ràng. Điều này tạo <strong>automation bias</strong> — tin tưởng chỉ vì trông chuyên nghiệp. <span class="hl-red">Cảnh giác!</span></p>
+    </div>
+    <div class="card">
+      <h3>② Nhất quán trong file, không nhất quán giữa files</h3>
+      <p>Không có memory giữa phiên: Module A dùng camelCase, Module B dùng snake_case. Error handling khác nhau giữa services. Lý do cần <strong>Constitution + AGENTS.md</strong>.</p>
+    </div>
+    <div class="card">
+      <h3>③ Edge cases bị bỏ qua</h3>
+      <p>AI xử lý happy path rất tốt nhưng thường miss:</p>
+      <ul style="font-size:12px;margin-top:6px">
+        <li>Input null/undefined/empty string</li>
+        <li>Concurrent access</li>
+        <li>Timezone issues (UTC vs local)</li>
+        <li>Unicode (tiếng Việt, emoji)</li>
+        <li>Network failures, timeout</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>④ Dependencies thừa</h3>
+      <p>AI có xu hướng import nhiều libraries hơn cần. Mỗi dependency = 1 rủi ro bảo mật + 1 điểm hỏng tiềm tàng. Check: <strong>package nào thực sự được dùng?</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 33B: 2.4.2 — TRACE LỖI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s33b">
+  <h2 class="sec-label">2.4.2 — Trace Lỗi</h2>
+  <h2 class="slide-title">Kỹ Năng Trace Trong Code AI</h2>
+  <div class="flow" style="margin-bottom:12px">
+    <div class="flow-step"><strong>Reproduce</strong><br><span style="font-size:11px;color:rgba(255,255,255,.55)">Tái hiện lỗi</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><strong>Isolate</strong><br><span style="font-size:11px;color:rgba(255,255,255,.55)">Khoanh vùng</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><strong>Instrument</strong><br><span style="font-size:11px;color:rgba(255,255,255,.55)">Thêm logs/probes</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><strong>Verify Fix</strong><br><span style="font-size:11px;color:rgba(255,255,255,.55)">Chặn tái phát</span></div>
+  </div>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Anti-pattern phổ biến</h3>
+      <ul>
+        <li>Sửa ngay khi chưa tái hiện được lỗi</li>
+        <li>Đụng nhiều file cùng lúc, không rõ nguyên nhân thật</li>
+        <li>Fix "đúng test hiện tại" nhưng sai business</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Trace protocol đề xuất</h3>
+      <ul>
+        <li>Ghi input cụ thể gây lỗi</li>
+        <li>Đặt log tại boundary giữa các layers</li>
+        <li>So sánh expected vs actual ở từng bước</li>
+        <li>Viết regression test trước khi merge</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 34: TDD + AI COMBO -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s34">
+  <h2 class="sec-label">2.4.3 — TDD + AI</h2>
+  <h2 class="slide-title">TDD + AI = Combo Mạnh Nhất</h2>
+  <div class="flow" style="margin:16px 0">
+    <div class="flow-step" style="border-color:#ff6b6b;background:rgba(255,107,107,.05)">
+      <strong style="color:#ff8080">Red</strong><br>
+      <span style="font-size:11px">BẠN viết tests</span>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" style="border-color:var(--g)">
+      <strong style="color:var(--g)">Green</strong><br>
+      <span style="font-size:11px">AI viết code</span>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" style="border-color:#a0c8ff;background:rgba(160,200,255,.05)">
+      <strong style="color:#a0c8ff">Refactor</strong><br>
+      <span style="font-size:11px">BẠN review</span>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <strong>Lặp lại</strong><br>
+      <span style="font-size:11px">Thêm edge cases</span>
+    </div>
+  </div>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Ví dụ: Tests encode business rules</h3>
+      <div class="code-block" style="font-size:10px">test('apply highest discount only', () => {
+  <span class="cm">// Business rule: chỉ áp mã cao nhất</span>
+  expect(calculateFinalPrice(100000, [
+    { type: 'pct', value: 50 },
+    { type: 'pct', value: 30 }
+  ])).toBe(50000);
+});
+test('price cannot go negative', () => {
+  expect(calculateFinalPrice(
+    10000, [{type:'fixed',value:20000}]
+  )).toBe(0);
+});</div>
+    </div>
+    <div class="card">
+      <h3>Tại sao hiệu quả</h3>
+      <ul>
+        <li>Bạn kiểm soát <strong>"cái gì đúng"</strong> (tests)</li>
+        <li>AI lo <strong>"làm thế nào"</strong> (implementation)</li>
+        <li>Tests = hàng rào: code sai → tests fail ngay</li>
+        <li>Bạn không cần đọc 100 dòng impl — chỉ cần tests pass và tests đầy đủ</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 35: 10 LỖI PHỔ BIẾN NHẤT -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s35">
+  <h2 class="sec-label">Bảng — 2.4.4</h2>
+  <h2 class="slide-title">10 Lỗi Phổ Biến Nhất Trong Code AI</h2>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>#</th><th>Lỗi</th><th>Tần suất</th><th>Mức nguy</th><th>Cách phát hiện</th></tr>
+      <tr><td>1</td><td><strong>N+1 queries</strong></td><td>Rất cao</td><td><span class="badge badge-r">Performance</span></td><td>Review mọi loop chứa DB query</td></tr>
+      <tr><td>2</td><td><strong>Missing input validation</strong></td><td>Rất cao</td><td><span class="badge badge-r">Security</span></td><td>Kiểm tra mọi endpoint nhận data user</td></tr>
+      <tr><td>3</td><td><strong>Hardcoded secrets</strong></td><td>Cao</td><td><span class="badge badge-r">Security</span></td><td>Grep: password, secret, key, token</td></tr>
+      <tr><td>4</td><td><strong>Inconsistent error handling</strong></td><td>Cao</td><td><span class="badge badge-y">Maintainability</span></td><td>So sánh error handling giữa modules</td></tr>
+      <tr><td>5</td><td><strong>No pagination</strong></td><td>Cao</td><td><span class="badge badge-r">Performance</span></td><td>Kiểm tra mọi endpoint trả list</td></tr>
+      <tr><td>6</td><td><strong>Race conditions</strong></td><td>TB</td><td><span class="badge badge-y">Data integrity</span></td><td>Tìm read-then-write không có lock</td></tr>
+      <tr><td>7</td><td><strong>Missing index</strong></td><td>TB</td><td><span class="badge badge-r">Performance</span></td><td>EXPLAIN mọi query với data lớn</td></tr>
+      <tr><td>8</td><td>Zombie imports</td><td>Thấp</td><td><span class="badge badge-g">Code quality</span></td><td>Lint rule: no-unused-imports</td></tr>
+      <tr><td>9</td><td>Over-abstraction</td><td>Thấp</td><td><span class="badge badge-y">Maintainability</span></td><td>Hỏi: "Có &gt;1 implementation không?"</td></tr>
+      <tr><td>10</td><td>Stale comments</td><td>Thấp</td><td><span class="badge badge-g">Maintainability</span></td><td>Review comments vs code logic</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 36: QUY TRÌNH DEBUG 6 BƯỚC -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s36">
+  <h2 class="sec-label">2.4.5 — Debug Protocol</h2>
+  <h2 class="slide-title">Quy Trình Debug Code AI — 6 Bước</h2>
+  <div class="card-grid cols2" style="gap:10px">
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3>① Xác định triệu chứng rõ ràng</h3>
+      <p style="font-size:13px">Không phải "nó không chạy" mà là: "<em>POST /api/login trả về 500 với body {...}, error: TypeError: Cannot read property 'id' of null</em>"</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3>② Kiểm tra spec trước</h3>
+      <p style="font-size:13px">Lỗi có phải do spec thiếu không? Nhiều khi lỗi nằm ở spec mơ hồ, không phải implementation. Ví dụ: spec không nói xử lý khi user null.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3>③ Giới hạn phạm vi</h3>
+      <p style="font-size:13px">Bug ở layer nào? Controller? Service? Repository? DB? Test từng layer độc lập bằng cách gọi function trực tiếp với test data.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3>④ Dùng AI để debug AI</h3>
+      <p style="font-size:13px">Mở phiên MỚI (context sạch!), cung cấp: endpoint, input, expected, actual, error, code. Hỏi AI phân tích nguyên nhân.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3>⑤ Verify fix</h3>
+      <p style="font-size:13px">Hiểu <strong>tại sao fix đó đúng</strong> → viết test cho case gây bug → chạy toàn bộ test suite (không regression).</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3>⑥ Update spec và tests</h3>
+      <p style="font-size:13px">Thêm edge case vào spec. Thêm test case. Đảm bảo bug không lặp lại. <strong>Bug là thông tin — hãy document nó.</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 37: WALKTHROUGH BUG THỰC TẾ -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s37">
+  <h2 class="sec-label">2.4.6 — Walkthrough</h2>
+  <h2 class="slide-title">Debug Bug Thực Tế: Overdue Fee</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Bug: calculateOverdueFee trả số âm</h3>
+      <div class="code-block" style="font-size:10px"><span class="bad">// Code AI tạo — BUG ở đây!</span>
+function calculateOverdueFee(
+  dueDate: string, returnDate: string
+) {
+  const due = new Date(dueDate);
+  const ret = new Date(returnDate);
+  <span class="bad">const diffMs = due.getTime()
+    - ret.getTime(); // ← ĐẢO NGƯỢC!</span>
+  const diffDays = Math.ceil(
+    diffMs / (1000 * 60 * 60 * 24)
+  );
+  const fee = Math.max(0, diffDays * 5000);
+  return Math.min(fee, 500000);
+}</div>
+    </div>
+    <div class="card">
+      <h3>Mental Simulation & Fix</h3>
+      <div class="code-block" style="font-size:10px"><span class="cm">// Input: due=Feb28, ret=Mar01</span>
+<span class="bad">// due - ret = số ÂM (due &lt; ret)</span>
+<span class="bad">// max(0, âm*5000) = 0 (BUG!)</span>
+
+<span class="good">// Fix: đổi thứ tự trừ</span>
+const diffMs =
+  ret.getTime() - due.getTime();
+
+<span class="cm">// Verify:</span>
+<span class="cm">// Đúng hạn: ret=due → 0 ✓</span>
+<span class="cm">// Trễ 1 ngày: → 5000 ✓</span>
+<span class="cm">// Trễ 100 ngày: → 500000 (cap) ✓</span>
+<span class="cm">// Trả sớm: → 0 ✓</span></div>
+      <p style="font-size:11px;color:rgba(255,255,255,.55);margin-top:6px">Bug nhỏ (đảo 2 biến) nhưng kết quả sai hoàn toàn. <strong>Bài học</strong>: test CẢ HAI chiều (sớm và trễ) cho mọi hàm tính toán.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 38: 2.5 HEADER -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s38">
+  <div class="sec-num">Section 2.5</div>
+  <h2 class="section-hero">Ethical Considerations</h2>
+  <div class="divider"></div>
+  <p class="sec-desc">Bất kể AI tạo ra bao nhiêu code, bạn luôn là <strong>người chịu trách nhiệm cuối cùng</strong>. Đây không chỉ là nguyên tắc đạo đức — mà là thực tế pháp lý: nếu ứng dụng gây thiệt hại, bạn và team chịu trách nhiệm — không phải Anthropic hay OpenAI.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 39: 3 QUY TẮC VÀNG -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s39">
+  <h2 class="sec-label">2.5.1 — Human-in-the-Loop</h2>
+  <h2 class="slide-title">⚠ 3 Quy Tắc Vàng</h2>
+  <div style="display:flex;flex-direction:column;gap:16px;max-width:800px;margin:0 auto">
+    <div class="card" style="border-left:4px solid #ff5050;padding:20px 24px">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="font-size:clamp(28px,3.5vw,48px);font-family:'Cormorant Garamond',serif;font-weight:700;color:#ff8080">1</div>
+        <div>
+          <h3 style="color:#ff8080;font-size:clamp(15px,1.7vw,20px)">Không commit code mà bạn không hiểu.</h3>
+          <p style="font-size:13px;color:rgba(255,255,255,.6);margin-top:4px">Khi giáo viên hỏi "Tại sao đoạn code này hoạt động thế này?", câu trả lời "Vì AI viết thế" là KHÔNG chấp nhận được.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid #ff5050;padding:20px 24px">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="font-size:clamp(28px,3.5vw,48px);font-family:'Cormorant Garamond',serif;font-weight:700;color:#ff8080">2</div>
+        <div>
+          <h3 style="color:#ff8080;font-size:clamp(15px,1.7vw,20px)">Không deploy tính năng mà bạn không thể giải thích.</h3>
+          <p style="font-size:13px;color:rgba(255,255,255,.6);margin-top:4px">Giải thích được = hiểu được logic + edge cases + failure modes.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid #ff5050;padding:20px 24px">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="font-size:clamp(28px,3.5vw,48px);font-family:'Cormorant Garamond',serif;font-weight:700;color:#ff8080">3</div>
+        <div>
+          <h3 style="color:#ff8080;font-size:clamp(15px,1.7vw,20px)">Không chấp nhận AI output mà bạn không thể verify.</h3>
+          <p style="font-size:13px;color:rgba(255,255,255,.6);margin-top:4px">Nếu bạn không biết cách kiểm tra output → học cách kiểm tra trước khi dùng AI cho lĩnh vực đó.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 40: 5 LỖ HỔNG BẢO MẬT -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s40">
+  <h2 class="sec-label">2.5.2 — Bảo Mật</h2>
+  <h2 class="slide-title">5 Lỗ Hổng Phổ Biến Trong Code AI</h2>
+  <div class="card-grid cols2" style="gap:10px">
+    <div class="card">
+      <h3>① SQL Injection</h3>
+      <div class="code-block" style="font-size:10px"><span class="bad">// XẤU:</span>
+`SELECT * FROM users WHERE email
+= '${email}'`  <span class="bad">// ← NGUY HIỂM</span>
+<span class="good">// TỐT — parameterized:</span>
+db.query(
+  'SELECT * FROM users WHERE email=$1',
+  [email]
+)</div>
+    </div>
+    <div class="card">
+      <h3>② Hardcoded Credentials</h3>
+      <div class="code-block" style="font-size:10px"><span class="bad">// XẤU:</span>
+const JWT_SECRET = 'super-secret-123';
+<span class="good">// TỐT:</span>
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET)
+  throw new Error('Not configured');</div>
+    </div>
+    <div class="card">
+      <h3>③ Missing Input Validation</h3>
+      <div class="code-block" style="font-size:10px"><span class="bad">// XẤU — không validate:</span>
+const { email, name } = req.body;
+db.createUser({ email, name });
+<span class="good">// TỐT:</span>
+if (!isValidEmail(email))
+  return res.status(400)...;
+const clean = sanitize(name);</div>
+    </div>
+    <div class="card">
+      <h3>④ Insecure Deps + ⑤ Permissive CORS</h3>
+      <div class="code-block" style="font-size:10px"><span class="cm">// Sau mỗi lần AI thêm package:</span>
+npm audit
+<span class="cm">// Kiểm tra: package có maintained không?</span>
+
+<span class="bad">// XẤU — CORS open:</span>
+app.use(cors({ origin: '*' }));
+<span class="good">// TỐT — chỉ định domain:</span>
+app.use(cors({
+  origin: ['https://myapp.com']
+}));</div>
+    </div>
+  </div>
+  <p style="margin-top:10px;font-size:13px;color:rgba(255,255,255,.55)">Tỷ lệ code AI có lỗ hổng bảo mật: <strong style="color:#ff8080">9.8% – 42.1%</strong> (các nghiên cứu khác nhau)</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 41: SECURITY CHECKLIST -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s41">
+  <h2 class="sec-label">2.5.4 — Security Checklist</h2>
+  <h2 class="slide-title">Security Checklist 15 Items — Cho Mỗi PR</h2>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>#</th><th>Kiểm tra</th><th>Mức độ</th></tr>
+      <tr><td>1</td><td>Không có hardcoded secrets (grep: password, secret, key, token)</td><td><span class="badge badge-r">Bắt buộc</span></td></tr>
+      <tr><td>2</td><td>Tất cả DB queries dùng parameterized (không string concat)</td><td><span class="badge badge-r">Bắt buộc</span></td></tr>
+      <tr><td>3</td><td>Tất cả user input được validate và sanitize</td><td><span class="badge badge-r">Bắt buộc</span></td></tr>
+      <tr><td>4</td><td>CORS chỉ cho phép domains cụ thể (không '*')</td><td><span class="badge badge-r">Bắt buộc</span></td></tr>
+      <tr><td>5</td><td>JWT secret từ env, không hardcode</td><td><span class="badge badge-r">Bắt buộc</span></td></tr>
+      <tr><td>6</td><td>Password hash bằng bcrypt/argon2 (không MD5/SHA1)</td><td><span class="badge badge-r">Bắt buộc</span></td></tr>
+      <tr><td>7</td><td>.gitignore có: .env, *.key, *.pem, node_modules</td><td><span class="badge badge-r">Bắt buộc</span></td></tr>
+      <tr><td>8</td><td>npm audit / pip audit không có critical vulnerabilities</td><td><span class="badge badge-y">Cao</span></td></tr>
+      <tr><td>9</td><td>Rate limiting cho endpoints nhạy cảm (login, register)</td><td><span class="badge badge-y">Cao</span></td></tr>
+      <tr><td>10</td><td>Error messages không lộ internal info (stack trace, DB schema)</td><td><span class="badge badge-y">Cao</span></td></tr>
+      <tr><td>11</td><td>HTTPS enforce (redirect HTTP → HTTPS)</td><td><span class="badge badge-y">Cao</span></td></tr>
+      <tr><td>12</td><td>Không có console.log chứa sensitive data</td><td><span class="badge badge-g">Trung bình</span></td></tr>
+      <tr><td>13</td><td>File upload: validate type, size</td><td><span class="badge badge-g">Trung bình</span></td></tr>
+      <tr><td>14</td><td>Session/token có expiry hợp lý</td><td><span class="badge badge-g">Trung bình</span></td></tr>
+      <tr><td>15</td><td>Helmet.js hoặc tương đương (HTTP security headers)</td><td><span class="badge badge-g">Trung bình</span></td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 42: TECH DEBT -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s42">
+  <h2 class="sec-label">2.5.3 & 2.5.5 — Tech Debt</h2>
+  <h2 class="slide-title">Tech Debt Từ AI — 4 Dạng + Chiến Lược</h2>
+  <div class="tbl-wrap" style="margin-bottom:14px">
+    <table>
+      <tr><th>Dạng debt</th><th>Mô tả</th><th>Cách phát hiện</th><th>Cách ngăn</th></tr>
+      <tr><td><strong>Inconsistent patterns</strong></td><td>Module A dùng Repository, Module B dùng Active Record</td><td>Cross-module code review</td><td>Constitution định nghĩa patterns</td></tr>
+      <tr><td><strong>Over-engineering</strong></td><td>Abstraction cho mọi thứ kể cả 1 use case</td><td>"Có thực sự cần interface này?"</td><td>YAGNI rule trong constitution</td></tr>
+      <tr><td><strong>Zombie code</strong></td><td>Imports, functions tạo nhưng không dùng</td><td>Lint: no-unused-vars</td><td>Lint + auto-fix trong CI</td></tr>
+      <tr><td><strong>Doc drift</strong></td><td>Docs không khớp code hiện tại</td><td>Spot check hàng sprint</td><td>Generate docs từ code</td></tr>
+    </table>
+  </div>
+  <div class="card" style="background:rgba(255,215,0,.05);border-color:rgba(255,215,0,.3)">
+    <h3 style="color:#ffd700">Chiến Lược 10% Rule</h3>
+    <p>Dành 10% thời gian mỗi sprint cho debt cleanup. Sprint 2 tuần = 1 ngày cleanup. Thứ 6 hàng tuần: 2 giờ fix lint + naming + stale docs + remove zombie code.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 43: 3 KỊCH BẢN ĐẠO ĐỨC -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s43">
+  <h2 class="sec-label">2.5.6 — Thảo Luận</h2>
+  <h2 class="slide-title">3 Kịch Bản Đạo Đức Thực Tế</h2>
+  <div class="card-grid cols3">
+    <div class="warning-box">
+      <h3 style="color:#ff8080">Kịch bản 1: Skip Review</h3>
+      <p style="font-size:13px">Deadline demo ngày mai. AI tạo code, tests pass. Muốn merge không review kỹ.</p>
+      <p style="font-size:12px;margin-top:8px;color:rgba(255,255,255,.55)"><strong style="color:rgba(255,255,255,.7)">Thảo luận:</strong> Rủi ro là gì? Giải pháp thay thế? Giảm scope? Xin thêm thời gian?</p>
+    </div>
+    <div class="warning-box">
+      <h3 style="color:#ff8080">Kịch bản 2: Không hiểu code</h3>
+      <p style="font-size:13px">AI tạo algorithm phức tạp cho recommendation. Chạy đúng nhưng bạn không hiểu logic.</p>
+      <p style="font-size:12px;margin-top:8px;color:rgba(255,255,255,.55)"><strong style="color:rgba(255,255,255,.7)">Quy tắc vàng:</strong> Nếu bạn không thể giải thích code cho nhóm, đừng commit nó.</p>
+    </div>
+    <div class="warning-box">
+      <h3 style="color:#ff8080">Kịch bản 3: Lỡ paste .env</h3>
+      <p style="font-size:13px">Thành viên A paste cả file .env (có DB password, API keys) vào Claude. Rồi mới nhận ra.</p>
+      <p style="font-size:12px;margin-top:8px"><strong style="color:#ffd700">Hành động NGAY:</strong></p>
+      <ol style="font-size:12px;padding-left:1.2em">
+        <li>Rotate TẤT CẢ credentials đã lộ</li>
+        <li>Kiểm tra truy cập trái phép</li>
+        <li>Thêm rule vào AGENTS.md</li>
+        <li>Dùng .env.example với giá trị giả</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 44: CASE STUDY HEADER -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s44">
+  <div class="sec-num">Case Study</div>
+  <h2 class="section-hero">Code Writer vs.<br>Outcome Engineer</h2>
+  <div class="divider"></div>
+  <p class="sec-desc">Tính năng <strong>Login</strong> cho ứng dụng web (React + Node.js + PostgreSQL). Hai developer, cùng một yêu cầu, hai cách tiếp cận khác nhau hoàn toàn. Kết quả? Một người mất 3 ngày fix bugs. Người kia hoàn thành trong 40 phút.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 45: CODE WRITER APPROACH -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s45">
+  <h2 class="sec-label">Case Study — Cách 1</h2>
+  <h2 class="slide-title">Code Writer: 5 Phút, 8 Lỗ Hổng</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>Prompt dùng</h3>
+      <div class="code-block">"Tạo cho tôi tính năng login
+với React frontend và Node.js backend,
+dùng PostgreSQL."</div>
+      <h3 style="margin-top:12px">Code AI tạo (5 phút)</h3>
+      <div class="code-block" style="font-size:10px">router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  const user = await User.findByEmail(email);
+  if (!user) return res.status(401)...;
+  const match = await bcrypt.compare(...);
+  if (!match) return res.status(401)...;
+  <span class="bad">const token = jwt.sign({ id: user.id },
+    'secret-key', { expiresIn: '7d' });</span>
+  res.json({ token });
+});</div>
+    </div>
+    <div class="card">
+      <h3>8 Lỗ Hổng Phát Hiện Sau</h3>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+        <div class="chk-item"><span class="chk-bad">✗</span><span>Không có rate limiting → Brute force attack</span></div>
+        <div class="chk-item"><span class="chk-bad">✗</span><span>JWT secret hardcoded → Lộ trong source code</span></div>
+        <div class="chk-item"><span class="chk-bad">✗</span><span>Token expiry 7 ngày → Token bị đánh cắp dùng 1 tuần</span></div>
+        <div class="chk-item"><span class="chk-bad">✗</span><span>Không log failed attempts → Không phát hiện tấn công</span></div>
+        <div class="chk-item"><span class="chk-bad">✗</span><span>Không validate input → SQL injection tiềm ẩn</span></div>
+        <div class="chk-item"><span class="chk-bad">✗</span><span>Không có refresh token → User bị logout giữa chừng</span></div>
+        <div class="chk-item"><span class="chk-bad">✗</span><span>Không có password policy → Chấp nhận password "1"</span></div>
+        <div class="chk-item"><span class="chk-bad">✗</span><span>Không có account lockout → Unlimited attempts</span></div>
+      </div>
+      <div style="margin-top:12px;padding:10px;background:rgba(255,80,80,.08);border-radius:4px">
+        <p style="font-size:13px;color:#ff8080">Tổng: 5 phút implement + <strong>3+ ngày fix</strong> + rủi ro bảo mật không giới hạn</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 46: OUTCOME ENGINEER SPEC -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s46">
+  <h2 class="sec-label">Case Study — Cách 2</h2>
+  <h2 class="slide-title">Outcome Engineer: Spec 30 Phút</h2>
+  <div class="code-block" style="font-size:10px;max-height:420px;overflow-y:auto"><span class="kw"># Feature Spec: Authentication System</span>
+
+<span class="cm">## Business Context</span>
+User cần đăng nhập để truy cập dữ liệu cá nhân.
+Hệ thống phải bảo vệ tài khoản khỏi unauthorized access.
+Target: 1000 users, 100 concurrent logins.
+
+<span class="cm">## Acceptance Criteria</span>
+AC-1: Đăng nhập bằng email/password
+AC-2: Rate limiting: max 5 attempts/phút/IP
+AC-3: Account lock sau 10 lần sai (unlock sau 30 phút)
+AC-4: JWT access token: 15 phút expiry
+AC-5: Refresh token: 7 ngày, rotate on use, revoke on logout
+AC-6: Password: min 8 chars, 1 uppercase, 1 number, 1 special
+AC-7: bcrypt cost factor: 12
+AC-8: Log mọi login attempt (success/fail) với IP, timestamp
+
+<span class="cm">## Technical Constraints</span>
+- Parameterized queries only (no string concatenation)
+- Secrets từ environment variables, NEVER hardcode
+- Validate & sanitize ALL input
+- CORS: chỉ frontend domain | HTTPS only
+
+<span class="cm">## Edge Cases</span>
+- Login từ timezone khác nhau
+- Concurrent login từ nhiều devices
+- Token refresh khi access token hết giữa request
+- Email case sensitivity (User@mail.com vs user@mail.com)
+
+<span class="cm">## Out of Scope (v2)</span>
+- OAuth/SSO | 2FA | Password reset via email</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 47: OUTCOME ENGINEER RESULT -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s47">
+  <h2 class="sec-label">Case Study — Cách 2 (tiếp)</h2>
+  <h2 class="slide-title">Outcome Engineer: Code Đầy Đủ, 10 Phút</h2>
+  <div class="code-block" style="font-size:9.5px;max-height:380px;overflow-y:auto">export async function login(input: unknown, ip: string) {
+  <span class="cm">// Validate input (AC: validate ALL input)</span>
+  const { email, password } = loginSchema.parse(input);
+
+  <span class="cm">// Rate limiting (AC-2: max 5 attempts/min/IP)</span>
+  await rateLimiter.checkLimit(`login:${ip}`, 5, 60);
+
+  <span class="cm">// Find user — email case-insensitive (Edge Case)</span>
+  const user = await authRepository.findByEmail(
+    email.toLowerCase().trim()
+  );
+  if (!user) {
+    logger.warn('Login failed: user not found', { email, ip });
+    throw new AppError(401, 'Invalid email or password');
+  }
+
+  <span class="cm">// Check account lock (AC-3)</span>
+  if (user.lockedUntil && user.lockedUntil > new Date()) {
+    logger.warn('Login on locked account', { userId: user.id });
+    throw new AppError(423, 'Account locked. Try again later.');
+  }
+
+  <span class="cm">// Verify password (AC-7: bcrypt cost 12)</span>
+  const isValid = await comparePassword(password, user.passwordHash);
+  if (!isValid) {
+    await authRepository.incrementFailedAttempts(user.id);
+    if (user.failedAttempts + 1 >= 10) {
+      const lockUntil = new Date(Date.now() + 30 * 60 * 1000);
+      await authRepository.lockAccount(user.id, lockUntil);
+    }
+    throw new AppError(401, 'Invalid email or password');
+  }
+
+  <span class="cm">// Generate token pair (AC-4: 15min, AC-5: 7d)</span>
+  const tokens = generateTokenPair({ userId: user.id, role: user.role });
+  logger.info('Login successful', { userId: user.id, ip });
+  return { accessToken: tokens.accessToken,
+           refreshToken: tokens.refreshToken, expiresIn: 900 };
+}</div>
+  <p style="margin-top:8px;font-size:12px;color:rgba(255,255,255,.55)">Agent trích dẫn AC-2, AC-3, AC-4, AC-5, AC-7, AC-8 trong code. Edge case email case-insensitive được xử lý. Logging đầy đủ. Error message không lộ "email không tồn tại".</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 48: BẢNG 2.8 SO SÁNH -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s48">
+  <h2 class="sec-label">Bảng 2.8 — Case Study</h2>
+  <h2 class="slide-title">So Sánh Hai Cách Tiếp Cận</h2>
+  <div class="tbl-wrap" style="margin-bottom:16px">
+    <table>
+      <tr><th>Tiêu chí</th><th style="color:#ff8080">Code Writer</th><th style="color:var(--g)">Outcome Engineer</th></tr>
+      <tr><td>Thời gian ban đầu</td><td>5 phút</td><td>40 phút</td></tr>
+      <tr><td>Thời gian fix issues</td><td>3+ ngày</td><td>&lt; 1 giờ</td></tr>
+      <tr><td><strong>Tổng thời gian thực</strong></td><td><strong style="color:#ff8080">3+ ngày</strong></td><td><strong style="color:var(--g)">&lt; 2 giờ</strong></td></tr>
+      <tr><td>Bảo mật</td><td>8 lỗ hổng</td><td>0 lỗ hổng đã biết</td></tr>
+      <tr><td>Test coverage</td><td>Basic (happy path)</td><td>Full (mọi AC + edge cases)</td></tr>
+      <tr><td>Tái sử dụng</td><td>Không có spec</td><td>Spec là tài liệu sống</td></tr>
+      <tr><td>Team hiểu code</td><td>Chỉ người tạo</td><td>Ai đọc spec đều hiểu</td></tr>
+      <tr><td>Giáo viên đánh giá</td><td>Khó trace đóng góp</td><td>Spec = deliverable rõ ràng</td></tr>
+      <tr><td>Mở rộng cho v2</td><td>Rewrite lại</td><td>Update spec, re-run agent</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 49: BÀI HỌC CỐT LÕI QUOTE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s49">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:20px">
+    <div class="sec-num" style="text-align:center;margin-bottom:24px">Bài Học Cốt Lõi</div>
+    <div class="big-quote" style="max-width:800px">Outcome Engineer<br>KHÔNG chậm hơn —<br>họ nhanh hơn khi tính<br><span style="color:#ffd700">tổng thời gian cả vòng đời feature.</span></div>
+    <div class="divider" style="margin:28px auto"></div>
+    <div style="display:flex;gap:32px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+      <div style="text-align:center">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(24px,3vw,42px);font-weight:700;color:var(--g)">30 phút</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6)">viết spec tiết kiệm</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(24px,3vw,42px);font-weight:700;color:var(--g)">3 ngày</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6)">fix bugs</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(24px,3vw,42px);font-weight:700;color:var(--g)">Spec</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6)">là cách duy nhất để</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,2.5vw,36px);font-weight:700;color:var(--g)">5 người</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6)">cùng hiểu 1 tính năng</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 50: BÀI TẬP TỔNG HỢP -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s50">
+  <h2 class="sec-label">Bài Tập Tổng Hợp</h2>
+  <h2 class="slide-title">🛠 Outcome Engineer Challenge — 80 Phút</h2>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Phase</th><th>Hoạt động</th><th>Người</th><th>Thời gian</th></tr>
+      <tr><td><strong>Phase 1: Spec</strong></td><td>1 người viết Why, 2 người viết AC+constraints, 1 người viết edge cases, 1 người dùng AI brainstorm</td><td>Nhóm</td><td>20 phút</td></tr>
+      <tr><td><strong>Phase 2: TDD</strong></td><td>Viết tests cho mọi AC, dùng AI tìm 5 edge cases bổ sung</td><td>Nhóm</td><td>15 phút</td></tr>
+      <tr><td><strong>Phase 3: Implement</strong></td><td>Đưa spec + tests cho agent, duyệt plan, implement</td><td>Agent + Nhóm</td><td>15 phút</td></tr>
+      <tr><td><strong>Phase 4: Verify</strong></td><td>Tests pass? Logic đúng? Architecture đúng? Security checklist?</td><td>Nhóm</td><td>20 phút</td></tr>
+      <tr><td><strong>Phase 5: Retro</strong></td><td>Spec thiếu gì? Nếu Vibe Coding thì khác thế nào? Update Skill Matrix</td><td>Nhóm</td><td>10 phút</td></tr>
+    </table>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <p>Đầu ra: 1 feature hoàn chỉnh với <strong>spec + tests + code + verification + retro notes</strong>. Lưu lại toàn bộ artifacts làm tài liệu học tập.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 51: TÓM TẮT -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s51">
+  <h2 class="sec-label">Tổng Kết</h2>
+  <h2 class="slide-title">Tóm Tắt Chương 2</h2>
+  <div class="card-grid cols2" style="gap:12px">
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3>2.1 — Outcome Engineer</h3>
+      <p>Developer chuyển từ <em>How</em> sang <em>Why & What</em>. 3 kỹ năng mới: Intent Definition, Spec Writing, Outcome Verification.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3>2.2 — T-Shape mở rộng</h3>
+      <p>Ngang = AI across SDLC + Critical Thinking. Dọc = DSA + Patterns + Domain Knowledge quan trọng hơn bao giờ.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3>2.3 — Context = Infrastructure</h3>
+      <p>4 nguyên tắc: Chọn lọc, Cấu trúc, Làm sạch, Phân tầng. 5 kỹ thuật giảm Cognitive Load. AGENTS.md = shared context.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--g)">
+      <h3>2.4 — TDD + AI Combo</h3>
+      <p>Đọc code AI với skepticism. TDD = hàng rào kiểm soát. Dùng AI tìm edge cases. Debug 6 bước có hệ thống.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #ff5050;grid-column:1/-1">
+      <h3 style="color:#ff8080">2.5 — Human-in-the-Loop luôn</h3>
+      <p>Không paste secrets. Kiểm tra 5 loại lỗ hổng phổ biến. 15-item security checklist mỗi PR. Quản lý tech debt từ đầu với 10% Rule.</p>
+    </div>
+  </div>
+  <div style="margin-top:12px;padding:14px;background:rgba(0,255,85,.06);border:1px solid rgba(0,255,85,.25);border-radius:6px">
+    <p style="font-size:clamp(14px,1.5vw,17px)">💡 <strong>Case Study:</strong> 40 phút Outcome Engineer &gt; 3 ngày Code Writer khi tính full lifecycle. <strong>Spec = đầu tư, không phải chi phí.</strong></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 52: CHECKLIST & TIẾP THEO -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s52">
+  <h2 class="sec-label">Checklist Hoàn Thành + Preview</h2>
+  <h2 class="slide-title">Bạn Đã Nắm Được Chương 2 Khi...</h2>
+  <div class="card-grid cols2">
+    <div class="card">
+      <h3>✅ Checklist</h3>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+        <div class="chk-item"><span class="chk">□</span><span>Hiểu chuyển dịch Code Writer → Outcome Engineer</span></div>
+        <div class="chk-item"><span class="chk">□</span><span>Biết viết Why-What-How cho một feature</span></div>
+        <div class="chk-item"><span class="chk">□</span><span>Tự đánh giá Skill Matrix, biết điểm yếu</span></div>
+        <div class="chk-item"><span class="chk">□</span><span>Hiểu và áp dụng 4 nguyên tắc Context Engineering</span></div>
+        <div class="chk-item"><span class="chk">□</span><span>Biết phân biệt 4 đặc trưng code AI</span></div>
+        <div class="chk-item"><span class="chk">□</span><span>Đã làm bài tập TDD + AI ít nhất 1 lần</span></div>
+        <div class="chk-item"><span class="chk">□</span><span>Biết 15-item security checklist</span></div>
+        <div class="chk-item"><span class="chk">□</span><span>Hiểu AGENTS.md dùng để làm gì</span></div>
+      </div>
+    </div>
+    <div class="card" style="background:rgba(0,255,85,.06);border-color:rgba(0,255,85,.4)">
+      <h3>➡ Tiếp Theo: Chương 3</h3>
+      <div class="divider" style="margin:10px 0"></div>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(18px,2.2vw,28px);color:var(--g);margin-bottom:12px">Hệ Sinh Thái Công Cụ AI Coding</h2>
+      <ul>
+        <li>So sánh chi tiết: <strong>Claude Code vs Cursor vs GitHub Copilot vs Codex CLI vs Kiro</strong></li>
+        <li>Ưu nhược điểm đa chiều: giá, tính năng, workflow</li>
+        <li>Hướng dẫn chọn tool cho đồ án nhóm</li>
+        <li>Setup và cấu hình thực tế</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+</div><!-- end #slideshow -->
+
+<!-- NAV BUTTONS -->
+<div id="nav">
+  <button id="btn-prev" onclick="go(-1)" title="Previous (←)">&#8592;</button>
+  <span id="slide-counter">1 / 58</span>
+  <button id="btn-next" onclick="go(1)" title="Next (→)">&#8594;</button>
+</div>
+
+<script>
+// ─── ANTI-COPY PROTECTION ─────────────────────────────────────────────────
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (
+    e.key === 'F12' ||
+    (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c','K','k'].includes(e.key)) ||
+    (e.ctrlKey && ['u','U','s','S','c','C','a','A','p','P','f','F'].includes(e.key))
+  ) {
+    e.preventDefault();
+    return false;
+  }
+});
+document.addEventListener('selectstart', e => e.preventDefault());
+document.addEventListener('dragstart', e => e.preventDefault());
+document.addEventListener('copy', e => e.preventDefault());
+
+// ─── MATRIX RAIN ──────────────────────────────────────────────────────────
+(function(){
+  const canvas = document.getElementById('rain');
+  const ctx = canvas.getContext('2d');
+  let cols, drops;
+  const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789ABCDEF';
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols = Math.floor(canvas.width / 18);
+    drops = Array(cols).fill(1);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  setInterval(() => {
+    ctx.fillStyle = 'rgba(1,21,0,0.06)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#00ff55';
+    ctx.font = '14px monospace';
+    drops.forEach((y, i) => {
+      const c = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(c, i * 18, y * 18);
+      if (y * 18 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    });
+  }, 50);
+})();
+
+// ─── SLIDESHOW ENGINE ─────────────────────────────────────────────────────
+const slides = Array.from(document.querySelectorAll('.slide'));
+const total = slides.length;
+let cur = 0;
+
+function go(dir) {
+  slides[cur].classList.remove('active');
+  cur = (cur + dir + total) % total;
+  slides[cur].classList.add('active');
+  document.getElementById('slide-counter').textContent = (cur+1)+' / '+total;
+  document.getElementById('progress-bar').style.width = ((cur+1)/total*100)+'%';
+}
+
+function goTo(idx) {
+  slides[cur].classList.remove('active');
+  cur = Math.max(0, Math.min(idx, total-1));
+  slides[cur].classList.add('active');
+  document.getElementById('slide-counter').textContent = (cur+1)+' / '+total;
+  document.getElementById('progress-bar').style.width = ((cur+1)/total*100)+'%';
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); go(-1); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); go(1); }
+  if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+  if (e.key === 'End') { e.preventDefault(); goTo(total-1); }
+  // Number shortcuts
+  const num = parseInt(e.key);
+  if (!isNaN(num) && num >= 1 && num <= 9) {
+    const sectionStarts = [0,3,10,22,31,37];
+    if (num <= sectionStarts.length) goTo(sectionStarts[num-1]);
+  }
+});
+
+// Touch
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+}, {passive:true});
+
+// Init
+document.getElementById('progress-bar').style.width = (1/total*100)+'%';
+document.getElementById('slide-counter').textContent = '1 / '+total;
+</script>
+</body>
+</html>

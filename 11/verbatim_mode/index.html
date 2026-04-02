@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chương 11 - Multi-Agent & Agent Orchestration (Verbatim Mode)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,500;1,600&family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #011500;
+      --bg-grad: radial-gradient(ellipse at 50% 0%, #022800, #011500, #010f00);
+      --text: #ffffff;
+      --accent: #00ff55;
+      --muted: #ccffcc;
+      --faint: #7de87d;
+      --card-border: rgba(0,255,65,0.5);
+      --card-bg: rgba(0,255,65,0.09);
+      --table-head: rgba(0,255,65,0.18);
+      --warn: #ffc844;
+      --danger: #ff7070;
+      --trend: #55ccff;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: 'Josefin Sans', sans-serif;
+      background: var(--bg-grad);
+      color: var(--text);
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #matrix {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: 0.09;
+      pointer-events: none;
+    }
+
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.02),
+        rgba(255,255,255,0.02) 1px,
+        rgba(0,0,0,0.02) 2px,
+        rgba(0,0,0,0.02) 3px
+      );
+      mix-blend-mode: screen;
+    }
+
+    .progress-wrap {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: rgba(0, 255, 85, 0.12);
+      z-index: 20;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #00ff41, #00ff99);
+      box-shadow: 0 0 14px rgba(0,255,85,0.8);
+      transition: width 0.35s ease;
+    }
+
+    .deck {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 60px 80px 80px;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 22px;
+      overflow-y: auto;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translate3d(44px, 0, 0) scale(0.985);
+      transition:
+        opacity 0.48s ease,
+        transform 0.62s cubic-bezier(0.22, 0.61, 0.36, 1),
+        visibility 0s linear 0.62s;
+      will-change: opacity, transform;
+    }
+
+    .slide.mounted {
+      display: flex;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translate3d(0, 0, 0) scale(1);
+      z-index: 3;
+      transition:
+        opacity 0.48s ease,
+        transform 0.62s cubic-bezier(0.22, 0.61, 0.36, 1),
+        visibility 0s linear 0s;
+    }
+
+    .slide.prev {
+      transform: translate3d(-44px, 0, 0) scale(0.985);
+      z-index: 2;
+    }
+
+    .slide.next {
+      transform: translate3d(44px, 0, 0) scale(0.985);
+      z-index: 1;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Cormorant Garamond', serif;
+      margin: 0;
+      color: var(--accent);
+      text-shadow: 0 0 18px rgba(0,255,85,0.35);
+    }
+
+    .title { font-size: clamp(44px, 6.5vw, 80px); line-height: 1.04; }
+    .section-title { font-size: clamp(34px, 4.5vw, 60px); line-height: 1.08; }
+    .content-title { font-size: clamp(28px, 3.4vw, 48px); line-height: 1.1; }
+    p, li { font-size: clamp(16px, 1.7vw, 22px); line-height: 1.45; color: var(--muted); margin: 0; }
+
+    .slide-header {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .slide-tag {
+      display: inline-block;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      color: var(--faint);
+      padding: 6px 12px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle { color: var(--faint); font-size: clamp(18px, 2vw, 26px); }
+    .content-body { display: flex; flex-direction: column; gap: 16px; text-align: left; }
+
+    .section-header {
+      min-height: 100%;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
+
+    .section-bg-num {
+      position: absolute;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(140px, 35vw, 360px);
+      color: rgba(0,255,85,0.12);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -56%);
+      pointer-events: none;
+    }
+
+    .card {
+      border-left: 4px solid var(--accent);
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .bullet-list { list-style: none; padding-left: 0; margin: 0; }
+    .bullet-list li {
+      font-size: clamp(15px, 1.6vw, 20px);
+      margin: 8px 0;
+      color: var(--text);
+    }
+    .bullet-list li::before {
+      content: "▸ ";
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    blockquote.matrix-quote {
+      margin: 0;
+      border-left: 4px solid var(--accent);
+      background: rgba(0,255,65,0.12);
+      color: var(--text);
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: clamp(17px, 1.8vw, 24px);
+      padding: 14px 18px;
+      border-radius: 10px;
+    }
+
+    .big-quote {
+      margin: auto 0;
+      text-align: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: clamp(26px, 3.2vw, 44px);
+      color: #e8ffe8;
+      line-height: 1.3;
+      text-shadow: 0 0 22px rgba(0,255,85,0.28);
+    }
+
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--card-border);
+      font-size: clamp(13px, 1.3vw, 16px);
+      background: rgba(0, 30, 0, 0.45);
+    }
+
+    .matrix-table th,
+    .matrix-table td {
+      border: 1px solid var(--card-border);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      color: var(--text);
+    }
+
+    .matrix-table th {
+      background: var(--table-head);
+      color: #e7ffe7;
+      font-weight: 600;
+    }
+
+    .alert-box {
+      border-radius: 10px;
+      padding: 12px 14px;
+      border: 1px solid;
+      font-size: clamp(15px, 1.6vw, 20px);
+    }
+    .alert-box.info { background: rgba(85,204,255,0.12); border-color: rgba(85,204,255,0.5); color: #d8f4ff; }
+    .alert-box.warn { background: rgba(255,200,68,0.12); border-color: rgba(255,200,68,0.6); color: #ffeec1; }
+    .alert-box.danger { background: rgba(255,112,112,0.12); border-color: rgba(255,112,112,0.6); color: #ffd9d9; }
+    .alert-box.tip { background: rgba(0,255,85,0.12); border-color: rgba(0,255,85,0.6); color: #d9ffd9; }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .data-point {
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      background: var(--card-bg);
+      padding: 14px;
+    }
+
+    .data-point .k {
+      font-size: clamp(24px, 2.8vw, 38px);
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 6px;
+      text-shadow: 0 0 12px rgba(0,255,85,0.35);
+    }
+
+    .data-point .v { font-size: clamp(14px, 1.4vw, 18px); color: var(--muted); }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .hl { color: #00ff55; }
+    .hl-r { color: #ff7070; }
+    .hl-o { color: #ffc844; }
+    .hl-b { color: #55ccff; }
+
+    pre {
+      margin: 0;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      background: rgba(0, 0, 0, 0.45);
+      color: #d9ffd9;
+      font-size: 13px;
+      line-height: 1.35;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .footer {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--faint);
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0, 18, 0, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      backdrop-filter: blur(4px);
+    }
+
+    .controls button {
+      border: 1px solid var(--card-border);
+      background: rgba(0,255,65,0.12);
+      color: #ecffec;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .controls button:hover { background: rgba(0,255,65,0.24); }
+
+    .counter {
+      min-width: 90px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .watermark {
+      position: fixed;
+      right: 14px;
+      top: 12px;
+      z-index: 25;
+      color: rgba(204,255,204,0.9);
+      font-size: 13px;
+      letter-spacing: 0.8px;
+      border: 1px solid rgba(0,255,65,0.35);
+      background: rgba(0, 30, 0, 0.55);
+      border-radius: 999px;
+      padding: 4px 10px;
+    }
+
+    @media (max-width: 900px) {
+      .slide { padding: 56px 20px 90px; }
+      .two-col, .toc-grid, .data-grid { grid-template-columns: 1fr; }
+      .controls { bottom: 12px; }
+      .matrix-table { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="scanlines"></div>
+  <div class="progress-wrap"><div class="progress" id="progress"></div></div>
+  <div class="watermark">LinhNDM - Nguyễn Đình Mạnh Linh</div>
+
+  <main class="deck" id="deck">
+    <section class="slide active" data-section="0">
+      <div class="slide-header">
+        <div class="slide-tag">Title Slide • Verbatim Mode</div>
+        <h1 class="title">Chương 11<br>Multi-Agent & Agent Orchestration</h1>
+        <p class="subtitle">Khi một AI không đủ - Xây đội ngũ thay vì siêu nhân</p>
+      </div>
+      <div class="content-body">
+        <div class="card">
+          <p><span class="hl">Playbook SDD + ADD</span> | Bản trình chiếu chuyên sâu cho chuyên gia công nghệ về kiến trúc multi-agent, skill system, hooks automation, MCP orchestration và chiến lược vận hành AI team ở mức production.</p>
+        </div>
+      </div>
+      <div class="footer"><span>© 2025 - Playbook SDD + ADD</span><span>Chapter 11</span></div>
+    </section>
+
+    <section class="slide" data-section="0">
+      <div class="slide-header">
+        <div class="slide-tag">Giới thiệu chương</div>
+        <h2 class="content-title">Từ Single Agent sang AI Team</h2>
+      </div>
+      <div class="content-body">
+        <p>Cho đến trước chương này, workflow chuẩn là một agent duy nhất đọc spec, lập kế hoạch, viết code, chạy test và tự sửa lỗi. Cách làm đó rất hiệu quả cho feature nhỏ hoặc bounded context ngắn.</p>
+        <p>Khi dự án lớn hơn, cần frontend, backend, testing chạy đồng thời và context của một feature vượt giới hạn cửa sổ nhớ, mô hình single-agent bắt đầu bộc lộ giới hạn kiến trúc. Vấn đề không phải agent kém thông minh, mà do bài toán thực tế đòi hỏi chuyên môn hóa và song song hóa.</p>
+        <blockquote class="matrix-quote">Kỹ sư giỏi trong tương lai không phải là người code nhanh nhất, mà là người biết tổ chức đội ngũ AI hiệu quả nhất: phân việc đúng, resolve conflict đúng thời điểm và đảm bảo output đi đúng hướng sản phẩm.</blockquote>
+      </div>
+    </section>
+
+    <section class="slide" data-section="0">
+      <div class="slide-header">
+        <div class="slide-tag">Mục lục</div>
+        <h2 class="content-title">Cấu trúc Chương 11</h2>
+      </div>
+      <div class="toc-grid">
+        <div class="card"><h3>11.1 Tại sao 1 Agent không đủ?</h3><p>Context limits, cognitive load, parallel execution.</p></div>
+        <div class="card"><h3>11.2 Kiến trúc Multi-Agent</h3><p>Vertical vs horizontal, shared state, communication patterns.</p></div>
+        <div class="card"><h3>11.3 Skill System</h3><p>SKILL.md format, 10 must-have skills, custom skill workflow.</p></div>
+        <div class="card"><h3>11.4 Hooks & Automation</h3><p>Lifecycle hooks, pre-commit, self-healing loop.</p></div>
+        <div class="card"><h3>11.5 Hands-on Lab</h3><p>4-agent team export report to PDF, contract-first execution.</p></div>
+        <div class="card"><h3>11.6 MCP trong Multi-Agent</h3><p>Tool borrowing, per-agent permissions, tool-sharing protocol.</p></div>
+      </div>
+    </section>
+
+    <section class="slide section-header" data-section="1">
+      <div class="section-bg-num">11.1</div>
+      <div class="slide-tag">Section Header</div>
+      <h2 class="section-title">Tại sao 1 Agent không đủ?</h2>
+      <p class="subtitle">Giới hạn kiến trúc cơ bản, không biến mất kể cả khi model mạnh hơn</p>
+    </section>
+
+    <section class="slide" data-section="1">
+      <div class="slide-header"><div class="slide-tag">11.1.1</div><h2 class="content-title">Context Window Limits</h2></div>
+      <div class="content-body">
+        <p>Context window dù 200K hay 2M tokens vẫn là tài nguyên hữu hạn. Một codebase production thường gồm frontend, backend, DB schema, tests và specs; khi dồn mọi thứ vào cùng context, không gian cho reasoning chất lượng cao bị co lại rất nhanh.</p>
+        <p>Điểm quan trọng là scale context không giải quyết triệt để. Khi enterprise codebase tăng lên hàng trăm nghìn dòng, lượng tokens tăng nhanh hơn khả năng giữ tập trung của một agent duy nhất.</p>
+        <div class="alert-box warn">Giải pháp thực dụng: <span class="hl">không cần một agent biết tất cả</span>. Frontend agent giữ frontend + shared types; backend agent giữ backend + DB schema; lead agent giữ interface contracts và orchestration.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="1">
+      <div class="slide-header"><div class="slide-tag">Data</div><h2 class="content-title">Codebase vs Context Window</h2></div>
+      <div class="content-body">
+        <div class="data-grid">
+          <div class="data-point"><div class="k">63,000</div><div class="v">Lines trong monorepo cỡ vừa</div></div>
+          <div class="data-point"><div class="k">~945K</div><div class="v">Tokens ước tính (15 tokens/line)</div></div>
+          <div class="data-point"><div class="k">4.7x</div><div class="v">Lớn hơn context 200K tokens</div></div>
+        </div>
+        <pre>frontend/src/ ~15,000 lines
+backend/src/  ~25,000 lines
+shared/types/ ~3,000 lines
+tests/        ~12,000 lines
+docs/specs/   ~8,000 lines
+
+Enterprise scale: 500K+ lines ~7.5M tokens - vẫn không fit kể cả context 1M.</pre>
+      </div>
+    </section>
+
+    <section class="slide" data-section="1">
+      <div class="slide-header"><div class="slide-tag">11.1.2</div><h2 class="content-title">Cognitive Load của AI</h2></div>
+      <div class="content-body">
+        <p>Khi một model phải track quá nhiều concerns cùng lúc, attention bị phân tán và chất lượng suy luận theo từng concern giảm. Agent có thể làm nhiều thứ, nhưng làm đồng thời CSS animation, SQL optimization, business logic và test strategy trong một session thường dẫn đến output "đủ dùng" chứ không xuất sắc.</p>
+        <blockquote class="matrix-quote">Chuyên môn hóa không phải vì agent thiếu intelligence; đó là cơ chế để dồn attention vào một domain, giữ best-practice context sâu và giảm rework ở integration phase.</blockquote>
+      </div>
+    </section>
+
+    <section class="slide" data-section="1">
+      <div class="slide-header"><div class="slide-tag">Table</div><h2 class="content-title">Scenario vs Quality</h2></div>
+      <table class="matrix-table">
+        <thead><tr><th>Scenario</th><th>Agent phải track</th><th>Reasoning quality</th><th>Output quality</th></tr></thead>
+        <tbody>
+          <tr><td>Full-stack trong 1 session</td><td>CSS + SQL + business logic + tests + docs</td><td>Phân tán, ~60%</td><td>Inconsistent, cần rework nhiều</td></tr>
+          <tr><td>Frontend-only agent</td><td>UI patterns, state, a11y, CSS</td><td>Focused, ~90%</td><td>High quality, rework thấp</td></tr>
+          <tr><td>Backend-only agent</td><td>DB schema, rules, API contracts</td><td>Focused, ~90%</td><td>High quality, rework thấp</td></tr>
+          <tr><td>Test-only agent</td><td>Coverage criteria, mocking, edge cases</td><td>Focused, ~95%</td><td>Thorough, bắt lỗi tốt hơn</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="slide" data-section="1">
+      <div class="slide-header"><div class="slide-tag">11.1.3</div><h2 class="content-title">Parallel Execution tối ưu thời gian chờ</h2></div>
+      <div class="content-body">
+        <p>Nhiều task trong một feature cycle độc lập tự nhiên: backend API, frontend scaffolding, docs hoặc worker service có thể triển khai song song ngay sau khi contract được define. Đây là lợi ích trực tiếp lên developer experience vì giảm idle time.</p>
+        <div class="two-col">
+          <div class="card"><p><span class="hl-o">Sequential:</span> 1 agent chạy tuần tự backend 4h -> frontend 4h -> tests 3h -> docs 2h -> fix 3h, tổng khoảng 16h.</p></div>
+          <div class="card"><p><span class="hl">Parallel:</span> 3 agents chạy đồng thời ngày 1, ngày 2 chỉ còn phase integration ngắn; tổng còn khoảng 7h, giảm ~56% thời gian elapsed.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide section-header" data-section="2">
+      <div class="section-bg-num">11.2</div>
+      <div class="slide-tag">Section Header</div>
+      <h2 class="section-title">Kiến trúc Multi-Agent</h2>
+      <p class="subtitle">Thiết kế đúng pattern, rõ trade-off, rõ điểm nghẽn</p>
+    </section>
+
+    <section class="slide" data-section="2">
+      <div class="slide-header"><div class="slide-tag">11.2.1</div><h2 class="content-title">Vertical vs Horizontal</h2></div>
+      <div class="content-body">
+        <div class="two-col">
+          <div class="card">
+            <h3>Vertical (Lead + Workers)</h3>
+            <ul class="bullet-list">
+              <li>Lead nhận intent cấp cao, plan và delegate.</li>
+              <li>Trách nhiệm rõ, dễ audit, conflict đơn giản.</li>
+              <li>Nhược điểm: lead có thể thành bottleneck/SPOF.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Horizontal (Peer Agents)</h3>
+            <ul class="bullet-list">
+              <li>Agents ngang hàng sync qua shared context.</li>
+              <li>Không bottleneck trung tâm, parallelism tốt.</li>
+              <li>Nhược điểm: conflict resolution phức tạp hơn.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="alert-box info">Chọn kiến trúc theo bounded context: team feature nhỏ thường phù hợp <span class="hl">vertical</span>; workstreams độc lập mạnh thường hợp <span class="hl-b">horizontal</span>.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="2">
+      <div class="slide-header"><div class="slide-tag">11.2.2</div><h2 class="content-title">Shared State & Context Synchronization</h2></div>
+      <div class="content-body">
+        <p>Thất bại phổ biến nhất của multi-agent không nằm ở chất lượng từng agent, mà nằm ở communication drift. Khi backend đổi field hoặc schema mà frontend không biết ngay, integration sẽ đổ vỡ vì assumptions lệch nhau.</p>
+        <div class="card">
+          <p><span class="hl">shared_context.md</span> phải là single source of truth: Lead cập nhật sau mỗi major decision; mọi sub-agent bắt buộc đọc trước khi bắt đầu và trước mỗi thay đổi liên quan API/shared files.</p>
+        </div>
+        <pre>POST /auth/register -> Response { user_id, created_at }
+GET /orders -> Response { orders, meta }
+Known breaking change: "order_list" -> "orders"
+Impact: Frontend parser phải update ngay.</pre>
+      </div>
+    </section>
+
+    <section class="slide" data-section="2">
+      <div class="slide-header"><div class="slide-tag">11.2.2</div><h2 class="content-title">Lead Agent Conflict Resolution</h2></div>
+      <div class="content-body">
+        <p>Xung đột thường xảy ra trên shared resources như `api_contracts.yaml`, DB schema hoặc config hệ thống. Protocol đúng là mọi write vào shared artifacts phải qua approval của Lead Agent.</p>
+        <div class="alert-box tip">Ví dụ conflict tương thích: Backend muốn rename `image_path` -> `image_url`, Frontend muốn thêm `imageUrl`. Lead quyết định thứ tự thực thi để tránh trạng thái trung gian sai: backend rename trước, frontend cập nhật theo sau.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="2">
+      <div class="slide-header"><div class="slide-tag">Table</div><h2 class="content-title">Communication Patterns</h2></div>
+      <table class="matrix-table">
+        <thead><tr><th>Pattern</th><th>Cơ chế</th><th>Use case</th><th>Ví dụ</th></tr></thead>
+        <tbody>
+          <tr><td>File-based handoff</td><td>Agent A ghi file, B đọc tiếp</td><td>Pipeline tuần tự</td><td>Backend viết API spec -> Frontend đọc</td></tr>
+          <tr><td>Shared database/file</td><td>Cùng đọc/ghi shared state</td><td>Real-time sync</td><td>`shared_context.md`, SQLite</td></tr>
+          <tr><td>Event queue</td><td>Publish/subscribe events</td><td>Loose coupling</td><td>Backend done -> Frontend notified</td></tr>
+          <tr><td>Direct delegation</td><td>Lead spawn sub-agent</td><td>Orchestrated execution</td><td>Claude Code multi-agent</td></tr>
+          <tr><td>Spec-based contract</td><td>Coordinate qua SPEC.md</td><td>Ngừa conflict từ sớm</td><td>SDD workflow</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="slide" data-section="2">
+      <div class="slide-header"><div class="slide-tag">11.2.4</div><h2 class="content-title">Nguyên tắc thiết kế Agent Team</h2></div>
+      <div class="content-body">
+        <p>Mỗi agent cần domain rõ ràng, overlap thấp, coupling giao tiếp tối thiểu và có khả năng fail/restart độc lập. Không phải dự án nào cũng cần tăng số lượng agent, vì orchestration overhead cũng là chi phí thật.</p>
+      </div>
+      <table class="matrix-table">
+        <thead><tr><th>Team size</th><th>Khuyến nghị team agent</th><th>Khi phù hợp</th></tr></thead>
+        <tbody>
+          <tr><td>1 developer</td><td>1 generalist agent</td><td>Prototype, personal project</td></tr>
+          <tr><td>2-3 developers</td><td>1 Lead + 2 specialists (FE + BE)</td><td>Small product team</td></tr>
+          <tr><td>4-6 developers</td><td>1 Lead + 3-4 specialists</td><td>Nhiều modules/services</td></tr>
+          <tr><td>7+ developers</td><td>1 Lead + domain teams có sub-lead</td><td>Large product, nhiều squads</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="slide section-header" data-section="3">
+      <div class="section-bg-num">11.3</div>
+      <div class="slide-tag">Section Header</div>
+      <h2 class="section-title">Skill System</h2>
+      <p class="subtitle">Đóng gói kinh nghiệm senior thành instruction set cho agent</p>
+    </section>
+
+    <section class="slide" data-section="3">
+      <div class="slide-header"><div class="slide-tag">11.3</div><h2 class="content-title">Vì sao SKILL.md có giá trị chiến lược?</h2></div>
+      <div class="content-body">
+        <p>Trong AI-assisted development, knowledge transfer là điểm nghẽn lớn: conventions, performance patterns, security gotchas và domain idioms thường nằm trong đầu senior chứ không nằm trong README. SKILL.md biến kiến thức ngầm đó thành quy tắc thực thi được.</p>
+        <blockquote class="matrix-quote">SKILL.md không phải tutorial để con người đọc; nó là <span class="hl">playbook vận hành</span> để agent làm đúng chuẩn senior ngay cả khi người chạy agent còn mới với codebase.</blockquote>
+      </div>
+    </section>
+
+    <section class="slide" data-section="3">
+      <div class="slide-header"><div class="slide-tag">11.3.1</div><h2 class="content-title">SKILL.md Format chuẩn</h2></div>
+      <div class="content-body">
+        <p>Một skill tối thiểu cần metadata, role rõ, workflow từng bước, patterns/anti-patterns và checklist tự kiểm tra. Cấu trúc này buộc knowledge phải cụ thể thay vì chung chung.</p>
+        <pre>---
+name: [Skill Name]
+version: 1.0.0
+author: @senior-dev
+domain: [backend|frontend|testing|database|security|devops]
+tools: [Cline, Cursor, Claude Code]
+trigger: [Khi nào agent apply skill]
+---
+ROLE -> EXPERTISE -> WORKFLOW -> PATTERNS -> ANTI-PATTERNS -> CHECKLIST</pre>
+      </div>
+    </section>
+
+    <section class="slide" data-section="3">
+      <div class="slide-header"><div class="slide-tag">11.3.2</div><h2 class="content-title">Skill 1: SQL Performance Tuner</h2></div>
+      <div class="content-body">
+        <p>Skill này xử lý pain point lớn ở backend data layer: query chậm, index sai thứ tự, pagination kém hiệu quả và N+1. Agent buộc phải đi qua quy trình phân tích access pattern, cardinality và kiểm chứng bằng EXPLAIN ANALYZE.</p>
+        <div class="two-col">
+          <div class="card">
+            <ul class="bullet-list">
+              <li>Ưu tiên composite index theo query thực tế.</li>
+              <li>Tránh `SELECT *` trong production path.</li>
+              <li>Dùng cursor-based pagination cho bảng lớn.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <ul class="bullet-list">
+              <li>Anti-pattern: N+1 query trong loop.</li>
+              <li>Anti-pattern: non-sargable predicate.</li>
+              <li>Anti-pattern: thiếu index cho foreign keys.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="3">
+      <div class="slide-header"><div class="slide-tag">11.3.2</div><h2 class="content-title">Skill 2: API Security Auditor</h2></div>
+      <div class="content-body">
+        <p>Mục tiêu của skill này là chuẩn hóa kiểm tra OWASP Top 10 ngay ở lúc implement endpoint, không đợi đến audit muộn. Checklist bắt buộc gồm authentication, authorization, input validation, rate limiting, error leakage, SQL injection và logging dữ liệu nhạy cảm.</p>
+        <div class="alert-box danger">Lỗi kinh điển cần chặn: đồng nhất authentication với authorization, leak khác biệt `not found`/`forbidden`, và log request body chưa sanitize.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="3">
+      <div class="slide-header"><div class="slide-tag">Table</div><h2 class="content-title">Skills 3-10 và Trigger</h2></div>
+      <table class="matrix-table">
+        <thead><tr><th>Skill</th><th>Domain</th><th>Vấn đề giải quyết</th><th>Trigger</th></tr></thead>
+        <tbody>
+          <tr><td>3. React Component Architect</td><td>Frontend</td><td>Component design, state, rerender optimization</td><td>Khi viết React components</td></tr>
+          <tr><td>4. Go Error Handler</td><td>Backend</td><td>Error wrapping, sentinel errors, logging</td><td>Khi handle errors trong Go</td></tr>
+          <tr><td>5. Test Coverage Engineer</td><td>Testing</td><td>Boundary values, mock design, strategy</td><td>Khi viết test files</td></tr>
+          <tr><td>6. Docker/K8s Deployer</td><td>DevOps</td><td>Build stages, limits, health checks</td><td>Khi viết Dockerfile/manifests</td></tr>
+          <tr><td>7. Async Task Designer</td><td>Backend</td><td>Queue patterns, retry, idempotency</td><td>Khi build background jobs</td></tr>
+          <tr><td>8. Frontend Performance</td><td>Frontend</td><td>Bundle size, lazy loading, CWV</td><td>Khi optimize performance</td></tr>
+          <tr><td>9. Data Migration Safe</td><td>Database</td><td>Zero-downtime migration, rollback</td><td>Khi viết DB migrations</td></tr>
+          <tr><td>10. OpenAPI Documenter</td><td>Documentation</td><td>Schema consistency, examples, errors</td><td>Khi document API</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="slide" data-section="3">
+      <div class="slide-header"><div class="slide-tag">11.3.2</div><h2 class="content-title">Skill 8: Frontend Performance Optimizer</h2></div>
+      <div class="content-body">
+        <p>Skill mẫu hoàn chỉnh đặt target cụ thể cho Core Web Vitals: LCP &lt; 2.5s, FID &lt; 100ms, CLS &lt; 0.1 và bundle per route &lt; 150KB gzipped. Nhờ target định lượng, agent có tiêu chuẩn pass/fail rõ.</p>
+        <pre>Patterns:
+- Dynamic import cho component nặng
+- Dùng Next.js Image thay vì img thường
+- useMemo/useCallback để tránh re-render thừa
+
+Anti-patterns:
+- useEffect không deps array
+- Inline object/function props không memo
+- import toàn bộ lodash</pre>
+      </div>
+    </section>
+
+    <section class="slide" data-section="3">
+      <div class="slide-header"><div class="slide-tag">11.3.3</div><h2 class="content-title">Custom Skill cho dự án</h2></div>
+      <div class="content-body">
+        <p>Custom skills thường cho ROI cao nhất vì chứa domain knowledge riêng của công ty. Workflow chuẩn: xác định pain point lặp lại, phỏng vấn senior để lấy pattern thật, viết draft theo template, test với agent và iterate 2-3 vòng đến khi stable.</p>
+        <div class="card">
+          <p><span class="hl">Ví dụ Payment Safety Guard (fintech):</span> bắt buộc idempotency key ở mọi payment call, verify webhook HMAC, chặn concurrent attempts cho cùng order, và đảm bảo amount invariant sau order creation để tránh double-charge.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide section-header" data-section="4">
+      <div class="section-bg-num">11.4</div>
+      <div class="slide-tag">Section Header</div>
+      <h2 class="section-title">Hooks và Automation</h2>
+      <p class="subtitle">Tạo Self-Healing Loop để hệ thống tự kiểm soát chất lượng</p>
+    </section>
+
+    <section class="slide" data-section="4">
+      <div class="slide-header"><div class="slide-tag">11.4.1</div><h2 class="content-title">Lifecycle Hooks</h2></div>
+      <table class="matrix-table">
+        <thead><tr><th>Hook</th><th>Timing</th><th>Use case</th><th>Ví dụ action</th></tr></thead>
+        <tbody>
+          <tr><td>pre_file_edit</td><td>Trước khi edit file</td><td>Backup, validation</td><td>Create checkpoint, validate constraints</td></tr>
+          <tr><td>post_file_edit</td><td>Sau khi edit file</td><td>Auto-format, lint</td><td>Run gofmt/prettier/eslint --fix</td></tr>
+          <tr><td>pre_test</td><td>Trước khi chạy tests</td><td>Environment setup</td><td>Start test DB, seed fixtures</td></tr>
+          <tr><td>post_test</td><td>Sau khi chạy tests</td><td>Report, cleanup</td><td>Coverage report, cleanup DB</td></tr>
+          <tr><td>pre_commit</td><td>Trước git commit</td><td>Quality gate</td><td>Run tests, lint, secret checks</td></tr>
+          <tr><td>post_commit</td><td>Sau commit</td><td>Notification, sync</td><td>Update plan.md, notify lead agent</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="slide" data-section="4">
+      <div class="slide-header"><div class="slide-tag">11.4.2</div><h2 class="content-title">Pre-commit Hook: Code luôn sạch</h2></div>
+      <div class="content-body">
+        <p>Pre-commit đóng vai trò quality gate cho AI-generated code: format, lint, type-check, secret scan và unit tests trước khi ghi lịch sử Git. Mục tiêu là chuyển effort review của con người sang logic và kiến trúc thay vì style lỗi vặt.</p>
+        <pre>Flow chuẩn: gofmt/prettier -> golangci-lint -> go vet -> gitleaks -> go test -tags=unit
+Nếu bước nào fail: chặn commit ngay.
+Nếu auto-format có thay đổi: git add -u để re-stage.</pre>
+      </div>
+    </section>
+
+    <section class="slide" data-section="4">
+      <div class="slide-header"><div class="slide-tag">11.4.3</div><h2 class="content-title">Self-Healing Loop</h2></div>
+      <div class="content-body">
+        <p>Self-healing loop vận hành theo chu trình: hook phát hiện test fail, thu log lỗi, gọi fixer agent với constraints rõ, re-run tests và chỉ cho commit đi tiếp khi pass. Nếu vượt ngưỡng số lần thử thì dừng và escalate cho human review.</p>
+        <div class="data-grid">
+          <div class="data-point"><div class="k">3</div><div class="v">Max attempts mặc định</div></div>
+          <div class="data-point"><div class="k">PASS</div><div class="v">Cho phép commit tự động</div></div>
+          <div class="data-point"><div class="k">FAIL</div><div class="v">Notify human, manual review</div></div>
+        </div>
+        <div class="alert-box warn">Boundary bắt buộc: chỉ auto-heal lỗi predictable, low-risk như format/lint/simple assertions. Security issues hoặc architecture violations phải để con người quyết định.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="4">
+      <div class="slide-header"><div class="slide-tag">11.4.4</div><h2 class="content-title">Claude Code Hook Configuration</h2></div>
+      <div class="content-body">
+        <p>Cấu hình hooks trong `.claude/settings.json` cho phép chèn automation vào PreToolUse/PostToolUse: checkpoint trước khi write/edit, auto-format theo ngôn ngữ sau khi write và tự tạo coverage report sau các lệnh test.</p>
+        <pre>PreToolUse: matcher Write|Edit -> append git checkpoint log
+PostToolUse: Write.*\.go$ -> gofmt + go vet
+PostToolUse: Write.*\.(ts|tsx)$ -> prettier --write
+PostToolUse: Bash.*go test -> generate coverage.html</pre>
+      </div>
+    </section>
+
+    <section class="slide section-header" data-section="5">
+      <div class="section-bg-num">11.5</div>
+      <div class="slide-tag">Section Header</div>
+      <h2 class="section-title">Hands-on Lab: Export Report sang PDF</h2>
+      <p class="subtitle">Contract-first, 3 agents chạy đồng thời, lead orchestrates integration</p>
+    </section>
+
+    <section class="slide" data-section="5">
+      <div class="slide-header"><div class="slide-tag">11.5.1</div><h2 class="content-title">Setup team 4 agents</h2></div>
+      <div class="content-body">
+        <p>Lab chọn feature Export Report to PDF vì tách tự nhiên thành ba concerns độc lập: UI/UX, business logic và worker xử lý PDF + storage. Đây là điều kiện lý tưởng để thực hành multi-agent orchestration thực chiến.</p>
+        <div class="two-col">
+          <div class="card"><p><span class="hl">Lead Agent:</span> orchestration, conflict resolution, ownership `shared_context.md`.</p></div>
+          <div class="card"><p><span class="hl">Agent A/B/C:</span> UI, Logic, Worker chạy ở các session riêng với context giới hạn đúng domain.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="5">
+      <div class="slide-header"><div class="slide-tag">11.5.2</div><h2 class="content-title">Step 1: Interface Contract do Lead định nghĩa</h2></div>
+      <div class="content-body">
+        <p>Lead phải khóa contract trước khi giao việc để sub-agents có thể làm độc lập mà không tạo coupling ngầm. Contract gồm API giữa UI-Backend, job structure giữa Logic-Worker và shared types dùng chung TypeScript/Go.</p>
+        <pre>POST /api/reports/export
+Request: { report_type, date_range, format:"pdf" }
+Response: { job_id, status_url }
+
+GET /api/reports/jobs/:id
+Response: { status: pending|processing|done|failed, download_url?, error? }
+
+ExportJob: { id, report_data, metadata, output_path }</pre>
+      </div>
+    </section>
+
+    <section class="slide" data-section="5">
+      <div class="slide-header"><div class="slide-tag">11.5.3</div><h2 class="content-title">Step 2: Parallel Execution</h2></div>
+      <div class="content-body">
+        <p>Sau khi contract rõ, Agent A xây UI polling mỗi 3 giây và xử lý loading/error/success; Agent B dựng handlers + query DB + enqueue Kafka; Agent C dựng Kafka consumer, render PDF A4, upload S3 và cập nhật job status.</p>
+        <div class="alert-box tip">Mỗi agent chỉ cần biết contract và phạm vi domain của mình. Đây là chìa khóa để đạt parallelism thật mà không tạo đống merge conflict khó kiểm soát.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="5">
+      <div class="slide-header"><div class="slide-tag">11.5.4</div><h2 class="content-title">Step 3: Lead Orchestrates & Merges</h2></div>
+      <div class="content-body">
+        <p>Khi A/B/C báo DONE, lead làm integration check theo contract, chạy test tích hợp và xử lý mismatch tại điểm giao nhau. Conflict tiêu biểu trong lab là khác biệt naming convention giữa backend và worker (`report_data` vs `reportData`).</p>
+        <div class="card">
+          <p>Lead quyết định chuẩn thống nhất (<span class="hl">snake_case</span> theo Go convention), giao fix task đúng agent chịu trách nhiệm, rồi re-run integration tests đến khi pass toàn bộ.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="5">
+      <div class="big-quote">"Multi-agent không loại bỏ conflict.<br>Nó dồn conflict về integration point,<br>nơi <span class="hl">Lead Agent</span> phải làm traffic controller."</div>
+    </section>
+
+    <section class="slide section-header" data-section="6">
+      <div class="section-bg-num">11.6</div>
+      <div class="slide-tag">Section Header</div>
+      <h2 class="section-title">MCP trong Multi-Agent</h2>
+      <p class="subtitle">Hệ thần kinh chung để agents mượn capability có kiểm soát</p>
+    </section>
+
+    <section class="slide" data-section="6">
+      <div class="slide-header"><div class="slide-tag">11.6.1</div><h2 class="content-title">Tool Borrowing</h2></div>
+      <div class="content-body">
+        <p>Trong team agent, MCP không chỉ để truy cập external resources mà còn để mượn capability liên-agent theo access policy. Ví dụ Frontend Agent cần verify UI bằng dữ liệu thật nhưng chỉ được DB read-only, không được write trực tiếp.</p>
+        <div class="alert-box info">Key insight: cùng một cụm MCP servers nhưng <span class="hl">permissions khác nhau theo từng agent</span> (lead rộng quyền, frontend read-only DB, backend produce Kafka, worker consume Kafka + write S3).</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="6">
+      <div class="slide-header"><div class="slide-tag">11.6.1</div><h2 class="content-title">Per-Agent Access Control</h2></div>
+      <div class="content-body">
+        <pre>lead-agent: database read_write, github repo:read/issues:write, filesystem .sdd+src+tests
+frontend-agent: database read_only (public), filesystem frontend/src + shared_context
+backend-agent: database read_write, kafka produce(export-jobs), filesystem backend + .sdd
+worker-agent: database read_write, kafka consume(export-jobs), s3 write (non-prod buckets)</pre>
+        <p>Thiết kế này cho phép tách biệt trách nhiệm, giảm blast radius khi sai sót và hỗ trợ audit trail rõ ràng ở cấp quyền truy cập.</p>
+      </div>
+    </section>
+
+    <section class="slide" data-section="6">
+      <div class="slide-header"><div class="slide-tag">11.6.2</div><h2 class="content-title">MCP như Tool-Sharing Protocol</h2></div>
+      <div class="content-body">
+        <p>Một mô hình advanced là agent publish MCP server để chia sẻ capability cho agent khác. Ví dụ Backend Agent expose `report-data` MCP server; Frontend/Worker gọi qua interface này thay vì đụng trực tiếp DB schema hoặc query logic nội bộ.</p>
+        <pre>@server.tool()
+async def get_report_data(report_type, from_date, to_date):
+    data = await report_service.fetch(report_type, from_date, to_date)
+    return data.to_dict()
+
+# Frontend session gọi MCP server của Backend để preview/report validation.</pre>
+      </div>
+    </section>
+
+    <section class="slide" data-section="7">
+      <div class="slide-header"><div class="slide-tag">Summary</div><h2 class="content-title">Tổng kết Chương 11</h2></div>
+      <table class="matrix-table">
+        <thead><tr><th>Section</th><th>Key concept</th><th>Takeaway</th></tr></thead>
+        <tbody>
+          <tr><td>11.1</td><td>Context limit + cognitive load + parallelism</td><td>Một agent tốt; nhiều agents chuyên hóa tốt hơn</td></tr>
+          <tr><td>11.2</td><td>Architecture + shared_context.md</td><td>Communication là vấn đề lớn nhất</td></tr>
+          <tr><td>11.3</td><td>SKILL.md encode kinh nghiệm senior</td><td>Build 10 must-have + custom skills theo domain</td></tr>
+          <tr><td>11.4</td><td>Hooks + self-healing loop</td><td>Pre-commit giữ sạch code, tự sửa lỗi predictable</td></tr>
+          <tr><td>11.5</td><td>Lab Export PDF 4 agents</td><td>Contract first -> parallel -> lead orchestration</td></tr>
+          <tr><td>11.6</td><td>MCP neural network cho team</td><td>Tool borrowing có access control, không chia sẻ vô hạn</td></tr>
+        </tbody>
+      </table>
+      <div class="alert-box tip">Tư duy cốt lõi: chuyển từ "lập trình viên bị AI thay thế" sang "lập trình viên quản lý AI team" để tăng giá trị deliver trên cùng đơn vị thời gian.</div>
+    </section>
+
+    <section class="slide" data-section="7">
+      <div class="slide-header"><div class="slide-tag">Next Chapter</div><h2 class="content-title">Takeaways & Chuyển tiếp</h2></div>
+      <div class="content-body">
+        <div class="big-quote">"Kỹ năng của tương lai không chỉ là viết code,
+mà là thiết kế, điều phối và kiểm soát
+một hệ sinh thái <span class="hl">AI agents</span> đáng tin cậy."</div>
+        <div class="card">
+          <p><span class="hl-b">Chương tiếp theo - Chương 12: Enterprise ADD</span></p>
+          <p>Đi vào bối cảnh tổ chức lớn: governance, compliance, multi-team coordination và AI policy để bảo đảm consistency, security và accountability khi AI-driven development được triển khai ở quy mô enterprise.</p>
+        </div>
+      </div>
+      <div class="footer"><span>LinhNDM - Nguyễn Đình Mạnh Linh</span><span>End of Chapter 11</span></div>
+    </section>
+  </main>
+
+  <div class="controls">
+    <button id="prevBtn" type="button">Prev</button>
+    <div class="counter" id="counter">1 / 1</div>
+    <button id="nextBtn" type="button">Next</button>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    let current = 0;
+    let isAnimating = false;
+    const TRANSITION_LOCK_MS = 520;
+    const MOUNT_RADIUS = 1; // current +/- 1 => render 3 slides
+
+    const progress = document.getElementById('progress');
+    const counter = document.getElementById('counter');
+
+    const sectionToSlide = {};
+    slides.forEach((slide, idx) => {
+      if (slide.classList.contains('section-header')) {
+        const sec = Number(slide.dataset.section || 0);
+        if (sec > 0) sectionToSlide[sec] = idx;
+      }
+    });
+
+    function isWithinMountRadius(index, centerIndex) {
+      return Math.abs(index - centerIndex) <= MOUNT_RADIUS;
+    }
+
+    function setMountedSlides(centerIndex) {
+      slides.forEach((slide, idx) => {
+        const mounted = isWithinMountRadius(idx, centerIndex);
+        slide.classList.toggle('mounted', mounted);
+        slide.inert = !mounted;
+        slide.setAttribute('aria-hidden', mounted ? 'false' : 'true');
+        if (!mounted) {
+          slide.classList.remove('active', 'prev', 'next');
+        }
+      });
+    }
+
+    function setSlidePositions(targetIndex) {
+      setMountedSlides(targetIndex);
+      slides.forEach((slide, idx) => {
+        if (!slide.classList.contains('mounted')) return;
+        slide.classList.remove('active', 'prev', 'next');
+        if (idx === targetIndex) slide.classList.add('active');
+        else if (idx < targetIndex) slide.classList.add('prev');
+        else slide.classList.add('next');
+      });
+    }
+
+    function updateSlideUI() {
+      const pct = ((current + 1) / slides.length) * 100;
+      progress.style.width = pct + '%';
+      counter.textContent = (current + 1) + ' / ' + slides.length;
+      slides[current].scrollTop = 0;
+    }
+
+    function showSlide(index, force = false) {
+      if (index < 0 || index >= slides.length) return;
+      if (!force && isAnimating) return;
+      if (index === current) {
+        if (force) setSlidePositions(index);
+        updateSlideUI();
+        return;
+      }
+      isAnimating = true;
+      setSlidePositions(index);
+      current = index;
+      updateSlideUI();
+      setTimeout(() => { isAnimating = false; }, TRANSITION_LOCK_MS);
+    }
+
+    function nextSlide() { showSlide(Math.min(current + 1, slides.length - 1)); }
+    function prevSlide() { showSlide(Math.max(current - 1, 0)); }
+
+    document.getElementById('nextBtn').addEventListener('click', nextSlide);
+    document.getElementById('prevBtn').addEventListener('click', prevSlide);
+
+    // Anti-copy protection
+    document.addEventListener('keydown', e => {
+      if (e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && ['I','J','K'].includes(e.key)) ||
+        (e.ctrlKey && ['u','s','a','c','p','f','U','S','A','C','P','F'].includes(e.key))) {
+        e.preventDefault();
+      }
+
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      }
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      }
+
+      if (/^[1-6]$/.test(e.key)) {
+        const sec = Number(e.key);
+        if (sectionToSlide[sec] !== undefined) {
+          e.preventDefault();
+          showSlide(sectionToSlide[sec]);
+        }
+      }
+    });
+
+    ['contextmenu','selectstart','dragstart','copy'].forEach(ev => {
+      document.addEventListener(ev, e => e.preventDefault());
+    });
+
+    // Touch/swipe support
+    let touchStartX = 0;
+    let touchStartY = 0;
+    document.addEventListener('touchstart', e => {
+      const t = e.changedTouches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = t.clientY - touchStartY;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) nextSlide();
+        else prevSlide();
+      }
+    }, { passive: true });
+
+    // Matrix rain
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&*+-<>/';
+    let drops = [];
+    let fontSize = 14;
+    let columns = 0;
+
+    function setupMatrix() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      columns = Math.floor(canvas.width / fontSize);
+      drops = Array(columns).fill(1 + Math.random() * 30);
+    }
+
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(1, 21, 0, 0.1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00ff41';
+      ctx.font = fontSize + 'px monospace';
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    }
+
+    window.addEventListener('resize', setupMatrix);
+    setupMatrix();
+    setInterval(drawMatrix, 48);
+    setSlidePositions(current);
+    showSlide(0, true);
+  </script>
+</body>
+</html>

@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chương 13: Hybrid Framework - Khi Nào Spec, Khi Nào Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#011500;
+  --accent:#00ff55;
+  --text:#ffffff;
+  --text-sub:#ccffcc;
+  --text-mute:#7de87d;
+  --card-border:rgba(0,255,65,0.5);
+  --card-bg:rgba(0,255,65,0.09);
+  --table-header:rgba(0,255,65,0.18);
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;user-select:none;-webkit-user-select:none}
+body{background:radial-gradient(ellipse at 50% 0%, #022800, #011500, #010f00)}
+#matrix-canvas{position:fixed;top:0;left:0;width:100%;height:100%;opacity:0.09;pointer-events:none;z-index:0}
+.scanlines{position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg, transparent 2px, rgba(0,0,0,0.07) 2px 4px);pointer-events:none;z-index:1}
+#progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg, #00ff55, #00cc44);width:0;transition:width 0.3s ease;z-index:100}
+#slide-counter{position:fixed;top:18px;right:28px;font-size:13px;color:var(--text-mute);letter-spacing:2px;z-index:100}
+.watermark{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(0,255,85,0.35);letter-spacing:3px;text-transform:uppercase;z-index:99;pointer-events:none;white-space:nowrap}
+.nav-buttons{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:16px;z-index:100}
+.nav-btn{background:rgba(0,255,65,0.12);border:1px solid var(--card-border);color:var(--accent);padding:10px 28px;font-size:13px;letter-spacing:2px;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.nav-btn:hover{background:rgba(0,255,65,0.25);box-shadow:0 0 18px rgba(0,255,65,0.3)}
+.nav-btn:disabled{opacity:0.25;cursor:not-allowed}
+#slideshow{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;padding:60px 80px 80px 80px}
+.slide.active{display:flex;animation:fadeIn 0.45s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+h1.main-title{font-family:'Cormorant Garamond',serif;font-size:clamp(44px, 6.5vw, 80px);color:var(--accent);text-shadow:0 0 30px rgba(0,255,85,0.5), 0 0 60px rgba(0,255,85,0.2);line-height:1.05}
+h2.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(34px, 4.5vw, 60px);color:var(--accent);text-shadow:0 0 30px rgba(0,255,85,0.5), 0 0 60px rgba(0,255,85,0.2);line-height:1.12}
+h2.content-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px, 3.4vw, 48px);color:var(--accent);line-height:1.2}
+p.body-text{font-size:clamp(16px, 1.7vw, 22px);color:var(--text-sub);line-height:1.7;margin-bottom:12px}
+.bullet-list{list-style:none}
+.bullet-list li{font-size:clamp(15px, 1.6vw, 20px);color:var(--text-sub);padding:6px 0 6px 20px;position:relative;line-height:1.5}
+.bullet-list li::before{content:'▸';position:absolute;left:0;color:#00ff55}
+.card{background:var(--card-bg);border-left:3px solid var(--accent);padding:18px 20px;margin-bottom:14px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+blockquote.matrix-quote{border-left:3px solid var(--accent);background:rgba(0,255,65,0.08);padding:16px 20px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(17px, 1.8vw, 24px);line-height:1.6;margin:14px 0;color:var(--text-sub)}
+.big-quote{text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(26px, 3.2vw, 44px);text-shadow:0 0 25px rgba(0,255,85,0.4);line-height:1.45;color:var(--accent)}
+table.matrix-table{width:100%;border-collapse:collapse}
+table.matrix-table th{background:var(--table-header);border:1px solid var(--card-border);padding:10px 12px;text-align:left;color:var(--accent);font-size:12px;letter-spacing:1px}
+table.matrix-table td{border:1px solid rgba(0,255,65,0.25);padding:10px 12px;vertical-align:top;color:var(--text-sub);font-size:clamp(13px, 1.3vw, 16px);line-height:1.45}
+.alert-box{padding:14px 18px;margin:12px 0;border-left:3px solid}
+.alert-box .alert-title{font-weight:700;letter-spacing:1px;margin-bottom:6px}
+.alert-box.info{border-color:#55ccff;color:#99e6ff;background:rgba(85,204,255,0.08)}
+.alert-box.warn{border-color:#ffc844;color:#ffe6a3;background:rgba(255,200,68,0.08)}
+.alert-box.danger{border-color:#ff7070;color:#ffc0c0;background:rgba(255,112,112,0.08)}
+.alert-box.tip{border-color:#00ff55;color:#ccffcc;background:rgba(0,255,85,0.08)}
+.data-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px;margin:18px 0}
+.data-point{background:var(--card-bg);border:1px solid var(--card-border);text-align:center;padding:14px}
+.data-num{font-family:'Cormorant Garamond',serif;font-size:clamp(30px, 4vw, 54px);color:var(--accent);line-height:1}
+.data-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-mute);margin-top:4px}
+.toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.toc-item{background:var(--card-bg);border:1px solid rgba(0,255,65,0.25);padding:16px 18px;cursor:pointer;transition:all .2s}
+.toc-item:hover{background:rgba(0,255,65,0.15);border-color:var(--accent)}
+.code-block{background:rgba(0,20,0,0.7);border:1px solid rgba(0,255,65,0.3);font-family:'Courier New',monospace;color:#90ee90;max-height:280px;overflow:auto;white-space:pre;padding:12px 14px;font-size:12px;line-height:1.55}
+.cb-title{font-size:11px;letter-spacing:2px;color:var(--text-mute);text-transform:uppercase;margin-bottom:6px;font-family:'Josefin Sans',sans-serif}
+.pipeline{border:1px solid var(--card-border);background:rgba(0,10,0,0.6);padding:14px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#90ee90}
+.pipeline .ph{color:#00ff55;font-weight:bold}
+.pipeline .ph-item{display:block;margin-left:16px}
+.next-chapter{background:rgba(85,204,255,0.07);border:1px solid rgba(85,204,255,0.3);padding:18px 20px;margin-top:14px}
+.next-chapter .nc-label{color:#55ccff;letter-spacing:2px;text-transform:uppercase;font-size:11px;margin-bottom:6px}
+.next-chapter h3{font-family:'Cormorant Garamond',serif;color:#aeefff;font-size:clamp(20px,2.4vw,30px);margin-bottom:6px}
+.next-chapter p{color:#c8f3ff;line-height:1.6}
+.section-num-bg{position:absolute;right:-2vw;top:50%;transform:translateY(-50%);font-family:'Cormorant Garamond',serif;font-size:clamp(180px,28vw,320px);color:rgba(0,255,65,0.05);pointer-events:none}
+.slide-tag{text-align:center;color:var(--text-mute);font-size:12px;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px}
+.slide-body{flex:1;overflow-y:auto;padding-right:4px}
+.slide-body::-webkit-scrollbar{width:4px}
+.slide-body::-webkit-scrollbar-thumb{background:rgba(0,255,65,0.35)}
+.slide-title-main{justify-content:center;align-items:center;text-align:center}
+.title-footer{position:absolute;bottom:30px;left:0;right:0;text-align:center;color:var(--text-mute);font-size:12px;letter-spacing:2px}
+.badge{display:inline-block;background:rgba(0,255,65,0.14);border:1px solid var(--card-border);padding:6px 14px;color:var(--accent);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.hl{color:#00ff55;font-weight:600}
+.hl-r{color:#ff7070}
+.hl-o{color:#ffc844}
+.hl-b{color:#55ccff}
+@media(max-width:768px){
+  .slide{padding:36px 20px 70px 20px}
+  .two-col{grid-template-columns:1fr}
+  .toc-grid{grid-template-columns:1fr}
+  .section-num-bg{font-size:130px;right:-10px}
+  .nav-btn{padding:8px 18px;font-size:11px}
+}
+</style>
+</head>
+<body>
+<canvas id="matrix-canvas"></canvas>
+<div class="scanlines"></div>
+<div id="progress-bar"></div>
+<div id="slide-counter">1 / 1</div>
+<div class="watermark">LinhNDM — Nguyễn Đình Mạnh Linh</div>
+
+<div id="slideshow">
+
+<div class="slide slide-title-main active" data-section="0">
+  <div style="max-width:1000px;position:relative;z-index:2">
+    <div class="badge">Playbook SDD + ADD | Chương 13</div>
+    <h1 class="main-title" style="margin:18px 0 12px">Hybrid Framework</h1>
+    <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(22px,2.8vw,34px);color:var(--text-sub)">Khi nào Spec, Khi nào Agent - Nghệ thuật phối hợp SDD + ADD</p>
+    <div class="data-grid" style="margin-top:28px">
+      <div class="data-point"><div class="data-num">6</div><div class="data-label">Sections</div></div>
+      <div class="data-point"><div class="data-num">7</div><div class="data-label">Bước workflow</div></div>
+      <div class="data-point"><div class="data-num">12</div><div class="data-label">Bảng dữ liệu</div></div>
+      <div class="data-point"><div class="data-num">22</div><div class="data-label">Trang tài liệu</div></div>
+    </div>
+  </div>
+  <div class="title-footer">© 2025 — Playbook SDD + ADD | LinhNDM | Nguyễn Đình Mạnh Linh</div>
+</div>
+
+<div class="slide" data-section="0">
+  <div class="slide-tag">Giới thiệu chương</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:18px">Vì sao Hybrid Framework quan trọng?</h2>
+  <div class="slide-body">
+    <p class="body-text">Chương 1-12 đã xây dựng hai framework đầy đủ: <span class="hl">SDD</span> cho các phần cần chính xác ngay từ đầu và <span class="hl-b">ADD</span> cho phần cần tốc độ triển khai. Câu hỏi thực tế của mọi đội là chọn cái nào cho mỗi task, và khi nào cần chuyển trạng thái từ Spec-driven sang Agent-driven.</p>
+    <p class="body-text">Chương 13 trả lời bằng bộ công cụ vận hành: mô hình <span class="hl">Core &amp; Shell</span>, ma trận quyết định 3 chiều, workflow 7 bước có Escape Hatch, template thư mục và Git strategy, cùng Constitution mẫu cho đồ án 20 tuần.</p>
+    <p class="body-text">Thông điệp trung tâm của chương là triết lý điều phối: <span class="hl">Spec ở tầng kiến trúc, Agent ở tầng implementation</span>. Không phải quy tắc cứng nhắc, mà là cách giữ cân bằng giữa rủi ro, tốc độ và chất lượng.</p>
+    <div class="alert-box info">
+      <div class="alert-title">INFO - Câu hỏi trung tâm</div>
+      SDD bảo vệ những thứ <span class="hl-r">không được phép sai</span>. ADD tăng tốc những thứ <span class="hl">cần xoay chuyển nhanh</span>. Kết hợp đúng mới là kỹ năng quan trọng của kỹ sư thời đại AI.
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-section="0">
+  <div class="slide-tag">Mục lục</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:20px">Cấu trúc Chương 13</h2>
+  <div class="slide-body">
+    <div class="toc-grid">
+      <div class="toc-item" onclick="goToSection(1)"><div style="font-size:26px;color:var(--accent);font-family:'Cormorant Garamond',serif">13.1</div><div>Nguyên tắc Hybrid - Core &amp; Shell</div></div>
+      <div class="toc-item" onclick="goToSection(2)"><div style="font-size:26px;color:var(--accent);font-family:'Cormorant Garamond',serif">13.2</div><div>Decision Matrix - Spec x Autonomy x Risk</div></div>
+      <div class="toc-item" onclick="goToSection(3)"><div style="font-size:26px;color:var(--accent);font-family:'Cormorant Garamond',serif">13.3</div><div>Hybrid Workflow 7 bước</div></div>
+      <div class="toc-item" onclick="goToSection(4)"><div style="font-size:26px;color:var(--accent);font-family:'Cormorant Garamond',serif">13.4</div><div>Template thư mục Hybrid Project</div></div>
+      <div class="toc-item" onclick="goToSection(5)"><div style="font-size:26px;color:var(--accent);font-family:'Cormorant Garamond',serif">13.5</div><div>Constitution mẫu đồ án SE 20 tuần</div></div>
+      <div class="toc-item" onclick="goToSection(6)"><div style="font-size:26px;color:var(--accent);font-family:'Cormorant Garamond',serif">13.6</div><div>3 Anti-patterns cần tránh</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-section="1" style="position:relative">
+  <div class="section-num-bg">13.1</div>
+  <div class="slide-tag">Section Header</div>
+  <h2 class="section-title">Nguyên tắc Hybrid - Mô hình Core &amp; Shell</h2>
+  <div class="slide-body" style="margin-top:12px">
+    <p class="body-text">Mô hình Core &amp; Shell mượn tư duy kiến trúc hệ thống: phần lõi cần ổn định tuyệt đối, phần vỏ cần linh hoạt để thích nghi nhanh.</p>
+    <ul class="bullet-list">
+      <li>13.1.1 CORE - Những thứ không được phép sai</li>
+      <li>13.1.2 SHELL - Những thứ cần xoay chuyển nhanh</li>
+      <li>13.1.3 Ranh giới CORE vs SHELL</li>
+    </ul>
+  </div>
+</div>
+
+<div class="slide" data-section="1">
+  <div class="slide-tag">13.1.1</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Core &amp; Shell Model trong thực thi</h2>
+  <div class="slide-body">
+    <p class="body-text">Trong Hybrid Framework, <span class="hl">SDD bảo vệ CORE</span> còn <span class="hl-b">ADD triển khai SHELL</span>. Core chứa database schema, API contract, security, authentication, state machine và payment flow. Shell chứa UI, business logic, CRUD, boilerplate, tests và docs.</p>
+    <div class="pipeline">
+<span class="ph">SHELL - Agent Driven (ADD)</span>
+<span class="ph-item">UI components | CRUD | formatting | helper functions | docs</span>
+<span class="ph-item">Nhanh, linh hoạt, iterative, agent-first - sai thì sửa nhanh</span>
+
+<span class="ph">CORE - SDD</span>
+<span class="ph-item">DB schema | API contracts | security rules | auth | data model | state machine</span>
+<span class="ph-item">Đúng từ đầu, không được phép sai - sai thì cost catastrophic</span>
+
+<span class="ph">What locked ở CORE - How linh hoạt ở SHELL</span>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-section="1">
+  <div class="slide-tag">Table</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">CORE - Những thứ không được phép sai</h2>
+  <div class="slide-body">
+    <table class="matrix-table">
+      <thead><tr><th>Core element</th><th>Tại sao không được sai</th><th>SDD level cần</th><th>Cost khi sai</th></tr></thead>
+      <tbody>
+        <tr><td>Database schema</td><td>Migration phá dữ liệu production</td><td>Formal mức 3</td><td>Mất ngày restore backup, data loss</td></tr>
+        <tr><td>API contracts</td><td>Breaking change ảnh hưởng consumers</td><td>Formal</td><td>Clients lỗi hàng loạt, SLA breach</td></tr>
+        <tr><td>Authentication flow</td><td>Security vulnerability</td><td>Formal + security review</td><td>Data breach, legal liability</td></tr>
+        <tr><td>Payment state machine</td><td>Mất tiền hoặc duplicate charge</td><td>Formal + audit trail</td><td>Financial loss, churn</td></tr>
+        <tr><td>Data models</td><td>Sai domain kéo theo sai toàn hệ thống</td><td>Detailed/Formal</td><td>Refactor nhiều tháng</td></tr>
+        <tr><td>Security policies</td><td>Compliance violation</td><td>Formal + compliance review</td><td>Fine, reputational damage</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="slide" data-section="1">
+  <div class="slide-tag">13.1.2</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">SHELL - Nơi ưu tiên tốc độ và iteration</h2>
+  <div class="slide-body">
+    <p class="body-text">Shell là vùng mà lỗi có thể sửa nhanh với chi phí thấp. UI sai có thể chỉnh CSS trong vài phút, logic sai có thể debug trong sprint, test thiếu có thể bổ sung. Vì vậy mô hình <span class="hl">Agent-first</span> phù hợp.</p>
+    <table class="matrix-table">
+      <thead><tr><th>Shell element</th><th>Tại sao Agent-first OK</th><th>ADD approach</th><th>Iteration cycle</th></tr></thead>
+      <tbody>
+        <tr><td>UI Components</td><td>Visual feedback kiểm chứng nhanh</td><td>Agentic với Cline/Cursor</td><td>Minutes - hours</td></tr>
+        <tr><td>Business Logic</td><td>Test-driven correction khả thi</td><td>Agentic + DoD</td><td>Hours - days</td></tr>
+        <tr><td>CRUD operations</td><td>Pattern-based, complexity thấp</td><td>Template + Agent</td><td>Minutes</td></tr>
+        <tr><td>Boilerplate</td><td>Mechanical, dễ verify</td><td>Fully agentic</td><td>Seconds - minutes</td></tr>
+        <tr><td>Tests</td><td>Acceptance criteria rõ</td><td>Agent from spec</td><td>Hours</td></tr>
+        <tr><td>Documentation</td><td>Nội dung quan trọng hơn format</td><td>Agent + human review</td><td>Hours</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="slide" data-section="1">
+  <div class="slide-tag">13.1.3</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Ranh giới Core vs Shell</h2>
+  <div class="slide-body">
+    <p class="body-text">Ranh giới không luôn rõ ràng. Ví dụ email validation tưởng là Shell nhưng nếu email là unique identifier ở database thì nó trở thành Core.</p>
+    <div class="two-col">
+      <div class="card">
+        <h3 style="color:var(--accent);margin-bottom:8px">3 câu hỏi phân biệt nhanh</h3>
+        <ul class="bullet-list">
+          <li>Nếu sai có sửa được mà <span class="hl-r">không migration/rollback</span> không?</li>
+          <li>Thành phần này có <span class="hl-o">consumer ngoài module</span> không?</li>
+          <li>Sai ở đây có liên quan <span class="hl-r">security/compliance</span> không?</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--accent);margin-bottom:8px">Quy tắc quyết định</h3>
+        <ul class="bullet-list">
+          <li>Có thể sửa nhanh, phạm vi cục bộ: <span class="hl">Shell</span></li>
+          <li>Có consumer ngoài, ảnh hưởng hợp đồng: <span class="hl-r">Core</span></li>
+          <li>Liên quan compliance hoặc security: <span class="hl-r">Core + Formal Spec</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-section="2" style="position:relative">
+  <div class="section-num-bg">13.2</div>
+  <div class="slide-tag">Section Header</div>
+  <h2 class="section-title">Decision Matrix - Spec Depth x Agent Autonomy x Risk</h2>
+  <div class="slide-body"><ul class="bullet-list"><li>13.2.1 Ba chiều của ma trận</li><li>13.2.2 Ma trận 9 ô + Risk overlay</li><li>13.2.3 Flowchart quyết định nhanh</li><li>13.2.4 5 tình huống áp dụng</li></ul></div>
+</div>
+
+<div class="slide" data-section="2">
+  <div class="slide-tag">13.2.1</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Ba chiều của Decision Matrix</h2>
+  <div class="slide-body">
+    <p class="body-text">Công cụ này trả lời ba câu hỏi cho mọi task: cần spec sâu bao nhiêu, trao autonomy cho agent ở mức nào, và risk thực tế là gì.</p>
+    <table class="matrix-table">
+      <thead><tr><th>Chiều</th><th>Levels</th><th>Định nghĩa</th></tr></thead>
+      <tbody>
+        <tr><td>Spec Depth</td><td>None / Light / Full</td><td>None: prompt; Light: EARS + scope + DoD; Full: 8-component + EARS + state diagram</td></tr>
+        <tr><td>Agent Autonomy</td><td>Guided / Agentic / Multi-agent</td><td>Guided: human-in-loop từng bước; Agentic: tự execute có gates; Multi-agent: team có orchestrator</td></tr>
+        <tr><td>Risk Level</td><td>Low / Medium / High</td><td>Low: lỗi dễ sửa; Medium: ảnh hưởng UX/data; High: tiền, security, compliance</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="slide" data-section="2">
+  <div class="slide-tag">Table</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Decision Matrix 9 ô</h2>
+  <div class="slide-body">
+    <table class="matrix-table">
+      <thead><tr><th>Spec \ Autonomy</th><th>Guided</th><th>Agentic</th><th>Multi-agent</th></tr></thead>
+      <tbody>
+        <tr><td>No Spec</td><td><span class="hl-r">Tránh</span>: output khó đoán, chỉ hợp hackathon</td><td><span class="hl-o">Có thể dùng</span> cho CSS tweak, utility đơn giản</td><td><span class="hl-r">Tránh</span>: nhiều agent không contract sẽ hỗn loạn</td></tr>
+        <tr><td>Light Spec</td><td>Tốt cho feature medium risk, module đơn</td><td><span class="hl">Sweet spot</span> cho đa số feature UI/logic/tests</td><td>Tốt cho parallel FE+BE với shared contracts</td></tr>
+        <tr><td>Full Spec</td><td>Mandatory cho payment/auth/compliance</td><td>Standard cho feature phức tạp có business rules</td><td>Enterprise cross-team, API chia sẻ, regulated</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="slide" data-section="2">
+  <div class="slide-tag">Table</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Risk Overlay - Áp dụng chiều thứ ba</h2>
+  <div class="slide-body">
+    <table class="matrix-table">
+      <thead><tr><th>Risk</th><th>Spec depth</th><th>Autonomy</th><th>Ví dụ</th><th>Approach</th></tr></thead>
+      <tbody>
+        <tr><td>High + Complex</td><td>Full mandatory</td><td>Guided</td><td>Payment/Auth</td><td>Full SDD - Guided Agent - Audit</td></tr>
+        <tr><td>High + Simple</td><td>Full</td><td>Agentic with gates</td><td>Rate limiting config</td><td>Spec + Agentic + Constitution</td></tr>
+        <tr><td>Medium + Complex</td><td>Light - Full</td><td>Agentic</td><td>Order management, reports</td><td>Light spec + Agentic + tests</td></tr>
+        <tr><td>Medium + Simple</td><td>Light</td><td>Agentic</td><td>Profile update</td><td>EARS + Agent + DoD</td></tr>
+        <tr><td>Low + Complex</td><td>Light</td><td>Multi-agent</td><td>Dashboard nhiều chart</td><td>Shared contracts + parallel agents</td></tr>
+        <tr><td>Low + Simple</td><td>None</td><td>Autonomous</td><td>CSS button, utils</td><td>Direct prompt - accept output</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="slide" data-section="2">
+  <div class="slide-tag">13.2.3</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Flowchart quyết định nhanh</h2>
+  <div class="slide-body">
+    <div class="pipeline">
+<span class="ph">START: Tôi có một task cần làm</span>
+<span class="ph-item">Q1: Nếu sai, có cần DB migration/rollback không?</span>
+<span class="ph-item">NO -> CORE PATH -> Full Spec MANDATORY -> Human approval mọi step</span>
+<span class="ph-item">YES -> Q2: Có cần >1 agent làm song song?</span>
+<span class="ph-item">YES -> 2 agents: Light Spec + Agentic | 3+ agents: Light/Full + Multi-agent</span>
+<span class="ph-item">NO -> Q3: Rủi ro nếu agent hiểu sai intent?</span>
+<span class="ph-item">HIGH: Light/Full + Agentic (EARS + DoD)</span>
+<span class="ph-item">MEDIUM: Light + Agentic (Scope + DoD)</span>
+<span class="ph-item">LOW: No Spec + Agentic (Direct prompt + shadow plan)</span>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-section="2">
+  <div class="slide-tag">Table</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Ví dụ áp dụng ma trận (1/2)</h2>
+  <div class="slide-body">
+    <table class="matrix-table">
+      <thead><tr><th>Tình huống</th><th>Risk</th><th>Complexity</th><th>Quyết định</th><th>Thực hiện</th></tr></thead>
+      <tbody>
+        <tr><td>Thêm màu button</td><td>Low</td><td>Low</td><td>No Spec + Agentic</td><td>Prompt trực tiếp, accept output</td></tr>
+        <tr><td>Add pagination danh sách</td><td>Low</td><td>Medium</td><td>Light Spec + Agentic</td><td>EARS + scope + DoD, 1 agent</td></tr>
+        <tr><td>Implement user registration</td><td>Medium</td><td>Medium</td><td>Light Spec + Agentic</td><td>EARS + auth constraints + DoD</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="slide" data-section="2">
+  <div class="slide-tag">Table</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Ví dụ áp dụng ma trận (2/2)</h2>
+  <div class="slide-body">
+    <table class="matrix-table">
+      <thead><tr><th>Tình huống</th><th>Risk</th><th>Complexity</th><th>Quyết định</th><th>Thực hiện</th></tr></thead>
+      <tbody>
+        <tr><td>Payment checkout flow</td><td>High</td><td>Complex</td><td>Full Spec + Guided</td><td>Formal spec + state machine + human every step</td></tr>
+        <tr><td>Dashboard 3 charts</td><td>Low</td><td>Complex</td><td>Light Spec + Multi-agent</td><td>Shared API contract + 3 agents song song</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="slide" data-section="3" style="position:relative">
+  <div class="section-num-bg">13.3</div>
+  <div class="slide-tag">Section Header</div>
+  <h2 class="section-title">Hybrid Workflow 7 Bước - Từ Idea đến Production</h2>
+  <div class="slide-body"><ul class="bullet-list"><li>B1 Constitution Setup</li><li>B2 Feature Specification</li><li>B3 Plan Review</li><li>B4 Task Decomposition</li><li>B5 Agentic Implementation + Escape Hatch</li><li>B6 Validation Gate</li><li>B7 Integration &amp; Review</li></ul></div>
+</div>
+
+<div class="slide" data-section="3">
+  <div class="slide-tag">13.3 Overview</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Workflow chuẩn hóa SDD + ADD</h2>
+  <div class="slide-body">
+    <p class="body-text">Mục tiêu của quy trình 7 bước là giảm rework ở CORE, tăng tốc ở SHELL, và chốt chất lượng bằng Validation Gate trước merge. Escape Hatch được thiết kế như cơ chế kiểm soát rủi ro, không phải thất bại.</p>
+    <div class="pipeline">
+<span class="ph">B1 Constitution Setup (một lần)</span>
+<span class="ph">B2 Feature Specification (mỗi feature)</span>
+<span class="ph">B3 Plan Review (Human + AI)</span>
+<span class="ph">B4 Task Decomposition (AI generate)</span>
+<span class="ph">B5 Agentic Implementation (ADD loop) - Escape Hatch any step</span>
+<span class="ph">B6 Validation Gate (Spec-based quality check)</span>
+<span class="ph">B7 Integration & Review (Human final)</span>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-section="3">
+  <div class="slide-tag">Table</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">B1 - Constitution Setup artifacts</h2>
+  <div class="slide-body">
+    <table class="matrix-table">
+      <thead><tr><th>Artifact</th><th>File</th><th>Nội dung</th><th>Owner</th></tr></thead>
+      <tbody>
+        <tr><td>Constitution</td><td>.sdd/constitution.md</td><td>Hard rules, architectural constraints, security</td><td>Tech Lead</td></tr>
+        <tr><td>Agent Persona</td><td>AGENTS.md</td><td>Stack, expertise, forbidden actions</td><td>Tech Lead</td></tr>
+        <tr><td>Project Context</td><td>CLAUDE.md</td><td>Architecture, patterns, lessons learned</td><td>Team</td></tr>
+        <tr><td>Global Constraints</td><td>.sdd/constraints/*.md</td><td>Tech stack, business rules, safety</td><td>Tech Lead</td></tr>
+        <tr><td>Skill Library</td><td>.sdd/skills/*.md</td><td>Domain expertise, reusable patterns</td><td>Senior devs</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="slide" data-section="3">
+  <div class="slide-tag">B1 DoD</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Agent Pass Test trước khi đi tiếp</h2>
+  <div class="slide-body">
+    <div class="code-block"><div class="cb-title">B1 DoD</div>Run: "Describe this project in 5 bullets"
+-> Agent phải trả lời đúng bối cảnh, kiến trúc, ràng buộc.
+
+Run: "What is NOT allowed in this project?"
+-> Agent phải liệt kê đúng các vi phạm constitution.
+
+Nếu sai/thiếu:
+- Update context docs (AGENTS.md, CLAUDE.md, constraints)
+- Chạy lại pass test trước khi qua B2.</div>
+  </div>
+</div>
+
+<div class="slide" data-section="3">
+  <div class="slide-tag">B2</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Feature Specification theo Core/Shell</h2>
+  <div class="slide-body">
+    <p class="body-text">Ở B2, mỗi feature được chia thành Core elements và Shell elements. Core dùng Full Spec; Shell dùng Light/No Spec để giữ tốc độ.</p>
+    <div class="code-block"><div class="cb-title">B2 checklist + ví dụ User Profile Update</div>1) Identify CORE elements:
+   - Email uniqueness validation -> Full Spec
+   - Phone number format (PII/compliance) -> Full Spec
+
+2) Identify SHELL elements:
+   - Profile form UI -> Light Spec
+   - Toast notification -> No Spec
+   - Avatar crop/resize -> Light Spec
+
+Spec files cho CORE:
+.sdd/features/feat-profile-update/core-email-validation.md
+.sdd/features/feat-profile-update/core-phone-format.md</div>
+  </div>
+</div>
+
+<div class="slide" data-section="3">
+  <div class="slide-tag">B3</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Plan Review - điểm veto cuối trước khi code</h2>
+  <div class="slide-body">
+    <div class="code-block"><div class="cb-title">Plan Review prompt</div>Đọc:
+- .sdd/features/.../core-email-validation.md
+- AGENTS.md và .sdd/constraints/
+
+Viết execution plan:
+1. CORE elements + approach
+2. SHELL elements + approach
+3. Agent team structure
+4. Files sẽ thay đổi
+5. Integration risks
+6. Assumptions
+
+DỪNG và đợi human approval.</div>
+    <div class="alert-box warn">
+      <div class="alert-title">WARN - Human review questions</div>
+      CORE/SHELL phân loại đúng chưa? Team size agent phù hợp chưa? Có risk ẩn nào bị bỏ sót không? Assumptions có đúng context hệ thống không?
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-section="3">
+  <div class="slide-tag">B4</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Task Decomposition thành atomic tasks</h2>
+  <div class="slide-body">
+    <p class="body-text">Sau approve plan, agent tách task vào TASKS.md. Mỗi task nên dưới 4 giờ, có dependency rõ và DoD riêng.</p>
+    <div class="code-block"><div class="cb-title">TASKS.md output mẫu</div>T001 DB migration add phone_number | 1h | rollback OK
+T002 Email validation service      | 2h | unit tests + constitution check
+T003 Phone format validator E.164  | 2h | tests cover 10+ formats
+T004 Profile form UI (depends T001)| 3h | renders + validation
+T005 API endpoint (T002,T003)      | 2h | tests pass + OpenAPI updated
+T006 Integration test              | 2h | E2E flow pass
+
+Parallel:
+- T001/T002/T003 chạy đồng thời
+- T004/T005 đồng thời sau khi T001-T003 xong</div>
+  </div>
+</div>
+
+<div class="slide" data-section="3">
+  <div class="slide-tag">B5</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Agentic Implementation + Escape Hatch</h2>
+  <div class="slide-body">
+    <p class="body-text">B5 vận hành theo Plan-Act-Check. Human can thiệp ở approval gates hoặc khi agent stuck. Escape Hatch cho phép chuyển manual coding sau 3 lần loop lỗi hoặc khi thời hạn quá gấp.</p>
+    <div class="code-block"><div class="cb-title">Escape Hatch Protocol</div>Trigger:
+- Agent loop > 3 lần cùng một lỗi
+- Output quality liên tục dưới ngưỡng
+- Task đòi hỏi domain knowledge chưa encode
+- Deadline không cho phép chờ agent tự tìm ra
+
+Khi kích hoạt:
+1. Interrupt agent session
+2. Manual code phần khó
+3. Ghi vào plan.md: lý do, file, line, learning
+4. Tiếp tục workflow với các task còn lại</div>
+  </div>
+</div>
+
+<div class="slide" data-section="3">
+  <div class="slide-tag">Quote Spotlight</div>
+  <div class="slide-body" style="display:flex;align-items:center;justify-content:center">
+    <div class="big-quote">"Đừng tin AI khi nó nói: I have finished the task.\nHãy tin khi Unit Test xanh và Spec Checklist hoàn thành."</div>
+  </div>
+</div>
+
+<div class="slide" data-section="3">
+  <div class="slide-tag">Table</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">B6 Validation Gate - 4 lớp kiểm tra</h2>
+  <div class="slide-body">
+    <table class="matrix-table">
+      <thead><tr><th>Layer</th><th>Kiểm tra</th><th>Tool</th><th>Fail = ?</th></tr></thead>
+      <tbody>
+        <tr><td>L1 Automated</td><td>Unit tests, lint, type check</td><td>go test, eslint, mypy</td><td>Block merge, yêu cầu agent fix</td></tr>
+        <tr><td>L2 Spec Compliance</td><td>Mọi SHALL có code + EARS trace</td><td>Manual + AI-assisted</td><td>Task chưa được coi là done</td></tr>
+        <tr><td>L3 Constitution</td><td>Security, architecture, standards</td><td>CI pipeline checks</td><td>Block merge, escalate</td></tr>
+        <tr><td>L4 Acceptance</td><td>Criteria từ spec §7</td><td>Manual test + demo</td><td>Quay lại B5 để làm rõ/fix</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="slide" data-section="3">
+  <div class="slide-tag">B6 Checklist</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Checklist bắt buộc trước merge</h2>
+  <div class="slide-body">
+    <div class="code-block"><div class="cb-title">Validation Gate checklist</div>[L1]
+[ ] go test ./... ALL PASS
+[ ] golangci-lint ZERO errors
+[ ] go vet CLEAN
+[ ] gitleaks NO secrets
+
+[L2]
+[ ] Mỗi SHALL trong SPEC.md có implementation
+[ ] EARS tags traceable
+[ ] Không code out-of-scope
+[ ] WHERE constraints có error handling
+
+[L3]
+[ ] Constitution self-check prompt pass
+[ ] CI pipeline pass, không bypass
+
+[L4]
+[ ] Tất cả checkbox acceptance criteria được verify
+[ ] Demo end-to-end pass
+
+RULE: Chỉ 1 fail => quay về B5 và revalidate.</div>
+  </div>
+</div>
+
+<div class="slide" data-section="3">
+  <div class="slide-tag">B7</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Integration &amp; Review - Human final gate</h2>
+  <div class="slide-body">
+    <p class="body-text">B7 không lặp lại việc kiểm spec hoặc code quality (đã xử lý ở B6). B7 tập trung vào system fit, kiến trúc tổng thể và tác động tương lai.</p>
+    <div class="two-col">
+      <div class="card">
+        <h3 style="color:var(--accent);margin-bottom:8px">System & Architecture</h3>
+        <ul class="bullet-list">
+          <li>Hidden dependency mới?</li>
+          <li>Side effect module khác?</li>
+          <li>Service boundaries có bị vi phạm?</li>
+          <li>Cross-service DB access có xuất hiện?</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--accent);margin-bottom:8px">Future & Documentation</h3>
+        <ul class="bullet-list">
+          <li>Có tạo tech debt hay breaking change tiềm ẩn?</li>
+          <li>Cần update shared_context.md / CHANGELOG?</li>
+          <li>Có lesson learned cần ghi vào CLAUDE.md?</li>
+          <li>Quyết định mới có cần ADR?</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-section="4" style="position:relative">
+  <div class="section-num-bg">13.4</div>
+  <div class="slide-tag">Section Header</div>
+  <h2 class="section-title">Template Cấu trúc Thư mục Hybrid Project</h2>
+  <div class="slide-body"><ul class="bullet-list"><li>13.4.1 Git Branching Strategy cho SDD</li><li>13.4.2 File Naming Conventions</li></ul></div>
+</div>
+
+<div class="slide" data-section="4">
+  <div class="slide-tag">13.4</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Directory structure chuẩn cho Hybrid Project</h2>
+  <div class="slide-body">
+    <p class="body-text">Một cấu trúc thư mục tốt giúp agent và con người tìm đúng thông tin, giữ Git history rõ ràng, và cấu hình CI/CD đơn giản hơn.</p>
+    <div class="code-block"><div class="cb-title">Hybrid Project Directory</div>my-project/
+├── .sdd/
+│   ├── constitution.md
+│   ├── shared_context.md
+│   ├── constraints/{global,business,safety}.md
+│   ├── specs/_template.md
+│   ├── specs/feat-{name}/{SPEC,PLAN,TASKS,CHANGELOG}.md
+│   ├── skills/*.md
+│   ├── rfcs/ADR-001-*.md
+│   └── reviews/
+├── .agents/{AGENTS.md,CLAUDE.md,.agentignore}
+├── src/{domain,usecase,interface,infra}
+├── tests/{unit,integration,e2e}
+├── docs/{api,architecture}
+├── plan.md
+├── AGENTS.md (symlink)
+├── CLAUDE.md (symlink)
+└── .github/workflows/</div>
+  </div>
+</div>
+
+<div class="slide" data-section="4">
+  <div class="slide-tag">13.4.1</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Git Branching Strategy - audit trail theo spec</h2>
+  <div class="slide-body">
+    <div class="code-block"><div class="cb-title">Git flow</div>MAIN BRANCHES:
+main (production, protected)
+develop (integration, tests must pass)
+
+SPEC BRANCHES:
+spec/{feature-name}
+- viết spec, AI review, human approval
+- merge vào main (chỉ .sdd files)
+
+AGENT BRANCHES:
+agent/{feature-name}
+- code implementation từ spec đã approved
+- merge vào develop sau Validation Gate pass
+
+HOTFIX:
+fix/{issue-id}
+
+FLOW:
+1) spec/feature -> review -> approve
+2) merge spec vào main
+3) tạo agent/feature từ develop
+4) agent implement
+5) pass B6 -> merge develop
+6) QA -> merge main
+
+TAGS:
+spec/payment/v1.0.0
+release/v2.1.0</div>
+  </div>
+</div>
+
+<div class="slide" data-section="4">
+  <div class="slide-tag">Table</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">File Naming Conventions</h2>
+  <div class="slide-body">
+    <table class="matrix-table">
+      <thead><tr><th>Artifact</th><th>Pattern</th><th>Ví dụ</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Feature spec folder</td><td>feat-{kebab-name}</td><td>feat-user-profile</td><td>Lowercase + hyphens</td></tr>
+        <tr><td>Spec file</td><td>SPEC.md</td><td>SPEC.md</td><td>UPPERCASE, locked khi approved</td></tr>
+        <tr><td>Task file</td><td>TASKS.md</td><td>TASKS.md</td><td>Agent cập nhật</td></tr>
+        <tr><td>Skill file</td><td>{domain}-{name}.md</td><td>sql-performance.md</td><td>Kebab-case</td></tr>
+        <tr><td>ADR file</td><td>ADR-{n}-{name}.md</td><td>ADR-001-auth-approach.md</td><td>Zero-padded number</td></tr>
+        <tr><td>Git spec branch</td><td>spec/{feature}</td><td>spec/payment-v2</td><td>Slash chỉ dùng cho prefix</td></tr>
+        <tr><td>Git agent branch</td><td>agent/{feature}</td><td>agent/payment-v2</td><td>Match spec branch name</td></tr>
+        <tr><td>Git spec tag</td><td>spec/{name}/v{semver}</td><td>spec/payment/v1.0.0</td><td>Semver cho spec versions</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="slide" data-section="5" style="position:relative">
+  <div class="section-num-bg">13.5</div>
+  <div class="slide-tag">Section Header</div>
+  <h2 class="section-title">Template Constitution cho Đồ án SE 20 tuần</h2>
+  <div class="slide-body"><ul class="bullet-list"><li>Layer 1: Hard Rules (Security, Data)</li><li>Layer 2: Architectural Constraints - API First</li><li>Layer 3: Engineering Standards + AI Agent Policy</li></ul></div>
+</div>
+
+<div class="slide" data-section="5">
+  <div class="slide-tag">13.5</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Constitution Template - khung xương vận hành 20 tuần</h2>
+  <div class="slide-body">
+    <p class="body-text">Template này dành cho team 3-5 sinh viên, gồm rule bảo mật, ràng buộc kiến trúc, coding/testing standards, Git conventions, review process, deployment rules và agent policy.</p>
+    <div class="code-block"><div class="cb-title">Header mẫu</div># PROJECT CONSTITUTION - [Tên đồ án]
+# Version: 1.0.0 | Status: LOCKED
+# Team: [Danh sách thành viên]
+# Supervisor: [GVHD]
+# Timeline: [Ngày bắt đầu] -> [Ngày bảo vệ]
+# Last updated: [Date]</div>
+    <div class="alert-box tip">
+      <div class="alert-title">TIP</div>
+      Constitution chỉ hiệu quả khi được coi là contract có thể enforce, không phải tài liệu tham khảo tùy ý.
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-section="5">
+  <div class="slide-tag">Layer 1</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Hard Rules - không bao giờ vi phạm</h2>
+  <div class="slide-body">
+    <div class="code-block"><div class="cb-title">Layer 1 rules</div>SEC-01 Password Security:
+- Hash password bằng bcrypt cost >=12 hoặc argon2id
+- Không lưu plaintext
+
+SEC-02 API Authentication:
+- JWT Bearer cho mọi endpoint mutating
+- Public endpoint phải comment // PUBLIC ENDPOINT
+
+SEC-03 Input Validation:
+- Validate + sanitize tất cả user input
+- Không raw SQL concatenation
+
+DATA-01 Soft Delete:
+- Dùng deleted_at cho business entities
+- Hard delete chỉ cho temp data/logs
+
+AUDIT-01 Change Logging:
+- Log CREATE/UPDATE/DELETE với actor, action, object_id, timestamp, ip_address</div>
+  </div>
+</div>
+
+<div class="slide" data-section="5">
+  <div class="slide-tag">Layer 2</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Architectural Constraints - API First bắt buộc</h2>
+  <div class="slide-body">
+    <div class="code-block"><div class="cb-title">ARCH constraints</div>ARCH-01 API First Policy:
+1) Update docs/api/openapi.yaml trước code
+2) Review approval >= 1 member
+3) Sau approve mới implement
+Enforcement: CI fail nếu endpoint có trong code nhưng không có trong openapi.yaml
+
+ARCH-02 Layer Boundaries:
+controller -> service -> repository
+Service không import repository của service khác
+Cross-service qua events hoặc API calls
+
+ARCH-03 Error Handling:
+Không expose stack trace ra client
+Error format: {error_code, message, request_id}
+Stack trace chỉ ở server logs</div>
+  </div>
+</div>
+
+<div class="slide" data-section="5">
+  <div class="slide-tag">Layer 3</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Engineering Standards + Testing + Git conventions</h2>
+  <div class="slide-body">
+    <div class="code-block"><div class="cb-title">Tech stack và standards</div>Tech stack mẫu:
+Backend FastAPI 0.111+ (Python 3.12+)
+Database PostgreSQL 16 + SQLAlchemy 2.0
+Cache Redis 7
+Frontend React 18 + TypeScript 5 + Vite
+Styling Tailwind CSS 3
+Testing pytest + Vitest
+Docs OpenAPI 3.1
+
+Python: type hints public funcs, Google docstring, black 88, ruff
+TypeScript: strict mode, no any, prettier + eslint
+
+Testing requirements:
+- Backend coverage >= 80%
+- Integration tests cho mọi API endpoint
+- Frontend unit/component/E2E
+
+DoD universal:
+- tests pass 100%
+- no lint errors
+- coverage >= 80%
+- OpenAPI updated nếu đổi API
+
+Git conventions:
+- branches: spec/*, agent/*, fix/*
+- conventional commits: feat/fix/docs/spec/chore
+- PR: >=1 reviewer, CI pass, no self-approval</div>
+  </div>
+</div>
+
+<div class="slide" data-section="5">
+  <div class="slide-tag">AI Agent Policy</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Agent Permissions, Forbidden, Must-do</h2>
+  <div class="slide-body">
+    <div class="two-col">
+      <div class="card">
+        <h3 style="color:var(--accent);margin-bottom:8px">Allowed / Forbidden</h3>
+        <ul class="bullet-list">
+          <li>Allowed: read/write <span class="hl">src/, tests/, docs/</span></li>
+          <li>Allowed: execute pytest, vitest, ruff, eslint, git add/commit</li>
+          <li>Forbidden không có human confirm: delete files, sửa constitution, push main/develop</li>
+          <li>Forbidden: thêm dependency và đổi DB schema khi chưa có approval</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--accent);margin-bottom:8px">Agent MUST-DO</h3>
+        <ul class="bullet-list">
+          <li>Chạy Spec Self-Check trước khi submit code</li>
+          <li>Update plan.md sau mỗi completed step</li>
+          <li>Báo cáo edge case không có trong spec</li>
+          <li>Shadow Plan trước khi execute task mới</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-section="6" style="position:relative">
+  <div class="section-num-bg">13.6</div>
+  <div class="slide-tag">Section Header</div>
+  <h2 class="section-title">3 Anti-patterns cần tránh</h2>
+  <div class="slide-body"><ul class="bullet-list"><li>AP1 Over-Specification</li><li>AP2 Blind Trust</li><li>AP3 Context Amnesia</li></ul></div>
+</div>
+
+<div class="slide" data-section="6">
+  <div class="slide-tag">AP1</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Over-Specification - Spec 500 dòng cho button</h2>
+  <div class="slide-body">
+    <p class="body-text">Over-specification xảy ra khi team dùng Formal Spec cho task chỉ cần prompt hoặc Light Spec. Hệ quả là chậm velocity, spec tự mâu thuẫn và agent quá tải bởi instruction density.</p>
+    <div class="alert-box warn"><div class="alert-title">Dấu hiệu sớm</div>SPEC.md > 200 dòng cho utility/component, mô tả HOW thay vì WHAT, team mất >2 giờ review feature chỉ mất 1 ngày implement.</div>
+    <div class="code-block"><div class="cb-title">Cách sửa</div>1) Luôn chạy Risk x Complexity matrix trước khi viết spec
+2) Verify bằng mắt dưới 30 giây => không cần EARS formal
+3) Spec >150 dòng cho feature 1 ngày => trim xuống requirement cốt lõi
+4) Nội dung thuần presentational (color/layout/animation) => Figma + prompt</div>
+  </div>
+</div>
+
+<div class="slide" data-section="6">
+  <div class="slide-tag">AP2</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Blind Trust - Accept all agent output</h2>
+  <div class="slide-body">
+    <p class="body-text">"Tests pass" không đồng nghĩa với đúng spec. Nếu tests không cover business rule hoặc tests được viết theo implementation sai, team sẽ merge bug với độ tự tin cao.</p>
+    <div class="code-block"><div class="cb-title">Ví dụ blind trust</div># Agent viết login, test pass:
+assert response.status_code == 200
+assert "access_token" in response.json()
+
+# Nhưng SPEC §6 yêu cầu:
+# Wrong email và wrong password phải trả cùng message
+# để tránh user enumeration.
+
+# Agent lại trả:
+# - Wrong email: "User not found"
+# - Wrong password: "Incorrect password"
+# => Security vulnerability dù tests vẫn xanh.</div>
+    <div class="alert-box danger"><div class="alert-title">Fix bắt buộc</div>Validation Gate 4 lớp phải là điều kiện merge. Rule: "Agent says done" chỉ là điểm bắt đầu kiểm định, không phải điểm kết thúc task.</div>
+  </div>
+</div>
+
+<div class="slide" data-section="6">
+  <div class="slide-tag">AP3</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Context Amnesia - Không maintain memory</h2>
+  <div class="slide-body">
+    <p class="body-text">Khi AGENTS.md, CLAUDE.md và shared_context.md không được cập nhật sau quyết định quan trọng, agent sẽ lặp lại pattern cũ đã bị deprecated.</p>
+    <div class="code-block"><div class="cb-title">Scenario từ tài liệu</div>Sprint 3: team migrate password hashing từ bcrypt sang argon2id
+PR discussion có ghi, nhưng AGENTS.md không update.
+
+Sprint 5: agent tạo feature mới, đọc AGENTS.md cũ -> dùng bcrypt.
+Tests vẫn pass, human review bỏ sót.
+Sprint 7 audit phát hiện bcrypt trong code mới.
+Sprint 8 phải refactor lại -> tốn 1 sprint.
+
+Root cause: thiếu cập nhật memory artifact cùng commit quyết định.</div>
+    <div class="alert-box tip"><div class="alert-title">Memory ritual</div>Mọi quyết định scope > 1 sprint phải update AGENTS.md/CLAUDE.md cùng PR; weekly review context docs; dùng ADR cho quyết định lớn; log breaking change vào shared_context.md ngay lập tức.</div>
+  </div>
+</div>
+
+<div class="slide" data-section="6">
+  <div class="slide-tag">Table</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Bảng tổng hợp 3 Anti-patterns</h2>
+  <div class="slide-body">
+    <table class="matrix-table">
+      <thead><tr><th>Anti-pattern</th><th>Dấu hiệu sớm</th><th>Cost nếu không sửa</th><th>Fix nhanh</th></tr></thead>
+      <tbody>
+        <tr><td>Over-specification</td><td>Spec > 200 dòng cho task đơn giản</td><td>Slow velocity, giảm morale</td><td>Apply Risk Matrix trước khi viết spec</td></tr>
+        <tr><td>Blind Trust</td><td>Merge không qua Validation Gate</td><td>Security/compliance bugs</td><td>Mandatory Validation Gate checklist trong PR template</td></tr>
+        <tr><td>Context Amnesia</td><td>Agent lặp pattern deprecated</td><td>Rework, inconsistency, tech debt</td><td>Update AGENTS.md cùng PR code change</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="slide" data-section="0">
+  <div class="slide-tag">Summary + Next Chapter</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:16px">Tổng kết Chương 13</h2>
+  <div class="slide-body">
+    <table class="matrix-table">
+      <thead><tr><th>Section</th><th>Key Technique</th><th>Điểm cốt lõi</th></tr></thead>
+      <tbody>
+        <tr><td>13.1 Core &amp; Shell</td><td>Phân loại theo risk</td><td>Xác định thành phần nào cần Full Spec, thành phần nào chạy Agent-first</td></tr>
+        <tr><td>13.2 Decision Matrix</td><td>9-cell + Risk overlay + Flowchart</td><td>Mọi task đều có cách chọn Spec depth và autonomy có hệ thống</td></tr>
+        <tr><td>13.3 Workflow 7 bước</td><td>B1-B7 + Escape Hatch + Validation Gate</td><td>Không bỏ qua B6 nếu muốn reliability thật sự</td></tr>
+        <tr><td>13.4 Directory template</td><td>Folder architecture + branch model</td><td>Tạo audit trail rõ giữa spec và code</td></tr>
+        <tr><td>13.5 Constitution</td><td>3-layer policy cho đồ án 20 tuần</td><td>Rule rõ + enforce được mới giữ chất lượng bền vững</td></tr>
+        <tr><td>13.6 Anti-patterns</td><td>3 cạm bẫy + cách né</td><td>Tránh over-spec, blind trust, context amnesia để giảm rework</td></tr>
+      </tbody>
+    </table>
+    <div class="next-chapter">
+      <div class="nc-label">Chương tiếp theo</div>
+      <h3>Chương 14 - Tương lai của SDD + ADD</h3>
+      <p>Khi model mạnh hơn và context window mở rộng, vai trò developer sẽ chuyển từ code executor sang system architect, policy designer và quality governor. Chương 14 phân tích cách SDD/ADD tiến hóa trong 5 năm tới.</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-section="0">
+  <div class="slide-tag">5 Key Takeaways</div>
+  <h2 class="content-title" style="text-align:center;margin-bottom:18px">5 điểm chốt cần nhớ</h2>
+  <div class="slide-body">
+    <div class="card"><h3 style="color:var(--accent);margin-bottom:6px">1) Core phải được khóa bằng Spec</h3><p class="body-text" style="font-size:17px">Các phần như schema, auth, payment, security luôn cần Full Spec và approval rõ ràng trước khi code.</p></div>
+    <div class="card"><h3 style="color:var(--accent);margin-bottom:6px">2) Shell là vùng tăng tốc của Agent</h3><p class="body-text" style="font-size:17px">UI, CRUD, boilerplate, docs nên đi theo ADD để giảm cycle time và nhận feedback nhanh.</p></div>
+    <div class="card"><h3 style="color:var(--accent);margin-bottom:6px">3) Decision Matrix giúp bỏ cảm tính</h3><p class="body-text" style="font-size:17px">Dùng ba chiều Spec Depth x Autonomy x Risk để chọn chiến lược phù hợp cho từng task.</p></div>
+    <div class="card"><h3 style="color:var(--accent);margin-bottom:6px">4) Validation Gate là điểm khóa chất lượng</h3><p class="body-text" style="font-size:17px">Không có L1-L4 đầy đủ thì không merge. "Done" từ agent không thay thế evidence.</p></div>
+    <div class="card"><h3 style="color:var(--accent);margin-bottom:6px">5) Memory management là năng lực chiến lược</h3><p class="body-text" style="font-size:17px">Context docs phải được bảo trì liên tục để agent không tái tạo quyết định cũ đã lỗi thời.</p></div>
+  </div>
+</div>
+
+<div class="slide slide-title-main" data-section="0">
+  <div style="max-width:980px;position:relative;z-index:2">
+    <p style="font-size:13px;letter-spacing:4px;color:var(--text-mute);text-transform:uppercase">Playbook SDD + ADD - Closing</p>
+    <h1 class="main-title" style="margin:10px 0 8px">Hybrid Framework</h1>
+    <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(20px,2.4vw,30px);color:var(--text-sub)">Chương 13 - Khi nào Spec, Khi nào Agent</p>
+    <div style="width:70px;height:1px;background:var(--accent);margin:28px auto;box-shadow:0 0 14px var(--accent)"></div>
+    <p style="font-family:'Cormorant Garamond',serif;font-size:clamp(36px,5vw,72px);color:var(--accent);text-shadow:0 0 30px rgba(0,255,85,0.5),0 0 60px rgba(0,255,85,0.2)">LinhNDM</p>
+    <p style="font-size:clamp(16px,1.8vw,24px);letter-spacing:3px;color:var(--text-sub);margin-top:6px">Nguyễn Đình Mạnh Linh</p>
+  </div>
+</div>
+
+</div>
+
+<div class="nav-buttons">
+  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>&larr; Prev</button>
+  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Next &rarr;</button>
+</div>
+
+<script>
+document.addEventListener('keydown', e => {
+  if(e.key==='F12' ||
+     (e.ctrlKey && e.shiftKey && ['I','J','K'].includes(e.key.toUpperCase())) ||
+     (e.ctrlKey && ['u','s','a','c','p','f'].includes(e.key.toLowerCase()))
+  ) e.preventDefault();
+});
+['contextmenu','selectstart','dragstart','copy'].forEach(ev =>
+  document.addEventListener(ev, e => e.preventDefault())
+);
+
+(function(){
+  const canvas = document.getElementById('matrix-canvas');
+  const ctx = canvas.getContext('2d');
+  let cols = 0;
+  let drops = [];
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%"\'#&_(),.;:!?[]{}';
+  function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols = Math.floor(canvas.width/16);
+    drops = Array(cols).fill(1);
+  }
+  function draw(){
+    ctx.fillStyle = 'rgba(1,21,0,0.05)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#00ff41';
+    ctx.font = '14px monospace';
+    for(let i=0;i<drops.length;i++){
+      const t = chars[Math.floor(Math.random()*chars.length)];
+      ctx.fillText(t, i*16, drops[i]*16);
+      if(drops[i]*16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  setInterval(draw, 50);
+})();
+
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let current = 0;
+
+const sectionMap = {};
+slides.forEach((s, i) => {
+  const sec = parseInt(s.dataset.section, 10);
+  if(sec > 0 && sectionMap[sec] === undefined) sectionMap[sec] = i;
+});
+
+function goToSlide(n) {
+  if(n<0||n>=total) return;
+  slides[current].classList.remove('active');
+  current = n;
+  slides[current].classList.add('active');
+  updateUI();
+}
+
+function updateUI() {
+  document.getElementById('slide-counter').textContent = (current+1)+' / '+total;
+  document.getElementById('btn-prev').disabled = current === 0;
+  document.getElementById('btn-next').disabled = current === total-1;
+  document.getElementById('progress-bar').style.width = ((current+1)/total*100).toFixed(1)+'%';
+}
+
+function changeSlide(d){ goToSlide(current+d); }
+function goToSection(n){ if(sectionMap[n] !== undefined) goToSlide(sectionMap[n]); }
+
+document.addEventListener('keydown', e => {
+  if(e.key==='ArrowRight' || e.key===' '){ e.preventDefault(); changeSlide(1); }
+  else if(e.key==='ArrowLeft'){ e.preventDefault(); changeSlide(-1); }
+  else if(e.key>='1'&&e.key<='9'){
+    const n = parseInt(e.key,10);
+    if(sectionMap[n] !== undefined) goToSection(n);
+  }
+  else if(e.key==='Home'){ goToSlide(0); }
+  else if(e.key==='End'){ goToSlide(total-1); }
+});
+
+let startX = 0;
+document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', e => {
+  const delta = e.changedTouches[0].clientX - startX;
+  if(Math.abs(delta) > 50) changeSlide(delta < 0 ? 1 : -1);
+}, {passive:true});
+
+updateUI();
+</script>
+</body>
+</html>

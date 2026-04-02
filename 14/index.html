@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chương 14: Roadmap 15 Tuần</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#011500;
+  --accent:#00ff55;
+  --text:#ffffff;
+  --text-sub:#ccffcc;
+  --text-mute:#7de87d;
+  --card-border:rgba(0,255,65,0.5);
+  --card-bg:rgba(0,255,65,0.09);
+  --table-header:rgba(0,255,65,0.18);
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;user-select:none;-webkit-user-select:none}
+body{background:radial-gradient(ellipse at 50% 0%, #022800, #011500, #010f00)}
+#matrix-canvas{position:fixed;top:0;left:0;width:100%;height:100%;opacity:0.09;pointer-events:none;z-index:0}
+.scanlines{position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg, transparent 2px, rgba(0,0,0,0.07) 2px 4px);pointer-events:none;z-index:1}
+#progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg, #00ff55, #00cc44);width:0;transition:width 0.3s ease;z-index:100}
+#slide-counter{position:fixed;top:18px;right:28px;font-size:13px;color:var(--text-mute);letter-spacing:2px;z-index:100}
+.watermark{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(0,255,85,0.35);letter-spacing:3px;text-transform:uppercase;z-index:99;pointer-events:none;white-space:nowrap}
+.nav-buttons{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:16px;z-index:100}
+.nav-btn{background:rgba(0,255,65,0.12);border:1px solid var(--card-border);color:var(--accent);padding:10px 28px;font-size:13px;letter-spacing:2px;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.nav-btn:hover{background:rgba(0,255,65,0.25);box-shadow:0 0 18px rgba(0,255,65,0.3)}
+.nav-btn:disabled{opacity:0.25;cursor:not-allowed}
+#slideshow{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;padding:60px 80px 80px 80px}
+.slide.active{display:flex;animation:fadeIn 0.45s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+h1.main-title{font-family:'Cormorant Garamond',serif;font-size:clamp(44px, 6.5vw, 80px);color:var(--accent);text-shadow:0 0 30px rgba(0,255,85,0.5), 0 0 60px rgba(0,255,85,0.2);line-height:1.05}
+h2.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(34px, 4.5vw, 60px);color:var(--accent);text-shadow:0 0 30px rgba(0,255,85,0.5), 0 0 60px rgba(0,255,85,0.2);line-height:1.12}
+h2.content-title{text-align:center;font-family:'Cormorant Garamond',serif;font-size:clamp(28px, 3.4vw, 48px);color:var(--accent);line-height:1.2}
+p.body-text{font-size:clamp(16px, 1.7vw, 22px);color:var(--text-sub);line-height:1.7;margin-bottom:12px}
+.bullet-list{list-style:none}
+.bullet-list li{font-size:clamp(15px, 1.6vw, 20px);color:var(--text-sub);padding:6px 0 6px 20px;position:relative;line-height:1.5}
+.bullet-list li::before{content:'▸';position:absolute;left:0;color:#00ff55}
+.card{background:var(--card-bg);border-left:3px solid var(--accent);padding:18px 20px;margin-bottom:14px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+blockquote.matrix-quote{border-left:3px solid var(--accent);background:rgba(0,255,65,0.08);padding:16px 20px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(17px, 1.8vw, 24px);line-height:1.6;margin:14px 0;color:var(--text-sub)}
+.big-quote{text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(26px, 3.2vw, 44px);text-shadow:0 0 25px rgba(0,255,85,0.4);line-height:1.45;color:var(--accent)}
+table.matrix-table{width:100%;border-collapse:collapse}
+table.matrix-table th{background:var(--table-header);border:1px solid var(--card-border);padding:10px 12px;text-align:left;color:var(--accent);font-size:12px;letter-spacing:1px}
+table.matrix-table td{border:1px solid rgba(0,255,65,0.25);padding:10px 12px;vertical-align:top;color:var(--text-sub);font-size:clamp(13px, 1.3vw, 16px);line-height:1.45}
+.alert-box{padding:14px 18px;margin:12px 0;border-left:3px solid}
+.alert-box .alert-title{font-weight:700;letter-spacing:1px;margin-bottom:6px}
+.alert-box.info{border-color:#55ccff;color:#99e6ff;background:rgba(85,204,255,0.08)}
+.alert-box.warn{border-color:#ffc844;color:#ffe6a3;background:rgba(255,200,68,0.08)}
+.alert-box.danger{border-color:#ff7070;color:#ffc0c0;background:rgba(255,112,112,0.08)}
+.alert-box.tip{border-color:#00ff55;color:#ccffcc;background:rgba(0,255,85,0.08)}
+.data-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px;margin:18px 0}
+.data-point{background:var(--card-bg);border:1px solid var(--card-border);text-align:center;padding:14px}
+.data-num{font-family:'Cormorant Garamond',serif;font-size:clamp(30px, 4vw, 54px);color:var(--accent);line-height:1}
+.data-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-mute);margin-top:4px}
+.toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.toc-item{background:var(--card-bg);border:1px solid rgba(0,255,65,0.25);padding:16px 18px;cursor:pointer;transition:all .2s}
+.toc-item:hover{background:rgba(0,255,65,0.15);border-color:var(--accent)}
+.code-block{background:rgba(0,20,0,0.7);border:1px solid rgba(0,255,65,0.3);font-family:'Courier New',monospace;color:#90ee90;max-height:280px;overflow:auto;white-space:pre;padding:12px 14px;font-size:12px;line-height:1.55}
+.cb-title{font-size:11px;letter-spacing:2px;color:var(--text-mute);text-transform:uppercase;margin-bottom:6px;font-family:'Josefin Sans',sans-serif}
+.pipeline{border:1px solid var(--card-border);background:rgba(0,10,0,0.6);padding:14px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#90ee90}
+.pipeline .ph{color:#00ff55;font-weight:bold}
+.pipeline .ph-item{display:block;margin-left:16px}
+.next-chapter{background:rgba(85,204,255,0.07);border:1px solid rgba(85,204,255,0.3);padding:18px 20px;margin-top:14px}
+.next-chapter .nc-label{color:#55ccff;letter-spacing:2px;text-transform:uppercase;font-size:11px;margin-bottom:6px}
+.next-chapter h3{font-family:'Cormorant Garamond',serif;color:#aeefff;font-size:clamp(20px,2.4vw,30px);margin-bottom:6px}
+.next-chapter p{color:#c8f3ff;line-height:1.6}
+.section-num-bg{position:absolute;right:-2vw;top:50%;transform:translateY(-50%);font-family:'Cormorant Garamond',serif;font-size:clamp(180px,28vw,320px);color:rgba(0,255,65,0.05);pointer-events:none}
+.slide-tag{text-align:center;color:var(--text-mute);font-size:12px;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px}
+.slide-body{flex:1;overflow-y:auto;padding-right:4px}
+.slide-body::-webkit-scrollbar{width:4px}
+.slide-body::-webkit-scrollbar-thumb{background:rgba(0,255,65,0.35)}
+.slide-title-main{justify-content:center;align-items:center;text-align:center}
+.title-footer{position:absolute;bottom:30px;left:0;right:0;text-align:center;color:var(--text-mute);font-size:12px;letter-spacing:2px}
+.badge{display:inline-block;background:rgba(0,255,65,0.14);border:1px solid var(--card-border);padding:6px 14px;color:var(--accent);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.hl{color:#00ff55;font-weight:600}
+.hl-r{color:#ff7070}
+.hl-o{color:#ffc844}
+.hl-b{color:#55ccff}
+.author-name{font-family:'Cormorant Garamond',serif;font-size:clamp(58px,9vw,120px);color:var(--accent);text-shadow:0 0 30px rgba(0,255,85,0.5), 0 0 60px rgba(0,255,85,0.2);line-height:1}
+@media(max-width:768px){
+  .slide{padding:36px 20px 70px 20px}
+  .two-col{grid-template-columns:1fr}
+  .toc-grid{grid-template-columns:1fr}
+  .section-num-bg{font-size:130px;right:-10px}
+  .nav-btn{padding:8px 18px;font-size:11px}
+}
+</style>
+</head>
+<body>
+<canvas id="matrix-canvas"></canvas>
+<div class="scanlines"></div>
+<div id="progress-bar"></div>
+<div id="slide-counter">1 / 1</div>
+<div class="watermark">LinhNDM — Nguyễn Đình Mạnh Linh</div>
+
+<div id="slideshow">
+  <div class="slide slide-title-main active" data-section="0">
+    <div style="max-width:1000px;position:relative;z-index:2">
+      <div class="badge">Playbook SDD + ADD | Chương 14</div>
+      <h1 class="main-title" style="margin:18px 0 12px">Roadmap 15 Tuần</h1>
+      <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(22px,2.8vw,34px);color:var(--text-sub)">Áp dụng cho đồ án Software Engineering theo mô hình Hybrid SDD + ADD</p>
+      <div class="data-grid" style="margin-top:28px">
+        <div class="data-point"><div class="data-num">5</div><div class="data-label">Sections</div></div>
+        <div class="data-point"><div class="data-num">15</div><div class="data-label">Tuần / Bước</div></div>
+        <div class="data-point"><div class="data-num">5</div><div class="data-label">Bảng dữ liệu</div></div>
+        <div class="data-point"><div class="data-num">15</div><div class="data-label">Trang tài liệu</div></div>
+      </div>
+    </div>
+    <div class="title-footer">© 2025 — Playbook SDD + ADD | LinhNDM | Nguyễn Đình Mạnh Linh</div>
+  </div>
+
+  <div class="slide" data-section="0">
+    <div class="slide-tag">Giới thiệu chương</div>
+    <h2 class="content-title" style="margin-bottom:18px">Vì sao Chương 14 là bản đồ thực thi quan trọng nhất?</h2>
+    <div class="slide-body">
+      <p class="body-text">Chương 14 chuyển toàn bộ playbook từ mức nguyên tắc sang mức <span class="hl">tuần-theo-tuần</span>, dành riêng cho team 5 sinh viên làm đồ án SE. Mỗi tuần đều có mục tiêu, deliverable, công cụ và checklist để tránh làm việc cảm tính hoặc bị trễ dây chuyền.</p>
+      <p class="body-text">Khác với các chương thiên về framework, chương này đóng vai trò <span class="hl-b">operating plan</span>: team biết rõ tuần nào phải chốt spec, tuần nào được tăng tốc agent coding, tuần nào dừng viết feature để kiểm thử bảo mật và tuần nào tập trung polish để demo hội đồng.</p>
+      <p class="body-text">Nó kết nối trực tiếp chương trước về Hybrid workflow và chuẩn bị cho chương sau về case studies thực tế: một bên là <span class="hl">phương pháp</span>, bên kia là <span class="hl">lịch trình triển khai</span> để phương pháp trở thành kết quả thật.</p>
+      <div class="alert-box info">
+        <div class="alert-title">INFO - Tinh thần chương</div>
+        100% thực hành, không có lý thuyết thừa. Nếu team bám đúng roadmap, bạn giảm mạnh <span class="hl-r">rework</span>, giữ nhịp release đều, và đến tuần 15 có đủ code, docs, slides, video để nộp đồ án hoàn chỉnh.
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="0">
+    <div class="slide-tag">Mục lục</div>
+    <h2 class="content-title" style="margin-bottom:20px">Cấu trúc Chương 14</h2>
+    <div class="slide-body">
+      <div class="toc-grid">
+        <div class="toc-item" onclick="goToSection(1)"><div style="font-size:26px;color:var(--accent);font-family:'Cormorant Garamond',serif">14.1</div><div>Giai đoạn 1: Foundation (Tuần 1-4)</div></div>
+        <div class="toc-item" onclick="goToSection(2)"><div style="font-size:26px;color:var(--accent);font-family:'Cormorant Garamond',serif">14.2</div><div>Giai đoạn 2: Core Development (Tuần 5-12)</div></div>
+        <div class="toc-item" onclick="goToSection(3)"><div style="font-size:26px;color:var(--accent);font-family:'Cormorant Garamond',serif">14.3</div><div>Giai đoạn 3: Polish &amp; Delivery (Tuần 13-15)</div></div>
+        <div class="toc-item" onclick="goToSection(4)"><div style="font-size:26px;color:var(--accent);font-family:'Cormorant Garamond',serif">14.4</div><div>Phân công 5 vai trò và rotation theo sprint</div></div>
+        <div class="toc-item" onclick="goToSection(5)"><div style="font-size:26px;color:var(--accent);font-family:'Cormorant Garamond',serif">14.5</div><div>Ceremony calendar, template agenda, milestones</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="1" style="position:relative">
+    <div class="section-num-bg">14.1</div>
+    <div class="slide-tag">Section Header</div>
+    <h2 class="section-title">Giai Đoạn 1: Foundation</h2>
+    <div class="slide-body" style="margin-top:12px">
+      <p class="body-text">Tuần 1-4 đặt nền móng cho 11 tuần còn lại: nếu foundation yếu, mọi sprint sau sẽ liên tục sửa sai. Chương yêu cầu team ưu tiên chuẩn hóa context, spec và kiến trúc trước khi lao vào code.</p>
+      <ul class="bullet-list">
+        <li>Tuần 1: Setup toolchain + CONSTITUTION.md + project memory</li>
+        <li>Tuần 2-3: SDD Sprint thuần túy, chưa viết code feature</li>
+        <li>Tuần 4: Architecture &amp; Scaffolding, cầu nối SDD sang ADD</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="slide" data-section="1">
+    <div class="slide-tag">Table</div>
+    <h2 class="content-title" style="margin-bottom:16px">Tổng Quan 15 Tuần (Phần 1/2)</h2>
+    <div class="slide-body">
+      <table class="matrix-table">
+        <thead><tr><th>Tuần</th><th>Giai đoạn</th><th>Trọng tâm</th><th>Phương pháp</th><th>Công cụ chính</th><th>Output</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Foundation</td><td>Setup &amp; Constitution</td><td>SDD</td><td>Claude Code, Cursor</td><td>CONSTITUTION.md</td></tr>
+          <tr><td>2</td><td>Foundation</td><td>Spec tính năng cốt lõi</td><td>SDD</td><td>Spec Kit / Kiro</td><td>Spec files</td></tr>
+          <tr><td>3</td><td>Foundation</td><td>Spec review &amp; hoàn thiện</td><td>SDD</td><td>Spec Kit / Kiro</td><td>Approved Specs</td></tr>
+          <tr><td>4</td><td>Foundation</td><td>Architecture &amp; Scaffolding</td><td>SDD + ADD</td><td>Claude Code, Cline</td><td>DB Schema + API</td></tr>
+          <tr><td>5</td><td>Core Dev</td><td>Sprint 1 - Auth &amp; Users</td><td>ADD</td><td>Cursor Agent, Claude</td><td>Auth module</td></tr>
+          <tr><td>6</td><td>Core Dev</td><td>Sprint 1 tiếp tục + review</td><td>ADD</td><td>Cursor Agent, Claude</td><td>PR merged</td></tr>
+          <tr><td>7</td><td>Core Dev</td><td>Sprint 2 - Business Logic</td><td>ADD</td><td>Cursor Agent, Claude</td><td>Core features</td></tr>
+          <tr><td>8</td><td>Core Dev</td><td>Sprint 2 tiếp tục + review</td><td>ADD</td><td>Cursor Agent, Claude</td><td>PR merged</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="slide" data-section="1">
+    <div class="slide-tag">Table</div>
+    <h2 class="content-title" style="margin-bottom:16px">Tổng Quan 15 Tuần (Phần 2/2)</h2>
+    <div class="slide-body">
+      <table class="matrix-table">
+        <thead><tr><th>Tuần</th><th>Giai đoạn</th><th>Trọng tâm</th><th>Phương pháp</th><th>Công cụ chính</th><th>Output</th></tr></thead>
+        <tbody>
+          <tr><td>9</td><td>Core Dev</td><td>Sprint 3 - Nâng cao</td><td>ADD</td><td>Cursor Agent, Claude</td><td>Advanced features</td></tr>
+          <tr><td>10</td><td>Core Dev</td><td>Sprint 3 - Dashboard</td><td>ADD</td><td>Cursor Agent, Claude</td><td>Dashboard</td></tr>
+          <tr><td>11</td><td>Polish</td><td>Testing Sprint Unit/Integration</td><td>ADD + SDD</td><td>Claude Code, pytest</td><td>80% coverage</td></tr>
+          <tr><td>12</td><td>Polish</td><td>Security audit + bug fixing</td><td>ADD + SDD</td><td>Claude Code, Snyk</td><td>Security report</td></tr>
+          <tr><td>13</td><td>Polish</td><td>Docs &amp; CI/CD deployment</td><td>ADD</td><td>Claude Code, GitHub</td><td>Staging deploy</td></tr>
+          <tr><td>14</td><td>Polish</td><td>User testing &amp; performance</td><td>ADD</td><td>Claude Code</td><td>Optimized app</td></tr>
+          <tr><td>15</td><td>Delivery</td><td>Final report &amp; presentation</td><td>Manual</td><td>AI writing assist</td><td>Đồ án hoàn chỉnh</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="slide" data-section="1">
+    <div class="slide-tag">14.1 - Tuần 1</div>
+    <h2 class="content-title" style="margin-bottom:16px">Tuần 1: Setup &amp; Constitution</h2>
+    <div class="slide-body">
+      <p class="body-text">Tuần 1 được gọi là tuần quan trọng nhất vì quyết định ở đây ảnh hưởng trực tiếp toàn bộ 14 tuần còn lại. Team phải ưu tiên đồng thuận hệ thống làm việc trước khi bắt đầu bất kỳ module nào.</p>
+      <div class="two-col">
+        <div class="card">
+          <ul class="bullet-list">
+            <li><span class="hl">Mục tiêu</span>: thống nhất tech stack, công cụ AI, quy tắc phối hợp.</li>
+            <li>Deliverable 1: `CONSTITUTION.md` với coding standards, security rules, Git conventions.</li>
+            <li>Deliverable 2: `AGENTS.md` + `CLAUDE.md` đã setup và chạy thử thành công.</li>
+            <li>Deliverable 3: cấu trúc repo chuẩn `/.spec`, `/.agents`, `/src`, `/tests`.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <ul class="bullet-list">
+            <li>Công cụ chính: Cursor hoặc Claude Code để verify luồng làm việc; GitHub cho repo setup.</li>
+            <li>Phân công: Spec Architect khởi tạo constitution, cả team review và ký-off.</li>
+            <li>Nguyên tắc: <span class="hl-r">không vội</span>, vì sửa nền tảng ở tuần sau luôn tốn hơn làm đúng ngay từ đầu.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="1">
+    <div class="slide-tag">14.1 - Tuần 1 Checklist</div>
+    <h2 class="content-title" style="margin-bottom:16px">Checklist Gate Tuần 1</h2>
+    <div class="slide-body">
+      <div class="card">
+        <ul class="bullet-list">
+          <li>Tất cả thành viên đã cài và chạy thử Claude Code hoặc Cursor thành công.</li>
+          <li>`CONSTITUTION.md` đã merge vào `main` và có đồng thuận toàn team.</li>
+          <li>`AGENTS.md` định nghĩa rõ tech stack, coding style, forbidden patterns.</li>
+          <li>`CLAUDE.md` có project context, constraints, definition of done.</li>
+          <li>Repo có đủ `/.spec/constitution.md`, `/.agents/CLAUDE.md`, `/.agents/AGENTS.md`.</li>
+          <li>Git branching strategy đã chốt: `spec/*` và `agent/*` branches.</li>
+        </ul>
+      </div>
+      <div class="alert-box danger">
+        <div class="alert-title">DANGER - Rule</div>
+        Không pass sang tuần 2 nếu checklist này chưa hoàn thành, vì mọi sprint sau sẽ thiếu chuẩn chung và tạo ra debt hệ thống.
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="1">
+    <div class="slide-tag">14.1 - Tuần 2-3</div>
+    <h2 class="content-title" style="margin-bottom:16px">SDD Sprint: Specification Thuần Túy</h2>
+    <div class="slide-body">
+      <p class="body-text">Hai tuần này không viết code feature. Toàn bộ năng lượng dồn vào việc tạo spec đủ rõ để agent có thể implement mà không phải đoán ý. Chất lượng spec ở tuần 2-3 quyết định chất lượng phần code tuần 5-12.</p>
+      <div class="two-col">
+        <div class="card">
+          <h3 style="color:var(--accent);margin-bottom:8px">Tuần 2: Viết Spec Draft</h3>
+          <ul class="bullet-list">
+            <li>Phân tích requirements từ thầy/khách hàng.</li>
+            <li>Áp dụng EARS notation cho 3-5 tính năng cốt lõi.</li>
+            <li>Mỗi file có Business Context, User Stories, Acceptance Criteria.</li>
+            <li>Dùng GitHub Spec Kit hoặc template Markdown tự thiết kế.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--accent);margin-bottom:8px">Tuần 3: Review &amp; Finalize</h3>
+          <ul class="bullet-list">
+            <li>Cross-review chéo giữa các thành viên.</li>
+            <li>Clarification session với AI để tìm ambiguity.</li>
+            <li>Merge toàn bộ spec vào `/.spec/`.</li>
+            <li>Output: bộ spec approved làm <span class="hl">source of truth</span>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="1">
+    <div class="slide-tag">14.1 - Quy tắc vàng</div>
+    <h2 class="content-title" style="margin-bottom:16px">3 Câu Hỏi Vàng Trước Khi Approve Spec</h2>
+    <div class="slide-body">
+      <blockquote class="matrix-quote">"Agent có thể implement từ spec này mà không cần hỏi thêm gì không? Nếu không, spec thiếu chi tiết."</blockquote>
+      <blockquote class="matrix-quote">"Nếu spec được implement đúng 100%, khách hàng có hài lòng không? Nếu không, spec sai business logic."</blockquote>
+      <blockquote class="matrix-quote">"Spec này có mâu thuẫn spec khác không? Nếu có, phải resolve trước khi code."</blockquote>
+    </div>
+  </div>
+
+  <div class="slide" data-section="1">
+    <div class="slide-tag">14.1 - Tuần 4</div>
+    <h2 class="content-title" style="margin-bottom:16px">Tuần 4: Architecture &amp; Scaffolding</h2>
+    <div class="slide-body">
+      <p class="body-text">Tuần 4 là cầu nối SDD sang ADD: team dùng SDD để chốt kiến trúc và contract, sau đó dùng ADD để generate boilerplate theo đúng chuẩn vừa chốt.</p>
+      <div class="two-col">
+        <div class="card">
+          <ul class="bullet-list">
+            <li>Mục tiêu: hoàn chỉnh database schema + API skeleton.</li>
+            <li>SDD task: viết design spec cho models (ERD) và API contracts (OpenAPI/Swagger).</li>
+            <li>ADD task: agent generate folder structure, config files, base classes.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <ul class="bullet-list">
+            <li>Deliverable: migrations + stub endpoints + tests pass (dù endpoint còn empty).</li>
+            <li>Công cụ: Claude Code, Cursor, dbdiagram.io.</li>
+            <li>Chi phí thay đổi API hậu kỳ rất cao, nên phải review contract thật kỹ.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="alert-box warn"><div class="alert-title">WARN</div>Đổi API contracts sau tuần 4 thường kéo theo sửa hàng loạt client và integration tests, dễ tạo <span class="hl-r">breaking chain</span>.</div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="2" style="position:relative">
+    <div class="section-num-bg">14.2</div>
+    <div class="slide-tag">Section Header</div>
+    <h2 class="section-title">Giai Đoạn 2: Core Development</h2>
+    <div class="slide-body" style="margin-top:12px">
+      <p class="body-text">Tuần 5-12 là trái tim dự án: 3 feature sprints (mỗi sprint 2 tuần) và 1 testing-security sprint. Chương yêu cầu team giữ chu kỳ tuần cố định để giảm chaos khi làm với agent.</p>
+      <ul class="bullet-list">
+        <li>Chu kỳ chuẩn: Thứ 2 chốt spec, Thứ 4 Agent Jam, Thứ 6 Demo &amp; Retro</li>
+        <li>Sprint 1: Auth &amp; User Management</li>
+        <li>Sprint 2: Business Logic</li>
+        <li>Sprint 3: Advanced Features &amp; Dashboard</li>
+        <li>Tuần 11-12: Testing Sprint + Security Audit</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="slide" data-section="2">
+    <div class="slide-tag">14.2 - Weekly Cycle</div>
+    <h2 class="content-title" style="margin-bottom:16px">Chu Kỳ Tuần Chuẩn (Tuần 5-10)</h2>
+    <div class="slide-body">
+      <div class="pipeline">
+<span class="ph">THỨ 2 - Spec Sync</span>
+<span class="ph-item">Chốt spec cho tuần đó. Không có approved spec thì Agent Pilot không được code.</span>
+<span class="ph">THỨ 4 - Agent Jam</span>
+<span class="ph-item">Pair programming Agent Pilot + AI. Thành viên còn lại review code ngay.</span>
+<span class="ph">THỨ 6 - Demo &amp; Retro</span>
+<span class="ph-item">Demo feature, chấm điểm technical debt, lên kế hoạch refactor tuần sau.</span>
+      </div>
+      <div class="alert-box tip"><div class="alert-title">TIP</div>Giữ nhịp đều quan trọng hơn chạy thật nhanh một tuần rồi đứt nhịp tuần kế tiếp.</div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="2">
+    <div class="slide-tag">14.2 - Sprint 1</div>
+    <h2 class="content-title" style="margin-bottom:16px">Sprint 1 (Tuần 5-6): Auth &amp; User Management</h2>
+    <div class="slide-body">
+      <p class="body-text">Sprint đầu tiên chốt năng lực sống còn của hệ thống: xác thực, phân quyền và vòng đời token. Đây là sprint cần kỹ luật test cao vì mọi feature sau đều phụ thuộc auth layer.</p>
+      <div class="card">
+        <ul class="bullet-list">
+          <li>Mục tiêu: Authentication system + User CRUD hoàn chỉnh có tests.</li>
+          <li>Scope: Register, Login, JWT, Refresh Token, RBAC (Admin/User).</li>
+          <li>Deliverable: auth module đạt <span class="hl">>=80% coverage</span>, Swagger cập nhật.</li>
+          <li>Refactoring cuối sprint: Human-led review code do agent sinh.</li>
+          <li>Công cụ: Cursor Agent Mode cho daily work, Claude Code cho logic phức tạp.</li>
+        </ul>
+      </div>
+      <div class="alert-box danger"><div class="alert-title">Rủi ro chính</div>JWT implementation sai có thể mở lỗ hổng bảo mật nghiêm trọng. Quality Gatekeeper phải review kỹ từng quyết định auth flow.</div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="2">
+    <div class="slide-tag">14.2 - Sprint 2</div>
+    <h2 class="content-title" style="margin-bottom:16px">Sprint 2 (Tuần 7-8): Business Logic</h2>
+    <div class="slide-body">
+      <p class="body-text">Giai đoạn này đẩy các năng lực nghiệp vụ lõi của domain vào hệ thống. Mục tiêu không chỉ là code chạy được, mà phải đi hết end-to-end với integration tests để chắc hành vi nghiệp vụ đúng.</p>
+      <div class="card">
+        <ul class="bullet-list">
+          <li>Implement 3-4 core features được định nghĩa trong spec, ưu tiên happy path trước.</li>
+          <li>Deliverable: core features hoạt động end-to-end và integration tests pass.</li>
+          <li>Giữa sprint phải kiểm tra code bloat từ sprint 1-2 và extract common patterns.</li>
+          <li>Nếu logic thực tế phức tạp hơn dự kiến: <span class="hl-r">update spec trước</span> rồi mới yêu cầu agent code lại.</li>
+          <li>Công cụ: Claude Code cho multi-file refactor, Cursor cho daily feature work.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="2">
+    <div class="slide-tag">14.2 - Sprint 3</div>
+    <h2 class="content-title" style="margin-bottom:16px">Sprint 3 (Tuần 9-10): Advanced Features &amp; Dashboard</h2>
+    <div class="slide-body">
+      <p class="body-text">Sprint này tạo phần "wow" cho demo: dashboard, reporting, visualizations, export, notification. Vì dễ chạy theo hứng thú, team cần bám spec discipline chặt hơn bình thường.</p>
+      <div class="two-col">
+        <div class="card">
+          <ul class="bullet-list">
+            <li>Scope: advanced search/filter, data visualization, export PDF/Excel, notification.</li>
+            <li>Deliverable: dashboard chạy với dữ liệu thật và có output báo cáo rõ ràng.</li>
+            <li>Cuối sprint: full codebase review trước khi vào testing sprint.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <ul class="bullet-list">
+            <li>Đây là sprint dễ trượt vào <span class="hl-o">vibe coding</span>.</li>
+            <li>Muốn thêm gì mới phải qua spec gate, không làm trực tiếp theo cảm hứng.</li>
+            <li>Nếu dashboard phức tạp, có thể dùng multi-agent chia UI Agent và Logic Agent.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="2">
+    <div class="slide-tag">14.2 - Tuần 11-12</div>
+    <h2 class="content-title" style="margin-bottom:16px">Testing &amp; Security Sprint</h2>
+    <div class="slide-body">
+      <p class="body-text">Hai tuần này không build feature mới, chỉ tập trung chất lượng. Đây là nơi nhiều team bỏ qua rồi trả giá ở buổi demo khi bug vỡ ra hàng loạt hoặc bị hỏi security mà không trả lời được.</p>
+      <div class="two-col">
+        <div class="card">
+          <h3 style="color:var(--accent);margin-bottom:8px">Tuần 11 - Testing Sprint</h3>
+          <ul class="bullet-list">
+            <li>Agent generate unit tests cho business logic.</li>
+            <li>Agent generate integration tests cho API endpoints.</li>
+            <li>Mục tiêu coverage >= 80% và Test Engine fill gaps còn sót.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--accent);margin-bottom:8px">Tuần 12 - Security Audit</h3>
+          <ul class="bullet-list">
+            <li>Claude Code audit toàn bộ codebase.</li>
+            <li>Fix toàn bộ vulnerabilities mức Critical/High.</li>
+            <li>Dependency audit với `npm audit` hoặc `pip check`.</li>
+            <li>Output: Security report + clean build.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="3" style="position:relative">
+    <div class="section-num-bg">14.3</div>
+    <div class="slide-tag">Section Header</div>
+    <h2 class="section-title">Giai Đoạn 3: Polish &amp; Delivery</h2>
+    <div class="slide-body" style="margin-top:12px">
+      <p class="body-text">Tuần 13-15 tập trung biến project thành sản phẩm có thể bàn giao: có môi trường chạy thật, tài liệu thật, hiệu năng ổn định và trình bày rõ ràng với hội đồng.</p>
+      <ul class="bullet-list">
+        <li>Tuần 13: Documentation &amp; Deployment</li>
+        <li>Tuần 14: User Testing &amp; Performance</li>
+        <li>Tuần 15: Final Delivery &amp; Presentation</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="slide" data-section="3">
+    <div class="slide-tag">14.3 - Tuần 13</div>
+    <h2 class="content-title" style="margin-bottom:16px">Documentation &amp; Deployment</h2>
+    <div class="slide-body">
+      <p class="body-text">Mục tiêu tuần 13 là hệ thống chạy được trên staging/production với quy trình CI/CD ổn định. Tài liệu không còn là phần phụ mà trở thành tiêu chí đánh giá mức độ chuyên nghiệp của đội dự án.</p>
+      <div class="card">
+        <ul class="bullet-list">
+          <li>Docs task: AI hỗ trợ viết technical docs (architecture overview, API reference, deployment guide).</li>
+          <li>Manual task: AI hỗ trợ viết user manual có screenshot và hướng dẫn từng bước.</li>
+          <li>Deploy task: thiết lập GitHub Actions/GitLab CI, deploy staging, chạy smoke test.</li>
+          <li>Deliverable: staging URL hoạt động + technical docs draft + README hoàn chỉnh.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="3">
+    <div class="slide-tag">14.3 - Tuần 14</div>
+    <h2 class="content-title" style="margin-bottom:16px">User Testing &amp; Performance</h2>
+    <div class="slide-body">
+      <p class="body-text">Tuần 14 biến phản hồi người dùng thành bản polished release. Team cần lấy feedback thật từ 3-5 người ngoài nhóm và ưu tiên sửa các vấn đề tác động trực tiếp đến trải nghiệm demo.</p>
+      <div class="two-col">
+        <div class="card">
+          <ul class="bullet-list">
+            <li>User testing: thu thập feedback, ưu tiên fix theo mức ảnh hưởng.</li>
+            <li>ADD task: dùng agent sửa nhanh UI bugs và tinh chỉnh UX flows.</li>
+            <li>Performance: phân tích slow queries bằng EXPLAIN ANALYZE.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <ul class="bullet-list">
+            <li>Thêm caching cho hot paths để giảm độ trễ.</li>
+            <li>Deliverable: production deploy + performance report before/after + bug fix log.</li>
+            <li>Rule cứng: <span class="hl-r">không add feature mới</span> trong tuần này.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="alert-box warn"><div class="alert-title">WARN</div>Tuần 14 chỉ fix và polish những gì đã có. Thêm feature mới lúc này thường phá ổn định cuối kỳ.</div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="3">
+    <div class="slide-tag">14.3 - Tuần 15</div>
+    <h2 class="content-title" style="margin-bottom:16px">Final Delivery</h2>
+    <div class="slide-body">
+      <p class="body-text">Tuần cuối cùng chốt cả sản phẩm và năng lực thuyết trình. Không chỉ nộp code, team phải chứng minh được tư duy kỹ thuật và quá trình ra quyết định xuyên suốt dự án.</p>
+      <div class="card">
+        <ul class="bullet-list">
+          <li>Report task: hoàn thiện báo cáo, dùng AI biên tập consistency và format.</li>
+          <li>Presentation: chuẩn bị 10-15 slides theo flow Problem -> Solution -> Demo -> Lessons Learned.</li>
+          <li>Demo prep: rehearsal ít nhất 2 lần, chuẩn bị Q&amp;A về technical decisions và AI workflow.</li>
+          <li>Final deliverables: source code, technical report, user manual, presentation slides, demo video backup.</li>
+        </ul>
+      </div>
+      <div class="alert-box tip"><div class="alert-title">PRO TIP</div>Câu hỏi thường gặp nhất từ hội đồng là "Tại sao chọn giải pháp này?". Bộ spec chính là bằng chứng quyết định kỹ thuật tốt nhất của team.</div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="4" style="position:relative">
+    <div class="section-num-bg">14.4</div>
+    <div class="slide-tag">Section Header</div>
+    <h2 class="section-title">Phân Công Vai Trò - Nhóm 5 Người</h2>
+    <div class="slide-body" style="margin-top:12px">
+      <p class="body-text">Section này định nghĩa cơ chế phân vai và luân chuyển vai trò theo sprint để mọi thành viên nhìn được full lifecycle của Hybrid workflow, thay vì chỉ giỏi một lát cắt hẹp.</p>
+      <ul class="bullet-list">
+        <li>Mô tả chi tiết 5 vai trò và năng lực cần có</li>
+        <li>Bảng rotation theo từng sprint</li>
+        <li>Giải thích vì sao rotation là cơ chế học tập bắt buộc</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="slide" data-section="4">
+    <div class="slide-tag">Table</div>
+    <h2 class="content-title" style="margin-bottom:16px">Mô Tả Chi Tiết 5 Vai Trò</h2>
+    <div class="slide-body">
+      <table class="matrix-table">
+        <thead><tr><th>Vai trò</th><th>Trách nhiệm chính</th><th>Kỹ năng cần có</th></tr></thead>
+        <tbody>
+          <tr><td>Spec Architect</td><td>Đảm bảo spec đúng EARS, không mâu thuẫn; review spec trước khi Agent Pilot code.</td><td>Viết tốt, tư duy hệ thống</td></tr>
+          <tr><td>Agent Pilot</td><td>Điều khiển Cursor/Claude Code thực thi; chịu trách nhiệm prompt engineering và context setup.</td><td>Prompt engineering, kiên nhẫn</td></tr>
+          <tr><td>Quality Gatekeeper</td><td>Review code AI sinh ra theo constitution; chặn PR không qua checklist review.</td><td>Code review, bảo mật</td></tr>
+          <tr><td>Test Engine</td><td>Điều phối agent viết test, kiểm soát coverage >=80% trước merge.</td><td>Testing, CI/CD</td></tr>
+          <tr><td>Ops &amp; Integration</td><td>Quản lý branch, merge code, deployment; duy trì CLAUDE.md và AGENTS.md cập nhật.</td><td>DevOps, Git workflow</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="slide" data-section="4">
+    <div class="slide-tag">Table</div>
+    <h2 class="content-title" style="margin-bottom:16px">Lịch Rotation Theo Sprint</h2>
+    <div class="slide-body">
+      <table class="matrix-table">
+        <thead><tr><th>Sprint</th><th>Spec Architect</th><th>Agent Pilot</th><th>Quality Gatekeeper</th><th>Test Engine</th><th>Ops &amp; Integration</th></tr></thead>
+        <tbody>
+          <tr><td>Sprint 1 (Tuần 5-6)</td><td>Thành viên A</td><td>Thành viên B</td><td>Thành viên C</td><td>Thành viên D</td><td>Thành viên E</td></tr>
+          <tr><td>Sprint 2 (Tuần 7-8)</td><td>Thành viên E</td><td>Thành viên A</td><td>Thành viên B</td><td>Thành viên C</td><td>Thành viên D</td></tr>
+          <tr><td>Sprint 3 (Tuần 9-10)</td><td>Thành viên D</td><td>Thành viên E</td><td>Thành viên A</td><td>Thành viên B</td><td>Thành viên C</td></tr>
+          <tr><td>Testing Sprint (11-12)</td><td>Thành viên C</td><td>Thành viên D</td><td>Thành viên E</td><td>Thành viên A</td><td>Thành viên B</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="slide" data-section="4">
+    <div class="slide-tag">Quote Spotlight</div>
+    <div class="slide-body" style="display:flex;align-items:center;justify-content:center">
+      <div class="big-quote">"Rotation hơi bất tiện trong ngắn hạn,
+nhưng tạo ra kỹ sư full-picture tốt hơn nhiều về dài hạn."</div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="5" style="position:relative">
+    <div class="section-num-bg">14.5</div>
+    <div class="slide-tag">Section Header</div>
+    <h2 class="section-title">Ceremony Calendar</h2>
+    <div class="slide-body" style="margin-top:12px">
+      <p class="body-text">Ba ceremony cố định mỗi tuần tạo nhịp vận hành cho team. Khi nhịp ổn định, mọi người giảm chờ đợi, giảm bất ngờ và phối hợp mượt hơn trong môi trường làm việc cùng agent.</p>
+      <ul class="bullet-list">
+        <li>Thứ 2: Spec Sync (45-60 phút)</li>
+        <li>Thứ 4: Agent Jam (2-3 giờ)</li>
+        <li>Thứ 6: Demo &amp; Retro (60-90 phút)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="slide" data-section="5">
+    <div class="slide-tag">14.5 - Thứ 2</div>
+    <h2 class="content-title" style="margin-bottom:16px">Spec Sync (45-60 phút)</h2>
+    <div class="slide-body">
+      <div class="card">
+        <ul class="bullet-list">
+          <li>Toàn team họp để chốt spec cho tuần đó.</li>
+          <li>Spec Architect trình bày draft, cả team review và đặt câu hỏi.</li>
+          <li>Chỉ khi spec đồng thuận, Agent Pilot mới được bắt đầu code.</li>
+          <li>Output: spec merge vào `/.spec/` với tag `approved`.</li>
+          <li>Rule: Không có approved spec thì không code, không có ngoại lệ.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="5">
+    <div class="slide-tag">14.5 - Thứ 4</div>
+    <h2 class="content-title" style="margin-bottom:16px">Agent Jam (2-3 giờ)</h2>
+    <div class="slide-body">
+      <div class="card">
+        <ul class="bullet-list">
+          <li>Agent Pilot chia sẻ màn hình để cả team theo dõi agent làm việc realtime.</li>
+          <li>Mỗi task agent nhận đều cần review plan trước khi approve execution.</li>
+          <li>Quality Gatekeeper review code ngay khi agent xong từng module.</li>
+          <li>Test Engine verify tests pass tại chỗ.</li>
+          <li>Output: feature branch sẵn sàng mở PR.</li>
+          <li>Tip: ghi hình session làm tài liệu và hỗ trợ thành viên vắng mặt.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="5">
+    <div class="slide-tag">14.5 - Thứ 6</div>
+    <h2 class="content-title" style="margin-bottom:16px">Demo &amp; Retro (60-90 phút)</h2>
+    <div class="slide-body">
+      <div class="card">
+        <ul class="bullet-list">
+          <li>Demo 15 phút: Agent Pilot trình diễn tính năng build trong tuần.</li>
+          <li>Technical Debt Review: Quality Gatekeeper báo cáo vấn đề phát hiện.</li>
+          <li>Debt scoring: phân mức Critical / High / Medium và lên kế hoạch xử lý.</li>
+          <li>Retrospective nhanh: Keep / Stop / Try cho tuần kế tiếp.</li>
+          <li>Update `CLAUDE.md` với lessons learned và constraints mới.</li>
+          <li>Output: `TECH_DEBT.md` cập nhật + retro notes + plan tuần sau.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="5">
+    <div class="slide-tag">Table</div>
+    <h2 class="content-title" style="margin-bottom:16px">Template Agenda Demo &amp; Retro</h2>
+    <div class="slide-body">
+      <table class="matrix-table">
+        <thead><tr><th>Thời gian</th><th>Nội dung</th><th>Người dẫn</th><th>Output</th></tr></thead>
+        <tbody>
+          <tr><td>0-15 phút</td><td>Demo feature tuần này (live trên staging)</td><td>Agent Pilot</td><td>Feedback notes</td></tr>
+          <tr><td>15-30 phút</td><td>Technical Debt Review - vấn đề phát hiện</td><td>Quality Gatekeeper</td><td>Debt list updated</td></tr>
+          <tr><td>30-45 phút</td><td>Retrospective: Keep / Stop / Try</td><td>Spec Architect (host)</td><td>Action items</td></tr>
+          <tr><td>45-60 phút</td><td>Planning tuần sau: spec assignment, agent tasks</td><td>Toàn team</td><td>Next week plan</td></tr>
+          <tr><td>60-75 phút</td><td>(Nếu cần) update CLAUDE.md và AGENTS.md</td><td>Ops &amp; Integration</td><td>Updated context</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="slide" data-section="5">
+    <div class="slide-tag">Table</div>
+    <h2 class="content-title" style="margin-bottom:16px">Checklist Milestone (Phần 1/2)</h2>
+    <div class="slide-body">
+      <table class="matrix-table">
+        <thead><tr><th>Milestone</th><th>Tuần</th><th>Tiêu chí Pass</th><th>Rủi ro nếu bỏ qua</th></tr></thead>
+        <tbody>
+          <tr><td>Constitution signed</td><td>1</td><td>Toàn team đồng thuận, đã merge vào main</td><td>Team làm theo nhiều convention khác nhau</td></tr>
+          <tr><td>Specs approved</td><td>3</td><td>Tất cả core specs qua peer review</td><td>Agent code theo assumption sai, rework tốn kém</td></tr>
+          <tr><td>Architecture lock</td><td>4</td><td>DB schema + API contracts finalized</td><td>Breaking changes đau đớn ở giai đoạn sau</td></tr>
+          <tr><td>Auth working</td><td>6</td><td>Auth module có >=80% test coverage</td><td>Security holes ở production</td></tr>
+          <tr><td>Core features done</td><td>10</td><td>Core features pass acceptance tests</td><td>Không đủ thời gian polish và test</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="slide" data-section="5">
+    <div class="slide-tag">Table</div>
+    <h2 class="content-title" style="margin-bottom:16px">Checklist Milestone (Phần 2/2)</h2>
+    <div class="slide-body">
+      <table class="matrix-table">
+        <thead><tr><th>Milestone</th><th>Tuần</th><th>Tiêu chí Pass</th><th>Rủi ro nếu bỏ qua</th></tr></thead>
+        <tbody>
+          <tr><td>80% coverage</td><td>11</td><td>Test Engine verify coverage report</td><td>Bugs phát hiện khi demo trước hội đồng</td></tr>
+          <tr><td>Security clean</td><td>12</td><td>Không có Critical/High vulnerabilities</td><td>Bị hỏi security và lúng túng phản biện</td></tr>
+          <tr><td>Staging deployed</td><td>13</td><td>Staging URL hoạt động, CI/CD pass</td><td>Demo chỉ chạy localhost, thiếu chuyên nghiệp</td></tr>
+          <tr><td>Final delivery</td><td>15</td><td>Code + Docs + Slides hoàn chỉnh</td><td>Mất điểm vì thiếu documentation</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="slide" data-section="5">
+    <div class="slide-tag">Quote Spotlight</div>
+    <div class="slide-body" style="display:flex;align-items:center;justify-content:center">
+      <div class="big-quote">"Đừng bao giờ tin AI khi nó nói 'I have finished the task'.
+Hãy tin khi Unit Test xanh và Spec Checklist hoàn thành."</div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="0">
+    <div class="slide-tag">Summary</div>
+    <h2 class="content-title" style="margin-bottom:16px">Summary + Next Chapter</h2>
+    <div class="slide-body">
+      <table class="matrix-table" style="margin-bottom:14px">
+        <thead><tr><th>Section</th><th>Key Technique</th><th>Điểm cốt lõi</th></tr></thead>
+        <tbody>
+          <tr><td>14.1 Foundation</td><td>Spec-first + architecture lock</td><td>Không có nền tảng đúng thì các sprint sau chỉ chữa cháy</td></tr>
+          <tr><td>14.2 Core Development</td><td>Chu kỳ tuần cố định + sprint discipline</td><td>Giữ nhịp Spec Sync -> Agent Jam -> Demo &amp; Retro để giảm chaos</td></tr>
+          <tr><td>14.3 Polish &amp; Delivery</td><td>Docs, deploy, user test, performance</td><td>Tập trung độ hoàn thiện thay vì thêm feature phút chót</td></tr>
+          <tr><td>14.4 Role Rotation</td><td>Luân chuyển vai trò theo sprint</td><td>Đào tạo kỹ sư full-picture thay vì chuyên một mắt xích</td></tr>
+          <tr><td>14.5 Ceremony &amp; Milestone</td><td>Ceremony cố định + gate theo tuần</td><td>Nhịp đều và điểm kiểm tra rõ giúp team đi xa mà không vỡ nhịp</td></tr>
+        </tbody>
+      </table>
+      <div class="next-chapter">
+        <div class="nc-label">Next Chapter</div>
+        <h3>Chương 15 - Case Studies Thực Tế</h3>
+        <p>Sau roadmap tuần-theo-tuần, chương tiếp theo đi vào các ca triển khai thực tế để thấy cách hybrid playbook vận hành trong điều kiện thật, cùng các bài học thành công và thất bại.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-section="0">
+    <div class="slide-tag">Takeaways</div>
+    <h2 class="content-title" style="margin-bottom:18px">5 Key Takeaways</h2>
+    <div class="slide-body">
+      <div class="card"><h3 style="color:var(--accent);margin-bottom:8px">1) Foundation quyết định vận tốc toàn dự án</h3><p class="body-text">Tuần 1-4 là nơi khóa context, spec và kiến trúc. Làm tốt giai đoạn này giúp tuần 5-15 chạy mượt; làm ẩu sẽ trả giá bằng rework liên tục.</p></div>
+      <div class="card"><h3 style="color:var(--accent);margin-bottom:8px">2) Spec là điều kiện để agent làm đúng</h3><p class="body-text">Không có approved spec thì không code. Spec rõ giúp agent ít đoán, ít loop lỗi và tạo output sát business intent.</p></div>
+      <div class="card"><h3 style="color:var(--accent);margin-bottom:8px">3) Sprint discipline quan trọng hơn cảm hứng</h3><p class="body-text">Chu kỳ Spec Sync - Agent Jam - Demo &amp; Retro giữ team ở trạng thái kiểm soát, thay vì chạy theo ngẫu hứng từng thành viên.</p></div>
+      <div class="card"><h3 style="color:var(--accent);margin-bottom:8px">4) Testing và security không phải việc "làm sau"</h3><p class="body-text">Tuần 11-12 dành riêng cho chất lượng là bắt buộc để tránh rủi ro demo và để trả lời được các câu hỏi phản biện kỹ thuật.</p></div>
+      <div class="card"><h3 style="color:var(--accent);margin-bottom:8px">5) Rotation biến nhóm sinh viên thành team kỹ sư</h3><p class="body-text">Luân chuyển vai trò giúp mọi thành viên hiểu trọn vòng đời product engineering và phối hợp tốt hơn khi đi làm thực tế.</p></div>
+    </div>
+  </div>
+
+  <div class="slide slide-title-main" data-section="0">
+    <div style="max-width:1000px;position:relative;z-index:2;text-align:center">
+      <div class="badge">Author Closing</div>
+      <h1 class="main-title" style="margin:18px 0 10px">Chương 14</h1>
+      <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(22px,2.8vw,34px);color:var(--text-sub)">Roadmap 15 Tuần - Hybrid Playbook SDD + ADD</p>
+      <div style="margin-top:34px">
+        <div class="author-name">LinhNDM</div>
+        <div style="margin-top:8px;font-family:'Cormorant Garamond',serif;font-size:clamp(26px,3.4vw,46px);color:#d4ffd4">Nguyễn Đình Mạnh Linh</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="nav-buttons">
+  <button id="btn-prev" class="nav-btn" onclick="goToSlide(current-1)">Prev</button>
+  <button id="btn-next" class="nav-btn" onclick="goToSlide(current+1)">Next</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let current = 0;
+let touchStartX = 0;
+
+const sectionMap = {};
+slides.forEach((s, i) => {
+  const sec = parseInt(s.dataset.section, 10);
+  if (sec > 0 && sectionMap[sec] === undefined) sectionMap[sec] = i;
+});
+
+function goToSlide(n) {
+  if (n < 0 || n >= total) return;
+  slides[current].classList.remove('active');
+  current = n;
+  slides[current].classList.add('active');
+  updateUI();
+}
+
+function goToSection(n) {
+  if (sectionMap[n] !== undefined) goToSlide(sectionMap[n]);
+}
+
+function updateUI() {
+  document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + total;
+  document.getElementById('btn-prev').disabled = current === 0;
+  document.getElementById('btn-next').disabled = current === total - 1;
+  document.getElementById('progress-bar').style.width = ((current + 1) / total * 100).toFixed(1) + '%';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'F12' ||
+     (e.ctrlKey && e.shiftKey && ['I','J','K'].includes(e.key.toUpperCase())) ||
+     (e.ctrlKey && ['u','s','a','c','p','f'].includes(e.key.toLowerCase()))) {
+    e.preventDefault();
+  }
+
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    e.preventDefault();
+    goToSlide(current + 1);
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    goToSlide(current - 1);
+  } else if (e.key === 'Home') {
+    e.preventDefault();
+    goToSlide(0);
+  } else if (e.key === 'End') {
+    e.preventDefault();
+    goToSlide(total - 1);
+  } else if (/^[1-9]$/.test(e.key)) {
+    e.preventDefault();
+    goToSection(parseInt(e.key, 10));
+  }
+});
+
+['contextmenu','selectstart','dragstart','copy'].forEach((ev) => {
+  document.addEventListener(ev, (e) => e.preventDefault());
+});
+
+document.addEventListener('touchstart', (e) => {
+  touchStartX = e.changedTouches[0].clientX;
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) {
+    if (dx < 0) goToSlide(current + 1);
+    else goToSlide(current - 1);
+  }
+}, { passive: true });
+
+const canvas = document.getElementById('matrix-canvas');
+const ctx = canvas.getContext('2d');
+let width = 0;
+let height = 0;
+let cols = 0;
+let drops = [];
+const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&@';
+
+function resizeMatrix() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+  cols = Math.floor(width / 16);
+  drops = Array(cols).fill(1);
+}
+
+function drawMatrix() {
+  ctx.fillStyle = 'rgba(1,21,0,0.05)';
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = '#00ff41';
+  ctx.font = '14px monospace';
+
+  for (let i = 0; i < drops.length; i++) {
+    const text = chars[Math.floor(Math.random() * chars.length)];
+    ctx.fillText(text, i * 16, drops[i] * 16);
+    if (drops[i] * 16 > height && Math.random() > 0.975) drops[i] = 0;
+    drops[i]++;
+  }
+}
+
+window.addEventListener('resize', resizeMatrix);
+resizeMatrix();
+setInterval(drawMatrix, 50);
+updateUI();
+</script>
+</body>
+</html>

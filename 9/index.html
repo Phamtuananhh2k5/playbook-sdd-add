@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chương 9: AI Agent Thực Sự Là Gì?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#011500;
+  --bg2:#022800;
+  --accent:#00ff55;
+  --text:#ffffff;
+  --sub:#ccffcc;
+  --muted:#7de87d;
+  --hl-r:#ff4444;
+  --hl-y:#ffcc00;
+  --hl-b:#44aaff;
+  --card-bg:rgba(0,255,85,0.04);
+  --card-border:rgba(0,255,85,0.18);
+  --font-title:'Cormorant Garamond',serif;
+  --font-body:'Josefin Sans',sans-serif;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
+body{
+  font-family:var(--font-body);
+  color:var(--text);
+  background:radial-gradient(ellipse at 50% 0%,#022800,#011500,#010f00);
+  user-select:none;
+  -webkit-user-select:none;
+}
+canvas#matrix{position:fixed;top:0;left:0;width:100%;height:100%;opacity:0.09;pointer-events:none;z-index:0;}
+.scanlines{position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:1;}
+#deck{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2;}
+.slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:60px 80px 80px;
+  opacity:0;pointer-events:none;transition:opacity .45s ease;
+  overflow:hidden;
+}
+.slide.active{opacity:1;pointer-events:auto;}
+.slide.scrollable{justify-content:flex-start;overflow-y:auto;}
+.slide.scrollable::-webkit-scrollbar{width:4px;}
+.slide.scrollable::-webkit-scrollbar-track{background:transparent;}
+.slide.scrollable::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px;}
+
+/* TYPOGRAPHY */
+.chap-label{font-family:var(--font-body);font-size:clamp(10px,1.1vw,13px);letter-spacing:.35em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+h1.title{font-family:var(--font-title);font-size:clamp(36px,5.5vw,72px);font-weight:700;color:var(--accent);line-height:1.1;text-align:center;margin-bottom:18px;}
+h2.section-title{font-family:var(--font-title);font-size:clamp(26px,3.8vw,50px);font-weight:700;color:var(--accent);line-height:1.15;margin-bottom:14px;}
+h3.slide-title{font-family:var(--font-title);font-size:clamp(20px,2.6vw,34px);font-weight:600;color:var(--sub);margin-bottom:18px;line-height:1.2;}
+.subtitle{font-family:var(--font-title);font-style:italic;font-size:clamp(14px,1.8vw,22px);color:var(--muted);margin-bottom:10px;}
+p{font-size:clamp(12px,1.25vw,16px);color:var(--sub);line-height:1.75;margin-bottom:12px;}
+
+/* CARD */
+.card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:22px 26px;margin-bottom:16px;}
+.card-title{font-family:var(--font-body);font-size:clamp(10px,1.05vw,13px);letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;font-weight:700;}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:100%;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;width:100%;}
+
+/* BULLET LIST */
+.bullet-list{list-style:none;margin:0;padding:0;}
+.bullet-list li{font-size:clamp(11px,1.2vw,15px);color:var(--sub);padding:5px 0 5px 22px;position:relative;line-height:1.6;}
+.bullet-list li::before{content:'▸';position:absolute;left:0;color:var(--accent);}
+
+/* QUOTE */
+blockquote.matrix-quote{border-left:3px solid var(--accent);padding:14px 20px;background:rgba(0,255,85,0.05);font-family:var(--font-title);font-style:italic;font-size:clamp(14px,1.7vw,20px);color:var(--sub);margin:14px 0;}
+.big-quote{font-family:var(--font-title);font-size:clamp(22px,3.2vw,44px);font-weight:700;color:var(--accent);text-align:center;line-height:1.2;margin:20px 0;}
+
+/* TABLE */
+table.matrix-table{width:100%;border-collapse:collapse;font-size:clamp(10px,1.05vw,13px);}
+table.matrix-table th{background:rgba(0,255,85,0.12);color:var(--accent);padding:9px 12px;text-align:left;border-bottom:1px solid var(--card-border);font-weight:700;letter-spacing:.05em;}
+table.matrix-table td{padding:8px 12px;border-bottom:1px solid rgba(0,255,85,0.07);color:var(--sub);vertical-align:top;}
+table.matrix-table tr:hover td{background:rgba(0,255,85,0.04);}
+
+/* ALERT BOX */
+.alert-box{border-radius:6px;padding:14px 18px;margin:12px 0;font-size:clamp(11px,1.1vw,14px);line-height:1.65;}
+.alert-box.info{background:rgba(68,170,255,0.08);border-left:3px solid var(--hl-b);color:var(--sub);}
+.alert-box.warn{background:rgba(255,204,0,0.07);border-left:3px solid var(--hl-y);color:var(--sub);}
+.alert-box.danger{background:rgba(255,68,68,0.08);border-left:3px solid var(--hl-r);color:var(--sub);}
+.alert-box.tip{background:rgba(0,255,85,0.06);border-left:3px solid var(--accent);color:var(--sub);}
+.alert-box strong{display:block;margin-bottom:6px;font-size:clamp(10px,1vw,12px);letter-spacing:.2em;text-transform:uppercase;}
+.alert-box.info strong{color:var(--hl-b);}
+.alert-box.warn strong{color:var(--hl-y);}
+.alert-box.danger strong{color:var(--hl-r);}
+.alert-box.tip strong{color:var(--accent);}
+
+/* DATA GRID */
+.data-grid{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:16px 0;}
+.data-point{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:18px 22px;text-align:center;min-width:130px;}
+.data-point .num{font-family:var(--font-title);font-size:clamp(28px,3.5vw,46px);font-weight:700;color:var(--accent);line-height:1;}
+.data-point .lbl{font-size:clamp(10px,1vw,12px);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
+
+/* TOC GRID */
+.toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:820px;}
+.toc-item{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:18px 22px;cursor:default;}
+.toc-item .toc-num{font-size:clamp(11px,1.1vw,14px);color:var(--accent);font-weight:700;letter-spacing:.15em;margin-bottom:6px;}
+.toc-item .toc-name{font-family:var(--font-title);font-size:clamp(14px,1.6vw,19px);color:var(--sub);font-weight:600;}
+.toc-item .toc-sub{font-size:clamp(9px,.9vw,11px);color:var(--muted);margin-top:4px;line-height:1.5;}
+
+/* CODE BLOCK */
+pre.code-block{background:rgba(0,0,0,0.55);border:1px solid rgba(0,255,85,0.15);border-radius:6px;padding:16px 18px;font-family:'Courier New',monospace;font-size:clamp(9px,.95vw,12px);color:#a8ffb8;line-height:1.55;white-space:pre-wrap;word-break:break-word;overflow-x:auto;margin:10px 0;}
+
+/* SECTION HEADER SLIDE */
+.sec-header{text-align:center;}
+.sec-num{font-family:var(--font-body);font-size:clamp(60px,10vw,130px);font-weight:700;color:rgba(0,255,85,0.08);line-height:1;margin-bottom:-20px;}
+.sec-label{font-family:var(--font-body);font-size:clamp(10px,1.1vw,13px);letter-spacing:.4em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+
+/* TITLE SLIDE */
+.title-slide-wrap{text-align:center;max-width:900px;}
+.title-badge{display:inline-block;border:1px solid var(--accent);color:var(--accent);font-size:clamp(9px,.95vw,12px);letter-spacing:.35em;text-transform:uppercase;padding:5px 16px;border-radius:20px;margin-bottom:22px;}
+.title-divider{width:80px;height:1px;background:var(--accent);margin:18px auto;}
+
+/* VERDICT BOX */
+.verdict-box{background:rgba(0,255,85,0.06);border:1px solid var(--accent);border-radius:8px;padding:22px 28px;text-align:center;margin:14px 0;}
+
+/* PHASE BOX */
+.phase-box{background:rgba(0,0,0,0.4);border:1px solid rgba(0,255,85,0.2);border-radius:6px;padding:14px 18px;margin:8px 0;}
+.phase-label{font-size:clamp(9px,.9vw,11px);letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:700;}
+
+/* WATERMARK */
+#watermark{position:fixed;bottom:14px;left:80px;font-size:11px;color:rgba(0,255,85,0.22);letter-spacing:.15em;z-index:10;font-family:var(--font-body);}
+/* PROGRESS */
+#bar-wrap{position:fixed;top:0;left:0;width:100%;height:2px;background:rgba(0,255,85,0.1);z-index:20;}
+#progress{height:100%;background:var(--accent);transition:width .3s ease;}
+/* COUNTER */
+#counter{position:fixed;top:14px;right:80px;font-size:12px;color:var(--muted);letter-spacing:.2em;z-index:20;font-family:var(--font-body);}
+/* NAV ARROWS */
+.nav-arrow{position:fixed;top:50%;transform:translateY(-50%);z-index:20;background:transparent;border:1px solid rgba(0,255,85,0.2);color:var(--muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.nav-arrow:hover{background:rgba(0,255,85,0.1);color:var(--accent);border-color:var(--accent);}
+#nav-prev{left:18px;}
+#nav-next{right:18px;}
+
+/* UTILITY */
+.accent{color:var(--accent);}
+.muted{color:var(--muted);}
+.red{color:var(--hl-r);}
+.yellow{color:var(--hl-y);}
+.blue{color:var(--hl-b);}
+.w100{width:100%;}
+.mt-sm{margin-top:10px;}
+.mb-sm{margin-bottom:10px;}
+.center{text-align:center;}
+
+/* TIER BOX for autonomy */
+.tier-box{background:rgba(0,0,0,0.35);border:1px solid rgba(0,255,85,0.15);border-radius:6px;padding:14px 18px;margin-bottom:10px;}
+.tier-label{font-size:clamp(9px,.9vw,11px);letter-spacing:.3em;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
+.tier-label.t1{color:#44aaff;}
+.tier-label.t2{color:#00ff55;}
+.tier-label.t3{color:#ffcc00;}
+.tier-desc{font-size:clamp(10px,1vw,13px);color:var(--sub);line-height:1.6;}
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<div class="scanlines"></div>
+<div id="bar-wrap"><div id="progress"></div></div>
+<div id="counter">1 / 39</div>
+<div id="watermark">LinhNDM — Nguyễn Đình Mạnh Linh</div>
+<button class="nav-arrow" id="nav-prev" onclick="prevSlide()">&#8592;</button>
+<button class="nav-arrow" id="nav-next" onclick="nextSlide()">&#8594;</button>
+
+<div id="deck">
+
+<!-- s0: TITLE -->
+<div class="slide active" id="s0">
+  <div class="title-slide-wrap">
+    <div class="title-badge">Playbook SDD + ADD</div>
+    <div class="chap-label">Chương 9</div>
+    <h1 class="title">AI Agent<br>Thực Sự Là Gì?</h1>
+    <div class="title-divider"></div>
+    <div class="subtitle">Vượt Xa Autocomplete — Reasoning, Planning, Acting</div>
+    <div class="data-grid" style="margin-top:28px;">
+      <div class="data-point"><div class="num">5</div><div class="lbl">Phần</div></div>
+      <div class="data-point"><div class="num">24</div><div class="lbl">Trang PDF</div></div>
+      <div class="data-point"><div class="num">39</div><div class="lbl">Slides</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- s1: INTRO -->
+<div class="slide" id="s1">
+  <h3 class="slide-title">Giới Thiệu Chương</h3>
+  <p>Chín chương trước đã xây dựng toàn bộ framework SDD. Chương này lùi lại một bước và đặt câu hỏi nền tảng: "AI Agent" mà chúng ta đã dùng xuyên suốt cuốn sách này thực sự là gì? Không phải ở mức marketing, mà ở mức kiến trúc kỹ thuật.</p>
+  <p style="margin-bottom:18px;">Hiểu rõ cơ chế cho bạn khả năng <span class="accent">dự đoán agent sẽ hành xử như thế nào</span>, debug khi agent sai, thiết kế workflow phù hợp với năng lực thực sự của agent.</p>
+  <div class="alert-box info">
+    <strong>Inference-time Compute — Cốt lõi của Agent hiện đại</strong>
+    Các model như Claude Sonnet, OpenAI o1 dành thời gian "nghĩ" (reasoning) trước khi ra câu trả lời. Đây gọi là <span class="accent">Inference-time Compute</span> — tính toán tại thời điểm suy luận. Thay vì output token ngay, model chạy nhiều vòng internal reasoning, tự phản biện, tự kiểm tra, rồi mới commit vào output cuối cùng.
+    <br><br>
+    <strong style="color:var(--accent);text-transform:none;letter-spacing:0;font-size:inherit;">Agent hiện đại không phải "fast answering machine" — là "slow thinking machine".</strong>
+  </div>
+</div>
+
+<!-- s2: TOC -->
+<div class="slide" id="s2">
+  <div class="chap-label">Nội Dung Chương 9</div>
+  <h2 class="section-title" style="margin-bottom:24px;">Mục Lục</h2>
+  <div class="toc-grid">
+    <div class="toc-item">
+      <div class="toc-num">9.1</div>
+      <div class="toc-name">Định nghĩa Agent</div>
+      <div class="toc-sub">Perception → Reasoning → Action<br>Vòng lặp, Inference-time, So sánh</div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">9.2</div>
+      <div class="toc-name">Kiến trúc Agentic Coding</div>
+      <div class="toc-sub">Tool Layer, MCP, Extended Thinking<br>Checkpoint System</div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">9.3</div>
+      <div class="toc-name">Agentic vs. Conversational vs. Autonomous</div>
+      <div class="toc-sub">Ba mức Autonomy, Human-in-the-Loop</div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">9.4</div>
+      <div class="toc-name">Demo: Xem Agent Làm Việc</div>
+      <div class="toc-sub">Session walkthrough, Log Analysis<br>Internal Monologue</div>
+    </div>
+    <div class="toc-item" style="grid-column:span 2;">
+      <div class="toc-num">9.5</div>
+      <div class="toc-name">Giới hạn của Agent Hiện tại</div>
+      <div class="toc-sub">Token Burn, Loop Trapping, Model Dependency, Context Cliff, API Hallucination</div>
+    </div>
+  </div>
+</div>
+
+<!-- s3: SECTION 9.1 HEADER -->
+<div class="slide" id="s3">
+  <div class="sec-header">
+    <div class="sec-num">9.1</div>
+    <div class="sec-label">Phần Một</div>
+    <h2 class="section-title">Định Nghĩa Agent</h2>
+    <div class="subtitle">Perception → Reasoning → Action</div>
+    <div class="title-divider" style="margin-top:18px;"></div>
+    <ul class="bullet-list" style="text-align:left;max-width:500px;margin:18px auto 0;">
+      <li>Vòng lặp Plan → Execute → Observe → Adjust</li>
+      <li>Inference-time Compute — Agent nghĩ như thế nào?</li>
+      <li>So sánh: Autocomplete → Chat → Agent</li>
+      <li>Environmental Feedback — Sự khác biệt then chốt</li>
+    </ul>
+  </div>
+</div>
+
+<!-- s4: ĐỊNH NGHĨA KỸ THUẬT -->
+<div class="slide" id="s4">
+  <h3 class="slide-title">Định Nghĩa Kỹ Thuật AI Agent</h3>
+  <p>Từ "Agent" bị overloaded đến mức mất nghĩa. Để dùng từ này có ý nghĩa, cần định nghĩa chính xác: điều gì phân biệt một AI Agent thực sự với một chatbot thông thường?</p>
+  <div class="card">
+    <div class="card-title">Định nghĩa kỹ thuật</div>
+    <p style="margin-bottom:0;">Một AI Agent là một hệ thống có khả năng <span class="accent">nhận thức trạng thái môi trường</span> (Perception), <span class="accent">lập kế hoạch hành động</span> dựa trên trạng thái đó (Reasoning), <span class="accent">thực thi hành động</span> trong môi trường (Action), và <span class="accent">điều chỉnh kế hoạch</span> dựa trên phản hồi từ môi trường (Feedback Loop) — lặp lại cho đến khi đạt mục tiêu.</p>
+  </div>
+  <div class="alert-box tip">
+    <strong>Điểm quan trọng nhất: Environmental Feedback</strong>
+    Chatbot chỉ nhận feedback từ con người. Agent nhận feedback từ cả <strong style="color:var(--accent);">môi trường</strong> — lỗi terminal, kết quả test, response của API, output của command. Đây là sự khác biệt kiến trúc, không phải marketing.
+  </div>
+</div>
+
+<!-- s5: FEEDBACK LOOP DIAGRAM -->
+<div class="slide scrollable" id="s5">
+  <h3 class="slide-title">Vòng Lặp Plan → Execute → Observe → Adjust</h3>
+  <pre class="code-block">╔════════════════════════════════════════════════════════════╗
+║              AGENT FEEDBACK LOOP                           ║
+╚════════════════════════════════════════════════════════════╝
+
+              ┌─────────────┐
+ User Intent ──► │  PERCEIVE   │
+              │  (Context)  │
+              └──────┬──────┘
+                     │ Environment state
+                     ▼
+              ┌─────────────┐
+              │   REASON    │◄── Inference-time Compute
+              │   (Plan)    │    ("Extended thinking")
+              └──────┬──────┘
+                     │ Action plan
+                     ▼
+              ┌─────────────┐
+              │    ACT      │
+              │  (Execute)  │──► File edit / Terminal
+              └──────┬──────┘    / API call / MCP
+                     │
+                     ▼
+              ┌─────────────┐
+              │   OBSERVE   │◄── Environmental Feedback
+              │  (Results)  │    (test results, errors,
+              └──────┬──────┘     API responses)
+                     │
+              ┌──────▼──────┐
+              │   ADJUST    │
+              │  (Re-plan?) │──► Goal achieved? → STOP
+              └──────┬──────┘    Error? → Back to REASON
+                     │           Budget exceeded? → STOP
+              ◄────── Loop continues ──────►
+
+Key: Agent không dừng sau 1 action. Nó loop cho đến khi:
+     (1) Goal achieved, (2) Explicit stop, (3) Resource limit</pre>
+</div>
+
+<!-- s6: INFERENCE-TIME COMPUTE TABLE -->
+<div class="slide scrollable" id="s6">
+  <h3 class="slide-title">Inference-time Compute — Agent Nghĩ Như Thế Nào?</h3>
+  <p style="margin-bottom:14px;">Thay vì trực tiếp generate output, model hiện đại dành compute để reasoning trước khi commit. Đây là lý do Claude Sonnet hay o1 "chậm hơn" GPT-3.5 — nhưng output có chất lượng cao hơn cho reasoning-intensive tasks.</p>
+  <table class="matrix-table" style="margin-bottom:16px;">
+    <tr><th>Cơ chế</th><th>Tên</th><th>Hoạt động</th><th>Model điển hình</th><th>Use case tốt nhất</th></tr>
+    <tr><td>Fast answering</td><td>Standard generation</td><td>Token → token trực tiếp</td><td>GPT-3.5, Claude Haiku</td><td>Câu trả lời nhanh, simple tasks</td></tr>
+    <tr><td>Chain-of-thought</td><td>Step-by-step</td><td>Viết reasoning steps rồi conclude</td><td>GPT-4, Claude Sonnet</td><td>Multi-step math, logic</td></tr>
+    <tr><td>Extended thinking</td><td>Internal monologue</td><td>Thinking tokens ẩn trước output</td><td>Claude Sonnet (thinking mode)</td><td>Complex planning, code debugging</td></tr>
+    <tr><td>Search-augmented</td><td>Test-time search</td><td>Generate → verify → backtrack</td><td>o1, o3, Claude Opus</td><td>Formal verification, proofs</td></tr>
+  </table>
+  <div class="alert-box info">
+    <strong>Extended Thinking trong Claude</strong>
+    Khi bật "Extended Thinking", Claude generate các thinking tokens ẩn trước output. Bạn có thể thấy nội dung này trong API response dưới dạng <span class="accent">&lt;thinking&gt;</span> blocks. Agent dùng thinking để: phân tích vấn đề, cân nhắc nhiều approach, phát hiện edge cases. <br>Cost: thinking tokens được charge như regular tokens — thường 2-5× nhiều hơn. Khi nào dùng: complex planning, debugging multi-file issues, architectural decisions.
+  </div>
+</div>
+
+<!-- s7: SO SÁNH AUTOCOMPLETE→CHAT→AGENT TABLE -->
+<div class="slide scrollable" id="s7">
+  <h3 class="slide-title">So Sánh: Autocomplete → Chat → Agent</h3>
+  <p style="margin-bottom:14px;">Không phải mọi AI coding tool đều như nhau. Ba thế hệ công cụ có kiến trúc và năng lực khác nhau căn bản:</p>
+  <table class="matrix-table">
+    <tr><th>Tiêu chí</th><th>Autocomplete (Copilot cũ)</th><th>Chat (ChatGPT/Claude.ai)</th><th>Agent (Cline/Claude Code)</th></tr>
+    <tr><td>Hành động</td><td>Suggest next tokens</td><td>Generate text/code block</td><td><span class="accent">Plan + execute + loop</span></td></tr>
+    <tr><td>Tự lập kế hoạch</td><td><span class="red">❌ Không</span></td><td><span class="red">❌ Không</span></td><td><span class="accent">✅ Có (multi-step plan)</span></td></tr>
+    <tr><td>Đọc codebase</td><td><span class="yellow">⚠ Chỉ file hiện tại</span></td><td><span class="yellow">⚠ Chỉ khi paste vào</span></td><td><span class="accent">✅ Tự đọc nhiều files</span></td></tr>
+    <tr><td>Thực thi lệnh</td><td><span class="red">❌ Không</span></td><td><span class="red">❌ Không</span></td><td><span class="accent">✅ Terminal, test runner</span></td></tr>
+    <tr><td>Environmental Feedback</td><td><span class="red">❌ Không</span></td><td><span class="red">❌ Chỉ từ user</span></td><td><span class="accent">✅ Errors, test results</span></td></tr>
+    <tr><td>Tự sửa lỗi</td><td><span class="red">❌ Không</span></td><td><span class="yellow">⚠ Khi user báo</span></td><td><span class="accent">✅ Tự detect + fix loop</span></td></tr>
+    <tr><td>Error Recovery</td><td><span class="red">❌ Không có</span></td><td><span class="red">❌ Không có</span></td><td><span class="accent">✅ Rollback + checkpoint</span></td></tr>
+    <tr><td>Context window</td><td>~2K tokens (current file)</td><td>8K–128K tokens</td><td><span class="accent">200K+ (via tools)</span></td></tr>
+  </table>
+</div>
+
+<!-- s8: ENVIRONMENTAL FEEDBACK CODE -->
+<div class="slide scrollable" id="s8">
+  <h3 class="slide-title">Environmental Feedback — Sự Khác Biệt Kiến Trúc Then Chốt</h3>
+  <p>Đây là điểm phân biệt agent thực sự với mọi công cụ AI trước đó. Khi Cline chạy pytest và nhận được output:</p>
+  <pre class="code-block">$ pytest tests/cart/test_service.py -v
+FAILED tests/cart/test_service.py::test_cart_merge_max_qty
+   AssertionError: assert 5 == 3
+   Full cart after merge has 5 items, expected max(3, 2) = 3
+
+FAILED tests/cart/test_service.py::test_concurrent_add
+   IntegrityError: duplicate key value violates unique constraint
+   "cart_items_cart_id_product_id_key"
+
+1 passed, 2 failed in 0.23s</pre>
+  <div class="alert-box tip">
+    <strong>Agent không dừng lại và hỏi bạn</strong>
+    Agent đọc output, parse error messages, trace về code, identify root cause, generate fix, chạy lại test. Toàn bộ quá trình đó không cần human input trung gian. Đây là <span class="accent">Environmental Feedback in action</span> — sự khác biệt kiến trúc, không phải marketing.
+  </div>
+</div>
+
+<!-- s9: SECTION 9.2 HEADER -->
+<div class="slide" id="s9">
+  <div class="sec-header">
+    <div class="sec-num">9.2</div>
+    <div class="sec-label">Phần Hai</div>
+    <h2 class="section-title">Kiến Trúc Agentic Coding</h2>
+    <div class="subtitle">Tool Layer, MCP, Extended Thinking, Checkpoint</div>
+    <div class="title-divider" style="margin-top:18px;"></div>
+    <ul class="bullet-list" style="text-align:left;max-width:500px;margin:18px auto 0;">
+      <li>Sơ đồ kiến trúc tổng quan</li>
+      <li>Tool Layer — MCP như tiêu chuẩn ngành</li>
+      <li>Extended Thinking — Agent dừng lại và suy nghĩ</li>
+      <li>Checkpoint System — Cơ chế rollback khi agent sai</li>
+    </ul>
+  </div>
+</div>
+
+<!-- s10: ARCHITECTURE DIAGRAM -->
+<div class="slide scrollable" id="s10">
+  <h3 class="slide-title">Sơ Đồ Kiến Trúc Tổng Quan</h3>
+  <pre class="code-block">╔══════════════════════════════════════════════════════════════╗
+║              AGENTIC CODING SYSTEM                           ║
+╠══════════════════════════════════════════════════════════════╣
+║  ┌──────────────────────────────────────────────────────┐    ║
+║  │                    AGENT CORE                        │    ║
+║  │  ┌─────────────┐  ┌──────────────────────────────┐  │    ║
+║  │  │ LLM Engine  │  │  Context Window (200K)       │  │    ║
+║  │  │ (Claude /   │◄─►│  • System prompt             │  │    ║
+║  │  │  GPT-4o)    │  │  • AGENTS.md / CLAUDE.md     │  │    ║
+║  │  │             │  │  • Conversation history      │  │    ║
+║  │  │ Inference-  │  │  • Tool outputs              │  │    ║
+║  │  │ time        │  │  • File contents             │  │    ║
+║  │  │ Compute     │  └──────────────────────────────┘  │    ║
+║  │  └──────┬──────┘                                    │    ║
+║  │         │ Tool calls                                │    ║
+║  └─────────┼────────────────────────────────────────── ┘    ║
+║            ▼                                                  ║
+║  ┌─────────────────────────────────────────────────────┐     ║
+║  │                   TOOL LAYER                        │     ║
+║  │  ┌──────────┐  ┌──────────┐  ┌───────────────────┐ │     ║
+║  │  │File Ops  │  │ Terminal │  │   MCP Servers     │ │     ║
+║  │  │read_file │  │execute_  │  │  GitHub MCP       │ │     ║
+║  │  │write_file│  │command   │  │  Jira MCP         │ │     ║
+║  │  │list_dir  │  │run_test  │  │  Database MCP     │ │     ║
+║  │  └──────────┘  └──────────┘  │  Slack MCP        │ │     ║
+║  │  ┌──────────┐  ┌──────────┐  └───────────────────┘ │     ║
+║  │  │  Web     │  │Checkpoint│                         │     ║
+║  │  │  Search  │  │  System  │                         │     ║
+║  │  └──────────┘  └──────────┘                         │     ║
+║  └─────────────────────────────────────────────────────┘     ║
+║            ▼                                                  ║
+║  ┌─────────────────────────────────────────────────────┐     ║
+║  │              FEEDBACK PROCESSING                    │     ║
+║  │  • Parse stdout/stderr  • Extract error types       │     ║
+║  │  • Test result analysis • State diff computation    │     ║
+║  │  • Inject back to context window for next iteration │     ║
+║  └─────────────────────────────────────────────────────┘     ║
+╚══════════════════════════════════════════════════════════════╝</pre>
+</div>
+
+<!-- s11: TOOL LAYER MCP TABLE -->
+<div class="slide scrollable" id="s11">
+  <h3 class="slide-title">Tool Layer — MCP Như Tiêu Chuẩn Ngành</h3>
+  <p style="margin-bottom:14px;">MCP (Model Context Protocol) chuẩn hóa giao tiếp: bất kỳ tool nào implement MCP protocol đều hoạt động với bất kỳ MCP-compatible host nào. MCP = "USB standard for AI tools".</p>
+  <table class="matrix-table" style="margin-bottom:14px;">
+    <tr><th>Tool category</th><th>Capabilities</th><th>Ví dụ MCP Server</th><th>Khi agent dùng</th></tr>
+    <tr><td>File System</td><td>read, write, list, search</td><td>Filesystem MCP</td><td>Đọc codebase, edit files</td></tr>
+    <tr><td>Terminal</td><td>execute commands, capture output</td><td>Native (built-in)</td><td>Run tests, build, git, CLI</td></tr>
+    <tr><td>Web Search</td><td>query, fetch pages</td><td>Brave Search MCP</td><td>Tìm docs, error solutions</td></tr>
+    <tr><td>Version Control</td><td>git log, diff, blame, PR</td><td>GitHub MCP</td><td>Trace history, tạo PR</td></tr>
+    <tr><td>Project Mgmt</td><td>issues, tasks, sprints</td><td>Jira/Linear MCP</td><td>Đọc requirements</td></tr>
+    <tr><td>Database</td><td>query, schema inspect</td><td>PostgreSQL MCP</td><td>Verify data, check migrations</td></tr>
+    <tr><td>Communication</td><td>send messages, search</td><td>Slack MCP</td><td>Alert khi hoàn thành</td></tr>
+  </table>
+  <div class="alert-box info">
+    <strong>MCP — Tại sao quan trọng cho SDD?</strong>
+    Trong SDD workflow, agent cần đọc spec từ GitHub Issues, đọc code từ filesystem, chạy tests qua terminal, và update Jira khi xong. Tất cả đều qua MCP. Xem Chương 4 để biết cách setup MCP trong Cline và Claude Code.
+  </div>
+</div>
+
+<!-- s12: EXTENDED THINKING CODE -->
+<div class="slide scrollable" id="s12">
+  <h3 class="slide-title">Extended Thinking — Agent "Dừng Lại và Suy Nghĩ"</h3>
+  <p style="margin-bottom:10px;">Extended Thinking là cơ chế cho phép model thực hiện inference-time compute — dành token để "nghĩ" trước khi output. Khi agent nhận một task phức tạp, nó chạy một internal monologue dưới dạng <span class="accent">&lt;thinking&gt;</span> blocks.</p>
+  <pre class="code-block"># Ví dụ: Agent nhận task "Fix the failing cart merge test"
+
+# === THINKING (internal, thường ẩn) ===
+&lt;thinking&gt;
+Nhìn vào test failure:
+  AssertionError: assert 5 == 3
+  Full cart after merge has 5 items, expected max(3, 2) = 3
+
+Test expectation: merge của cart có 3 items và cart có 2 items
+với cùng product → result phải là max(3,2) = 3 items (không phải 5)
+
+Điều này suggest rằng current implementation đang ADD quantity
+thay vì taking MAX. Cần kiểm tra CartMergeService.merge() method.
+
+Approach 1: Fix merge logic → change add to max
+Approach 2: Check nếu spec thực sự muốn max (có thể test sai?)
+Đọc SPEC.md §3: "merge rule: keep max(guest_qty, user_qty)"
+→ Test đúng, code sai. Fix CartMergeService.
+
+Plan: Edit CartMergeService.merge(), run test, verify other merge tests.
+&lt;/thinking&gt;
+
+# === OUTPUT (visible) ===
+# "Tôi thấy vấn đề trong CartMergeService.merge().
+#  Đang cộng quantity thay vì lấy max. Sửa ngay."</pre>
+</div>
+
+<!-- s13: CHECKPOINT SYSTEM -->
+<div class="slide scrollable" id="s13">
+  <h3 class="slide-title">Checkpoint System — Cơ Chế Rollback Khi Agent Sai</h3>
+  <div class="three-col" style="margin-bottom:14px;">
+    <div class="card">
+      <div class="card-title" style="color:var(--accent);">Tầng 1 — Git-based</div>
+      <p style="font-size:clamp(11px,1.1vw,13px);">Agent tạo git commit trước mỗi action thay đổi nhiều file. Rollback = <span class="accent">git reset</span>. Mạnh nhất, hoạt động cho mọi file change.</p>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--hl-y);">Tầng 2 — Tool snapshot</div>
+      <p style="font-size:clamp(11px,1.1vw,13px);">Trước khi overwrite file, agent lưu backup <span class="yellow">foo.py.bak</span>. Rollback trong session hiện tại.</p>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--hl-b);">Tầng 3 — Session</div>
+      <p style="font-size:clamp(11px,1.1vw,13px);">Cline và Claude Code lưu toàn bộ conversation state. Có thể rewind về bất kỳ điểm nào.</p>
+    </div>
+  </div>
+  <pre class="code-block"># Checkpoint workflow trong thực tế (Cline built-in)
+
+# Trước mỗi "dangerous action" (xóa, overwrite nhiều files):
+AGENT: "Tôi sắp xóa 3 files và rewrite CartService.py.
+        Tôi đã tạo checkpoint tại commit abc123.
+        Để rollback: git checkout abc123"
+        [Awaiting approval: Yes/No]
+
+# Khi agent detect nó đi sai hướng:
+AGENT: "Test vẫn fail sau 2 lần sửa. Rollback về checkpoint
+        và thử approach khác."
+→ git reset --hard abc123
+→ Agent restart với fresh approach
+
+# IMPORTANT: Agent tạo checkpoint trước, không sau.
+# Rule: "checkpoint → action" not "action → checkpoint"</pre>
+</div>
+
+<!-- s14: STATE MANAGEMENT TABLE -->
+<div class="slide scrollable" id="s14">
+  <h3 class="slide-title">State Management — Agent Quản Lý Trạng Thái</h3>
+  <p style="margin-bottom:14px;">Agent không có "memory" giữa các session (trừ khi dùng MCP Memory Server). Trong một session, state được quản lý qua context window — một "cuộn giấy" dài chứa toàn bộ lịch sử.</p>
+  <table class="matrix-table" style="margin-bottom:14px;">
+    <tr><th>State type</th><th>Lưu ở đâu</th><th>TTL</th><th>Risk nếu mất</th></tr>
+    <tr><td>Working memory (current plan)</td><td>Context window</td><td>Session</td><td><span class="red">Agent quên plan, replan sai</span></td></tr>
+    <tr><td>File changes</td><td>Filesystem</td><td>Permanent</td><td><span class="red">Mất code nếu không checkpoint</span></td></tr>
+    <tr><td>Tool outputs</td><td>Context window (appended)</td><td>Session (truncated)</td><td><span class="yellow">Agent "quên" test kết quả cũ</span></td></tr>
+    <tr><td>Conversation history</td><td>Context window</td><td>Session</td><td><span class="yellow">Context coherence bị break</span></td></tr>
+    <tr><td>Cross-session memory</td><td>MCP Memory Server</td><td>Configurable</td><td>Agent không nhớ preferences</td></tr>
+  </table>
+  <div class="alert-box warn">
+    <strong>Context Window Full — Dấu hiệu nguy hiểm</strong>
+    Khi context window đầy (&gt;150K tokens), agent bắt đầu "quên" phần đầu của task. Dấu hiệu: agent hỏi lại thông tin đã được cung cấp, re-plan từ đầu, ignore constraints. Giải pháp: summarize → clear → re-inject essentials. Prevention: break task thành subtasks &lt;50K tokens per session.
+  </div>
+</div>
+
+<!-- s15: SECTION 9.3 HEADER -->
+<div class="slide" id="s15">
+  <div class="sec-header">
+    <div class="sec-num">9.3</div>
+    <div class="sec-label">Phần Ba</div>
+    <h2 class="section-title">Agentic vs. Conversational vs. Autonomous</h2>
+    <div class="subtitle">Ba Mức Độ Autonomy — Kiến Trúc & Rủi Ro Khác Nhau</div>
+    <div class="title-divider" style="margin-top:18px;"></div>
+    <ul class="bullet-list" style="text-align:left;max-width:500px;margin:18px auto 0;">
+      <li>Ba mức độ Autonomy</li>
+      <li>Bảng so sánh chi tiết + Error Recovery</li>
+      <li>Human-in-the-Loop — Con người là Gatekeeper</li>
+    </ul>
+  </div>
+</div>
+
+<!-- s16: THREE-TIER AUTONOMY -->
+<div class="slide scrollable" id="s16">
+  <h3 class="slide-title">Ba Mức Độ Autonomy</h3>
+  <div class="tier-box">
+    <div class="tier-label t1">Tier 1: Conversational</div>
+    <div class="tier-desc">Human: "Viết function X" → AI: [generates code] → Human: "Fix bug trên dòng 5" → AI: [generates fix] [STOP — waits for human]<br>Pattern: <strong>Human input → AI output → Human reviews</strong> | Error recovery: NONE — human must spot and report</div>
+  </div>
+  <div class="tier-box">
+    <div class="tier-label t2">Tier 2: Agentic (Current sweet spot)</div>
+    <div class="tier-desc">Human: "Fix all cart tests" → AI: [reads files] → [identifies root cause] → [plans fixes] → [edits service.py]<br>AI: "Về to write to CartService.py. Approve?" → Human: [reviews diff] → Approve ✅<br>AI: [runs tests] → [2 fail] → [fixes + runs again] → "All tests green. Done."<br>Pattern: <strong>Human intent → AI executes → Human gates</strong> | Error recovery: BUILT-IN — AI self-corrects</div>
+  </div>
+  <div class="tier-box">
+    <div class="tier-label t3">Tier 3: Autonomous (Future / Restricted use today)</div>
+    <div class="tier-desc">Human: "Handle all Jira tickets labeled 'bug'" → AI: [polls Jira] → [reads tickets] → [reads code] → [fixes bugs] → [runs tests] → [creates PRs] → [merges when CI green] — no human approval<br>Pattern: <strong>High-level goal → AI executes fully</strong> | Error recovery: BUILT-IN + AUTOMATED rollback</div>
+  </div>
+</div>
+
+<!-- s17: COMPARISON TABLE -->
+<div class="slide scrollable" id="s17">
+  <h3 class="slide-title">Bảng So Sánh Chi Tiết</h3>
+  <table class="matrix-table">
+    <tr><th>Tiêu chí</th><th>Conversational</th><th>Agentic</th><th>Autonomous</th></tr>
+    <tr><td>Human input</td><td>Mỗi bước</td><td><span class="accent">Chỉ tại approval gates</span></td><td>Chỉ high-level goal</td></tr>
+    <tr><td>Tự lên kế hoạch</td><td><span class="red">❌ Không</span></td><td><span class="accent">✅ Multi-step plan</span></td><td><span class="accent">✅ Long-horizon plan</span></td></tr>
+    <tr><td>Error Recovery</td><td><span class="red">❌ Human phải báo</span></td><td><span class="accent">✅ Self-detect + fix</span></td><td><span class="accent">✅ Fully automated</span></td></tr>
+    <tr><td>Rủi ro khi sai</td><td><span class="accent">🟢 Thấp (human approve)</span></td><td><span class="yellow">🟡 Vừa (gate controlled)</span></td><td><span class="red">🔴 Cao (no human gate)</span></td></tr>
+    <tr><td>Traceability</td><td><span class="yellow">⚠ Manual review only</span></td><td><span class="accent">✅ Log + checkpoint</span></td><td><span class="yellow">⚠ Cần audit system</span></td></tr>
+    <tr><td>Cost efficiency</td><td><span class="yellow">⚠ Human bottleneck</span></td><td><span class="accent">✅ 90% AI, 10% human</span></td><td><span class="accent">✅ Highest automation</span></td></tr>
+    <tr><td>Tool examples</td><td>ChatGPT, Claude.ai</td><td><span class="accent">Cline, Claude Code, Cursor</span></td><td>AI Software Engineers (2025+)</td></tr>
+    <tr><td>Best for</td><td>Simple tasks, quick questions</td><td><span class="accent">Feature dev, bug fixes</span></td><td>Maintenance, scheduled tasks</td></tr>
+  </table>
+</div>
+
+<!-- s18: APPROVAL GATE TABLE -->
+<div class="slide scrollable" id="s18">
+  <h3 class="slide-title">Approval Gate Design — Khi Nào Cần Human?</h3>
+  <p style="margin-bottom:12px;">Human-in-the-loop không phải bottleneck — đó là thiết kế cố ý. Agent làm 90% công việc nặng; con người chỉ can thiệp tại những điểm có rủi ro cao nhất.</p>
+  <table class="matrix-table" style="margin-bottom:12px;">
+    <tr><th>Action</th><th>Risk level</th><th>Gate type</th><th>Lý do cần human</th></tr>
+    <tr><td>Read files, search web</td><td><span class="accent">🟢 Thấp</span></td><td>Auto-approve</td><td>Không thay đổi state</td></tr>
+    <tr><td>Write file (small edit)</td><td><span class="yellow">🟡 Vừa</span></td><td>Show diff, 1-click approve</td><td>Reversible, cần eyeball check</td></tr>
+    <tr><td>Delete files</td><td><span class="red">🔴 Cao</span></td><td>Explicit confirm + checkpoint</td><td>Hard to reverse</td></tr>
+    <tr><td>Run terminal commands</td><td><span class="yellow">🟡–🔴 Tùy lệnh</span></td><td>Show command, approve before run</td><td>Lệnh như rm -rf cần human xem</td></tr>
+    <tr><td>Git commit</td><td><span class="yellow">🟡 Vừa</span></td><td>Show commit message + diff</td><td>Affects shared history</td></tr>
+    <tr><td>Deploy / Release</td><td><span class="red">🔴 Cao</span></td><td>Full review + explicit approve</td><td>Production impact</td></tr>
+    <tr><td>Call external APIs</td><td><span class="yellow">🟡–🔴 Tùy API</span></td><td>Show request details</td><td>Cost, side effects, rate limits</td></tr>
+  </table>
+</div>
+
+<!-- s19: CLINE CONFIG + AUTONOMY SPECTRUM -->
+<div class="slide scrollable" id="s19">
+  <h3 class="slide-title">Cline Config + Autonomy Spectrum</h3>
+  <pre class="code-block">// .vscode/settings.json — Cline approval gates
+{
+  "cline.alwaysAllowReadOnly": true,   // Read = auto-approve
+  "cline.alwaysAllowWrite": false,     // Write = show diff
+  "cline.alwaysAllowExecute": false,   // Commands = explicit
+  "cline.autoApproveEnabled": false,   // No full auto
+
+  // Allowlist cho specific safe commands
+  "cline.allowedCommands": [
+    "pytest",      // Run tests = safe
+    "ruff",        // Linter = safe
+    "mypy",        // Type check = safe
+    "git status",  // Read-only git = safe
+    "git diff"
+  ]
+  // Anything NOT in allowlist = needs human approval
+}
+
+// Philosophy:
+// Agent làm việc nhanh trên read/analyze/test.
+// Human review tại "point of no return" moments.
+// 10% approval time → 90% development quality assurance.</pre>
+  <div class="alert-box info">
+    <strong>Vị trí các tool trên Autonomy Spectrum (2025)</strong>
+    <strong style="color:var(--sub);text-transform:none;letter-spacing:0;font-size:inherit;">Conversational:</strong> ChatGPT, Claude.ai, Gemini web interface<br>
+    <strong style="color:var(--sub);text-transform:none;letter-spacing:0;font-size:inherit;">Agentic:</strong> Cline, Claude Code, Cursor Composer, GitHub Copilot Workspace<br>
+    <strong style="color:var(--sub);text-transform:none;letter-spacing:0;font-size:inherit;">Approaching Autonomous:</strong> Devin (Cognition AI), SWE-agent (Princeton)<br>
+    Fully autonomous (no human) chỉ phù hợp cho isolated, reversible tasks.
+  </div>
+</div>
+
+<!-- s20: SECTION 9.4 HEADER -->
+<div class="slide" id="s20">
+  <div class="sec-header">
+    <div class="sec-num">9.4</div>
+    <div class="sec-label">Phần Bốn</div>
+    <h2 class="section-title">Demo: Xem Agent Làm Việc Thực Tế</h2>
+    <div class="subtitle">Session walkthrough — Fail, Self-correct, Internal Reasoning</div>
+    <div class="title-divider" style="margin-top:18px;"></div>
+    <ul class="bullet-list" style="text-align:left;max-width:500px;margin:18px auto 0;">
+      <li>Session walkthrough — 6 phases (kể cả khi fail)</li>
+      <li>Agent Log Analysis — Đọc log để debug</li>
+      <li>Internal Monologue — Tại sao Agent chọn A thay vì B</li>
+    </ul>
+  </div>
+</div>
+
+<!-- s21: PHASE 1+2 PERCEPTION + REASONING -->
+<div class="slide scrollable" id="s21">
+  <h3 class="slide-title">Phase 1 &amp; 2: Perception + Reasoning</h3>
+  <p style="margin-bottom:10px;font-size:clamp(11px,1.1vw,13px);">Task: Implement CartMergeService cho EcoShop (Case Study Ch.7). Spec đã approved. Agent yêu cầu implement + tests, không có additional guidance.</p>
+  <pre class="code-block"># === USER INPUT ===
+Implement CartMergeService theo SPEC.md §3 merge rule.
+Đọc code hiện có, viết implementation + tests. Chạy tests sau khi xong.
+
+# === PHASE 1: PERCEPTION — Agent reads codebase ===
+→ list_directory("src/cart/")
+# OUTPUT:
+  src/cart/service.py   ← CartService (exists)
+  src/cart/repository.py ← CartRepository (exists)
+  src/cart/models.py    ← Cart, CartItem models (exists)
+  # merge_service.py NOT YET EXISTS ← needs to create
+
+→ read_file("src/cart/service.py")
+→ read_file("src/cart/models.py")
+→ read_file(".sdd/features/feat-cart-core/SPEC.md")
+
+# === PHASE 2: REASONING — Agent lên plan ===
+&lt;thinking&gt;
+Merge logic cần handle:
+1. Guest cart items + User cart items
+2. Same product+variant: keep max(guest_qty, user_qty)
+3. Guest-only items: add to user cart
+4. User-only items: keep as is
+5. After merge: delete guest cart
+
+Edge cases từ SPEC clarification:
+- product_id + variant_id = unique key (Q3 answer)
+- Refresh snapshot_price after merge (Q1 answer)
+- Concurrent merge: need transaction (Q2 from original spec)
+Race condition: add FOR UPDATE lock in transaction.
+Plan: T1: Write CartMergeService + T2: Write unit tests + T3: Run tests
+&lt;/thinking&gt;</pre>
+</div>
+
+<!-- s22: PHASE 3 ACTION -->
+<div class="slide scrollable" id="s22">
+  <h3 class="slide-title">Phase 3: Action — Agent Viết Code</h3>
+  <pre class="code-block"># === AGENT ACTION: Create file ===
+→ write_file("src/cart/merge_service.py")
+
+class CartMergeService:
+    def __init__(self, repo: CartRepository, price_svc: PriceService):
+        self.repo = repo
+        self.price_svc = price_svc
+
+    async def merge(self, guest_cart_id: str, user_cart_id: str) -> Cart:
+        # EARS[Event]: WHEN Customer logs in with Guest cart
+        # EARS[Ubiquitous]: Run in transaction (race condition protection)
+        async with self.repo.transaction() as txn:
+            guest_cart = await txn.get_cart_for_update(guest_cart_id)
+            user_cart  = await txn.get_cart_for_update(user_cart_id)
+
+            for g_item in guest_cart.items:
+                key = (g_item.product_id, g_item.variant_id)
+                u_item = user_cart.find_item(*key)
+
+                if u_item:
+                    # EARS[Ubiquitous]: Same product → keep max qty
+                    u_item.quantity = max(u_item.quantity, g_item.quantity)
+                    # EARS[Ubiquitous]: Refresh snapshot_price
+                    u_item.snapshot_price = await self.price_svc.current(*key)
+                else:
+                    # Guest-only item → add to user cart
+                    user_cart.add_item(g_item, refresh_price=True)
+
+            await txn.delete_cart(guest_cart_id)
+            return await txn.save_cart(user_cart)
+
+→ write_file("tests/cart/test_merge_service.py")
+# [writes 5 test cases for the 5 scenarios]
+
+→ execute_command("pytest tests/cart/test_merge_service.py -v")</pre>
+</div>
+
+<!-- s23: PHASE 4 OBSERVE -->
+<div class="slide scrollable" id="s23">
+  <h3 class="slide-title">Phase 4: Observe — Tests Fail! Không Phải Happy Path</h3>
+  <pre class="code-block"># === TEST OUTPUT (environmental feedback) ===
+
+FAILED test_merge_guest_only_items
+   AttributeError: Cart object has no attribute "add_item"
+   self.repo returned Cart object, not expected CartProxy
+
+FAILED test_merge_max_qty_with_price_refresh
+   RuntimeError: Cannot use transaction outside async context
+   NullSession: transaction requires active session
+
+PASSED test_merge_user_only_items_unchanged
+PASSED test_merge_deletes_guest_cart
+
+2 passed, 2 failed in 0.31s
+
+# ← Agent NHẬN PHẢN HỒI TỪ MÔI TRƯỜNG
+# Không hỏi human. Tự phân tích.</pre>
+  <div class="alert-box warn">
+    <strong>Environmental Feedback in Action</strong>
+    Agent đọc output test, parse error messages, identify root cause. Toàn bộ quá trình không cần human input trung gian. Đây chính xác là điều phân biệt Tier 2 (Agentic) với Tier 1 (Conversational).
+  </div>
+</div>
+
+<!-- s24: PHASE 5 REASONING ABOUT FAILURES -->
+<div class="slide scrollable" id="s24">
+  <h3 class="slide-title">Phase 5: Reasoning — Agent Tự Debug</h3>
+  <pre class="code-block"># === AGENT THINKING sau khi đọc failures ===
+&lt;thinking&gt;
+Failure 1: "Cart object has no attribute add_item"
+→ add_item không phải method của Cart model.
+→ Tôi assumed Cart có add_item() nhưng models.py không có.
+→ Fix: dùng cart.items.append() + create CartItem object directly.
+→ Check models.py lại để verify correct field names.
+
+Failure 2: "Cannot use transaction outside async context"
+→ self.repo.transaction() không hoạt động trong unit test environment.
+→ Tests dùng mock repository không có real transaction support.
+→ Approach: Abstract transaction detail, mock trong tests.
+→ Hoặc: Đưa transaction lên caller (CartService), không trong MergeService.
+
+Which approach? SPEC nói CartService orchestrates everything.
+PLAN.md: CartMergeService là helper, CartService owns transaction.
+→ Move transaction to CartService.handle_login_merge().
+→ CartMergeService chỉ contain pure logic, easier to test.
+
+Đây là architectural improvement, không chỉ bug fix.
+Update both merge_service.py và service.py.
+&lt;/thinking&gt;
+
+# AGENT: "Tôi thấy 2 vấn đề:
+#  1. Cart.add_item() không tồn tại — cần dùng models trực tiếp
+#  2. Transaction nên ở CartService, không MergeService (clean architecture)
+#  Refactoring cả hai files."</pre>
+</div>
+
+<!-- s25: PHASE 6 GREEN TESTS -->
+<div class="slide scrollable" id="s25">
+  <h3 class="slide-title">Phase 6: Adjust — Fix và Re-test → Green!</h3>
+  <pre class="code-block"># === AGENT ACTION: Fix based on reasoning ===
+→ read_file("src/cart/models.py")          ← Verify Cart model fields
+→ write_file("src/cart/merge_service.py")  ← Remove transaction, pure logic
+→ write_file("src/cart/service.py")        ← Add transaction at CartService level
+→ write_file("tests/cart/test_merge_service.py")  ← Update mocks
+
+# === SECOND TEST RUN ===
+→ execute_command("pytest tests/cart/test_merge_service.py -v")
+
+PASSED test_merge_guest_only_items
+PASSED test_merge_max_qty_with_price_refresh
+PASSED test_merge_user_only_items_unchanged
+PASSED test_merge_deletes_guest_cart
+PASSED test_merge_handles_empty_guest_cart
+
+5 passed, 0 failed in 0.18s ✅
+
+→ execute_command("pytest tests/cart/ -v")
+# All 23 tests pass ✅
+
+# === AGENT FINAL OUTPUT ===
+"CartMergeService implemented. Kết quả:
+- 5/5 merge tests pass
+- 23/23 total cart tests pass
+- Architectural note: moved transaction to CartService
+  (cleaner, easier to test, follows PLAN.md pattern)
+Files changed:
+  + src/cart/merge_service.py (created)
+  ~ src/cart/service.py (added handle_login_merge)
+  + tests/cart/test_merge_service.py (created)"</pre>
+</div>
+
+<!-- s26: AGENT LOG ANALYSIS -->
+<div class="slide scrollable" id="s26">
+  <h3 class="slide-title">Agent Log Analysis — Đọc Log Để Debug</h3>
+  <pre class="code-block"># Cline Agent Log — Location: View → Output → "Cline" dropdown
+
+[10:23:01] TASK_START  model: claude-sonnet-4-6  context_tokens: 15230
+[10:23:02] TOOL_CALL: list_directory  path: "src/cart/"  tokens_added: 180
+[10:23:03] TOOL_CALL: read_file  path: "src/cart/service.py"  tokens_added: 2250
+[10:23:05] TOOL_CALL: read_file  path: ".sdd/.../SPEC.md"  tokens_added: 1800
+           ← Agent đọc spec!
+[10:23:08] THINKING  duration: 3.2s  thinking_tokens: 850
+           ← Extended thinking enabled
+[10:23:09] TOOL_CALL: write_file  path: "merge_service.py"  bytes: 1840
+           [AWAITING APPROVAL] ← Human gate
+[10:23:15] HUMAN_APPROVED  action: write_file
+[10:23:18] TOOL_CALL: execute_command  command: "pytest ... -v"
+           exit_code: 1  ← Test fail!  tokens_added: 420
+[10:23:19] THINKING  duration: 4.1s  thinking_tokens: 1200
+           ← Longer think for error analysis
+[10:23:25] TOOL_CALL: write_file (fix #1)
+[10:23:28] TOOL_CALL: execute_command  exit_code: 0 ← Green!
+[10:23:30] TASK_COMPLETE
+           total_duration: 89s  total_tokens: 22450 (~$0.067)
+           files_changed: 3  tool_calls: 12
+
+# Total: 89s, $0.067 — for a task that would take dev 30+ min</pre>
+</div>
+
+<!-- s27: RED FLAGS TABLE -->
+<div class="slide scrollable" id="s27">
+  <h3 class="slide-title">Red Flags Trong Log — Dấu Hiệu Agent Đang Có Vấn Đề</h3>
+  <table class="matrix-table">
+    <tr><th>Log pattern</th><th>Ý nghĩa</th><th>Action cần làm</th></tr>
+    <tr><td><span class="red">Thinking duration &gt; 10s liên tục</span></td><td>Agent stuck hoặc over-analyzing</td><td>Check nếu task quá rộng, chia nhỏ hơn</td></tr>
+    <tr><td><span class="red">Cùng tool call lặp lại &gt; 3 lần</span></td><td>Loop trap — fix này tạo ra lỗi khác</td><td>Interrupt, check root cause manually</td></tr>
+    <tr><td><span class="red">context_tokens &gt; 150K</span></td><td>Context window sắp đầy</td><td>Summarize và restart session</td></tr>
+    <tr><td><span class="yellow">exit_code: 1 &gt; 5 lần liên tiếp</span></td><td>Agent không thể fix test</td><td>Human review spec + code</td></tr>
+    <tr><td><span class="yellow">TOOL_CALL không có THINKING trước</span></td><td>Agent acting without reasoning</td><td>Check nếu task quá simple hoặc agent confused</td></tr>
+    <tr><td><span class="yellow">HUMAN_DENIED nhiều lần</span></td><td>Agent đề xuất risky actions</td><td>Review nếu task scope phù hợp</td></tr>
+  </table>
+  <div class="alert-box tip">
+    <strong>Đọc log = Debugging skill quan trọng nhất</strong>
+    Logs cho bạn biết chính xác agent đang làm gì, tại sao, và khi nào nó đi sai. exit_code, thinking duration, token count = những tín hiệu debugging chính yếu khi làm việc với agentic workflows.
+  </div>
+</div>
+
+<!-- s28: INTERNAL MONOLOGUE -->
+<div class="slide scrollable" id="s28">
+  <h3 class="slide-title">Internal Monologue — Tại Sao Agent Chọn A Thay Vì B</h3>
+  <p style="margin-bottom:10px;">Enable Extended Thinking để thấy lý do agent ra quyết định:</p>
+  <pre class="code-block"># Enable qua Claude API
+response = client.messages.create(
+    model="claude-sonnet-4-6",
+    thinking={"type": "enabled", "budget_tokens": 5000},
+    messages=[{"role": "user", "content": task}]
+)
+
+# Đọc thinking output
+for block in response.content:
+    if block.type == "thinking":
+        print("AGENT THINKING:", block.thinking)
+
+# === TYPICAL THINKING EXCERPT ===
+# "Two approaches to implement this:
+#  A: Use Redis cache with 5min TTL
+#  B: Use PostgreSQL materialized view
+#
+#  SPEC says: < 200ms p95 response time
+#  Current DB has 50K products → full scan too slow
+#
+#  Redis: latency ~1ms, cost ~$20/month, cache invalidation needed
+#  Mat view: latency ~5ms, cost $0, auto-refresh by DB
+#
+#  Both satisfy 200ms requirement.
+#  PLAN.md says: existing Redis cluster already deployed.
+#  → Use Redis (no new infrastructure, team already knows it)"
+
+# Đây là chính xác lý do agent chọn Redis.
+# Không phải "tôi thích Redis" — có reasoning chain rõ ràng.</pre>
+</div>
+
+<!-- s29: SECTION 9.5 HEADER -->
+<div class="slide" id="s29">
+  <div class="sec-header">
+    <div class="sec-num">9.5</div>
+    <div class="sec-label">Phần Năm</div>
+    <h2 class="section-title">Giới Hạn Của Agent Hiện Tại</h2>
+    <div class="subtitle">Đừng Kỳ Vọng Quá Mức — Hiểu để Design Đúng</div>
+    <div class="title-divider" style="margin-top:18px;"></div>
+    <ul class="bullet-list" style="text-align:left;max-width:500px;margin:18px auto 0;">
+      <li>Token Burn — Chi phí ẩn của Agentic Workflows</li>
+      <li>Loop Trapping — Khi Agent "Ngáo"</li>
+      <li>Model Dependency — Intelligence ceiling</li>
+      <li>Context Window Cliff + API Hallucination</li>
+      <li>Tóm tắt giới hạn và cách đối phó</li>
+    </ul>
+  </div>
+</div>
+
+<!-- s30: TOKEN BURN -->
+<div class="slide scrollable" id="s30">
+  <h3 class="slide-title">Token Burn — Chi Phí Ẩn Của Agentic Workflows</h3>
+  <div class="alert-box tip">
+    <strong>Kỳ vọng đúng = Kết quả tốt hơn</strong>
+    Agent là specialist cực giỏi trong phạm vi context window, nhưng có những điểm mù cơ bản. Design workflow tốt là "chơi đến điểm mạnh, tránh điểm yếu" — không phải "làm tất cả mọi thứ bằng agent".
+  </div>
+  <pre class="code-block"># Token budget breakdown — implement một feature
+
+# Bước 1: Initial context load (constant per session)
+AGENTS.md + CLAUDE.md:      4,000 tokens
+SPEC.md (current feature):  2,500 tokens
+PLAN.md + TASKS.md:         1,500 tokens
+Total setup:                8,000 tokens
+
+# Bước 2: Per-iteration costs (× nhiều lần)
+Read source file (200 lines): 2,500 tokens × 5 files = 12,500
+Thinking (Extended):          1,500 tokens × 3 rounds = 4,500
+Generate code (150 lines):    2,000 tokens × 2 files = 4,000
+Test output (50 lines):         600 tokens × 4 runs  = 2,400
+Error analysis thinking:      1,000 tokens × 2 errors = 2,000
+Total dynamic: ~25,400 tokens
+
+# Total session cost:
+# Input tokens:  ~28,000 × $3/M  = $0.084
+# Output tokens:  ~6,000 × $15/M = $0.090
+# Total: ~$0.17 per feature task   ← affordable!
+
+# Scale: 20 features/sprint × 2 devs × $0.17 = $6.80/sprint
+
+# Khi agent bị stuck và loop:
+# Normal task:           28,000 tokens
+# Loop task (10 iters): 280,000 tokens = $1.70/task
+# 5 tasks/day stuck: $8.50/day = $170/month extra!</pre>
+</div>
+
+<!-- s31: TOKEN OPTIMIZATION TABLE -->
+<div class="slide scrollable" id="s31">
+  <h3 class="slide-title">Chiến Lược Tối Ưu Chi Phí Token</h3>
+  <table class="matrix-table" style="margin-bottom:14px;">
+    <tr><th>Kỹ thuật</th><th>Token saving</th><th>Trade-off</th></tr>
+    <tr><td>Dùng Haiku cho boilerplate tasks</td><td><span class="accent">70–85% cheaper</span></td><td>Lower quality for complex logic</td></tr>
+    <tr><td>Limit file reads (chỉ đọc relevant)</td><td><span class="accent">30–50%</span></td><td>Need good file organization</td></tr>
+    <tr><td>Summarize context trước khi bắt đầu</td><td><span class="accent">20–40%</span></td><td>Summary có thể miss details</td></tr>
+    <tr><td>Tắt Extended Thinking cho simple tasks</td><td><span class="accent">20–30%</span></td><td>Less reasoning quality</td></tr>
+    <tr><td>Set hard token limit per task</td><td>0% saving, prevent runaway</td><td>Task may not complete</td></tr>
+    <tr><td>Break large tasks thành atomic</td><td><span class="accent">15–25% per task</span></td><td>More session overhead</td></tr>
+  </table>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Budget control trong Cline</div>
+      <pre class="code-block" style="margin:0;">"cline.maxTokensPerTask": 50000
+// hard stop at 50K
+
+"cline.warnAt": 30000
+// alert at 30K</pre>
+    </div>
+    <div class="card">
+      <div class="card-title">Rule of thumb</div>
+      <ul class="bullet-list">
+        <li>Normal feature: ~28K tokens = $0.17</li>
+        <li>Loop task: 10× = $1.70</li>
+        <li>Complex refactor: 50–200K tokens</li>
+        <li>Break tasks &lt;4h = &lt;50K tokens</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- s32: LOOP TRAPPING -->
+<div class="slide scrollable" id="s32">
+  <h3 class="slide-title">Loop Trapping — Khi Agent "Ngáo"</h3>
+  <p style="margin-bottom:12px;">Loop Trapping xảy ra khi agent bị stuck trong một vòng lặp sửa lỗi: fix lỗi A tạo ra lỗi B, fix lỗi B tạo ra lỗi A (hoặc C). Agent không nhận ra nó đang loop vì mỗi iteration nhìn có vẻ "khác nhau".</p>
+  <div class="alert-box warn">
+    <strong>Ví dụ Loop Trap thực tế</strong>
+    Iteration 1: Fix TypeError → thêm null check.<br>
+    Iteration 2: Null check tạo ra AssertionError (test expect non-null).<br>
+    Iteration 3: Fix assertion → bỏ null check.<br>
+    Iteration 4: TypeError lại. Agent ở iteration 1.<br>
+    Vòng lặp tiếp tục, mỗi lần burn 3,000 tokens.
+  </div>
+  <div class="card">
+    <div class="card-title">Nhận biết Loop Trap</div>
+    <ul class="bullet-list">
+      <li>Cùng test fail &gt; 3 lần liên tiếp</li>
+      <li>Agent edit cùng một file &gt; 5 lần</li>
+      <li>Thinking time tăng mỗi iteration (agent confused hơn, không phải smart hơn)</li>
+      <li>Agent bắt đầu thêm comments "Approach 5: trying a different..."</li>
+      <li>Token counter tăng nhanh mà không có progress</li>
+    </ul>
+  </div>
+</div>
+
+<!-- s33: BREAKING LOOP TRAP CODE -->
+<div class="slide scrollable" id="s33">
+  <h3 class="slide-title">Cách Xử Lý Khi Agent Bị Loop</h3>
+  <pre class="code-block"># Khi phát hiện agent đang loop — INTERRUPT ngay
+
+# 1. Dừng agent (Ctrl+C trong Cline)
+
+# 2. Đọc current state:
+#    - Test đang fail là gì?
+#    - Code hiện tại trông như thế nào?
+#    - Agent đã thử approach gì?
+
+# 3. Human analyze root cause
+#    Thường loop xảy ra vì:
+#    a) Spec mơ hồ → AI không biết "đúng" là gì
+#    b) Architectural constraint chưa được spec
+#    c) Dependency issue → cần fix ở chỗ khác trước
+
+# 4. Provide clarification prompt, không phải "fix this"
+
+# SAI (tạo thêm loop):
+# "Fix the test failure"
+
+# ĐÚNG (break loop với specific guidance):
+# "Test fail vì cart.items.quantity không thể là 0.
+#  SPEC §5 Data: quantity là positive integer.
+#  Database constraint: quantity > 0 NOT NULL.
+#  Approach: kiểm tra quantity >= 1 trong CartService.add_item(),
+#  reject nếu < 1 với ValidationError.
+#  Đừng fix test — fix validation trong service."
+
+# 5. Nếu vẫn loop sau clarification → rollback + rewrite từ đầu
+# Rule of thumb: > 5 failed attempts = root cause issue,
+# không phải fixable incrementally.</pre>
+</div>
+
+<!-- s34: PREVENTIVE DESIGN -->
+<div class="slide" id="s34">
+  <h3 class="slide-title">Preventive Design — Tránh Loop Từ Đầu</h3>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">5 nguyên tắc phòng tránh</div>
+      <ul class="bullet-list">
+        <li><span class="accent">SPEC.md rõ ràng về constraints</span> → agent không guess → ít loop</li>
+        <li><span class="accent">Task atomic (&lt;4h)</span> → ít dependency → ít cascading failures</li>
+        <li><span class="accent">Run Clarification Trigger TRƯỚC</span> khi implement → catch ambiguity trước</li>
+        <li><span class="accent">Set token limit per task</span> → force interrupt sớm</li>
+        <li><span class="accent">Provide patterns trong CLAUDE.md</span> → agent biết "đúng cách"</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Khi nào rollback vs. tiếp tục</div>
+      <ul class="bullet-list">
+        <li>&lt;3 attempts: tiếp tục, cung cấp guidance</li>
+        <li>3–5 attempts: human review spec + code</li>
+        <li>&gt;5 attempts: rollback + rewrite từ đầu</li>
+        <li>Loop sau clarification: root cause issue</li>
+      </ul>
+    </div>
+  </div>
+  <blockquote class="matrix-quote" style="margin-top:16px;">
+    Spec mơ hồ = loop trap đang chờ. Mỗi phút clarify spec trước implement tiết kiệm 10 phút debug loop.
+  </blockquote>
+</div>
+
+<!-- s35: MODEL DEPENDENCY TABLE -->
+<div class="slide scrollable" id="s35">
+  <h3 class="slide-title">Model Dependency — Intelligence Ceiling</h3>
+  <p style="margin-bottom:14px;">Mọi agentic framework — Cline, Claude Code, Cursor Composer — đều là orchestration layer. Chất lượng output cuối cùng bị bounded bởi model LLM bên trong. Architecture agent tốt với model kém → kết quả tệ hơn architecture đơn giản với model tốt.</p>
+  <table class="matrix-table" style="margin-bottom:14px;">
+    <tr><th>Model</th><th>Strengths cho coding</th><th>Weaknesses</th><th>Best for agentic tasks</th></tr>
+    <tr><td><span class="accent">Claude Sonnet</span></td><td>Code quality, reasoning, spec compliance</td><td>Cost &gt; Haiku</td><td><span class="accent">Business logic, spec implementation</span></td></tr>
+    <tr><td>Claude Haiku</td><td>Speed, cost-efficient</td><td>Complex multi-step reasoning</td><td>Boilerplate, simple tasks</td></tr>
+    <tr><td>GPT-4o</td><td>Multi-modal, broad knowledge</td><td>Slightly less rigorous spec compliance</td><td>General coding, documentation</td></tr>
+    <tr><td>Llama 3 (local)</td><td>Privacy, no API cost</td><td>Weaker complex reasoning</td><td>Sensitive code, offline work</td></tr>
+    <tr><td>o1/o3 (OpenAI)</td><td>Deep reasoning, math</td><td>Very slow, very expensive</td><td>Algorithm design, formal verification</td></tr>
+  </table>
+  <div class="alert-box tip">
+    <strong>Implication cho SDD</strong>
+    Model tốt nhất cho SDD workflow là model có khả năng: (1) theo đúng EARS specification, (2) tự phát hiện khi đang vi phạm constraint, (3) đặt câu hỏi thay vì guess. Hiện tại <span class="accent">Claude Sonnet</span> thể hiện tốt nhất về cả ba tiêu chí này cho mid-complexity features.
+  </div>
+</div>
+
+<!-- s36: CONTEXT CLIFF + HALLUCINATION -->
+<div class="slide scrollable" id="s36">
+  <h3 class="slide-title">Context Window Cliff + API Hallucination</h3>
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-title" style="color:var(--hl-r);">Context Window Cliff — Khi Agent Đột Ngột "Quên"</div>
+    <p style="margin-bottom:8px;">Context window không fade out dần dần — nó có một "cliff" (vách đá). Khi đạt đến giới hạn (~180K tokens cho Claude), phần đầu của context bị drop. Output quality drops đột ngột.</p>
+    <ul class="bullet-list">
+      <li>Symptom: agent generate code không tuân theo patterns đã thống nhất</li>
+      <li>Symptom: agent hỏi lại thông tin đã có trong spec</li>
+      <li>Fix: periodic context summarization ("Tóm tắt những gì đã làm và constraints quan trọng")</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title" style="color:var(--hl-y);">Hallucination về API/Library</div>
+    <p style="margin-bottom:8px;">Agent có thể confabulate API methods không tồn tại, đặc biệt với libraries ít phổ biến hoặc version mới.</p>
+    <pre class="code-block" style="margin:0;">
+# Ví dụ hallucination:
+# Agent viết: redis_client.set_with_ttl("key", value, ttl=300)
+# Thực tế:    redis_client.setex("key", 300, value)
+
+# Prevention:
+# 1. Thêm vào CLAUDE.md: library version + usage examples
+# 2. Cung cấp actual code examples trong spec
+# 3. Sau khi agent write code: "Verify tất cả API calls là hợp lệ"
+# 4. Luôn chạy code sau khi generate — import errors catch ngay</pre>
+  </div>
+</div>
+
+<!-- s37: LONG-RANGE + SUMMARY TABLE -->
+<div class="slide scrollable" id="s37">
+  <h3 class="slide-title">Long-range Dependency Blindness + Tóm Tắt Giới Hạn</h3>
+  <p style="margin-bottom:10px;">Agent thường rất tốt với local code nhưng yếu hơn với long-range dependencies: thay đổi một file ảnh hưởng đến file khác 20 modules downstream. Đây là lý do integration tests quan trọng hơn unit tests khi dùng agent.</p>
+  <table class="matrix-table">
+    <tr><th>Giới hạn</th><th>Biểu hiện</th><th>Mitigation</th><th>Không thể tránh khi</th></tr>
+    <tr><td><span class="red">Token Burn</span></td><td>Chi phí cao bất ngờ</td><td>Hard limits, task decomp, Haiku cho simple</td><td>Complex multi-file refactor</td></tr>
+    <tr><td><span class="red">Loop Trap</span></td><td>Agent không converge</td><td>Clarification, rollback, human intervention</td><td>Spec ambiguous về constraints</td></tr>
+    <tr><td><span class="yellow">Model Dependency</span></td><td>Quality ceiling</td><td>Use right model for task type</td><td>Budget restricts to weak model</td></tr>
+    <tr><td><span class="yellow">Context Cliff</span></td><td>Agent "quên"</td><td>Periodic summarization, smaller tasks</td><td>Session &gt;4h on complex codebase</td></tr>
+    <tr><td><span class="yellow">API Hallucination</span></td><td>Code fails at runtime</td><td>Run code immediately, library docs in context</td><td>Obscure libraries, new versions</td></tr>
+    <tr><td><span class="yellow">Long-range Blind</span></td><td>Hidden breaking changes</td><td>Run full test suite, not just unit tests</td><td>Large codebase, many dependencies</td></tr>
+  </table>
+</div>
+
+<!-- s38: TỔNG KẾT + NEXT CHAPTER -->
+<div class="slide scrollable" id="s38">
+  <h3 class="slide-title" style="text-align:center;margin-bottom:20px;">Tổng Kết Chương 9</h3>
+  <table class="matrix-table" style="margin-bottom:18px;">
+    <tr><th>Phần</th><th>Key concept</th><th>Điểm cốt lõi</th></tr>
+    <tr><td>9.1 — Định nghĩa</td><td>Perception→Reasoning→Action</td><td><span class="accent">Environmental feedback = sự khác biệt với chatbot</span></td></tr>
+    <tr><td>9.1 — Inference-time</td><td>Extended Thinking</td><td>Agent "nghĩ" trước khi làm — tốn token nhưng quality cao hơn</td></tr>
+    <tr><td>9.2 — Kiến trúc</td><td>Tool Layer + MCP</td><td>MCP chuẩn hóa agent tools — write once, use everywhere</td></tr>
+    <tr><td>9.2 — Checkpoint</td><td>State management</td><td><span class="accent">Checkpoint trước action — safety net cho rollback</span></td></tr>
+    <tr><td>9.3 — Autonomy</td><td>Three-tier spectrum</td><td>Agentic = sweet spot: AI làm 90%, human gates 10% risk</td></tr>
+    <tr><td>9.3 — HITL</td><td>Human-in-the-Loop</td><td>Gate is feature, not bug — control rủi ro cao</td></tr>
+    <tr><td>9.4 — Demo</td><td>Fail → Observe → Fix loop</td><td>Happy path ≠ realistic. Self-correct = real value</td></tr>
+    <tr><td>9.4 — Log analysis</td><td>Reading agent logs</td><td>exit_code, thinking duration, token count = debug signals</td></tr>
+    <tr><td>9.5 — Limits</td><td>Token burn + loop trap</td><td>Design workflow tránh điểm yếu, không fight against them</td></tr>
+  </table>
+  <div class="alert-box info">
+    <strong>Chương tiếp theo — Chương 10: ADD trong thực tế</strong>
+    Chương 10 đưa Agent-Driven Development vào enterprise context: Multi-agent systems, agent orchestration patterns, và safety boundaries. Khi nhiều agents làm việc cùng nhau — Orchestrator, Researcher, Coder, Reviewer — những nguyên tắc gì đảm bảo chúng không conflict hay amplify nhau's mistakes?
+  </div>
+</div>
+
+</div><!-- end #deck -->
+
+<script>
+// === ANTI-COPY PROTECTION ===
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('selectstart',e=>e.preventDefault());
+document.addEventListener('dragstart',e=>e.preventDefault());
+document.addEventListener('copy',e=>e.preventDefault());
+document.addEventListener('keydown',e=>{
+  const c=e.key.toUpperCase();
+  if(e.key==='F12')e.preventDefault();
+  if(e.ctrlKey&&e.shiftKey&&(c==='I'||c==='J'||c==='K'))e.preventDefault();
+  if(e.ctrlKey&&(c==='U'||c==='S'||c==='A'||c==='C'||c==='P'||c==='F'))e.preventDefault();
+});
+
+// === MATRIX RAIN ===
+(function(){
+  const canvas=document.getElementById('matrix');
+  const ctx=canvas.getContext('2d');
+  let W,H,cols,drops;
+  const chars='アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789ABCDEF';
+  function resize(){
+    W=canvas.width=window.innerWidth;
+    H=canvas.height=window.innerHeight;
+    cols=Math.floor(W/16);
+    drops=Array(cols).fill(1);
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  setInterval(()=>{
+    ctx.fillStyle='rgba(1,21,0,0.05)';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#00ff55';
+    ctx.font='14px monospace';
+    drops.forEach((y,i)=>{
+      ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*16,y*16);
+      if(y*16>H&&Math.random()>0.975)drops[i]=0;
+      drops[i]++;
+    });
+  },50);
+})();
+
+// === SLIDE ENGINE ===
+const TOTAL=39;
+let current=0;
+function showSlide(n){
+  document.querySelectorAll('.slide').forEach(s=>s.classList.remove('active'));
+  current=((n%TOTAL)+TOTAL)%TOTAL;
+  const el=document.getElementById('s'+current);
+  if(el){el.classList.add('active');el.scrollTop=0;}
+  document.getElementById('counter').textContent=(current+1)+' / '+TOTAL;
+  document.getElementById('progress').style.width=((current+1)/TOTAL*100)+'%';
+}
+function nextSlide(){showSlide(current+1);}
+function prevSlide(){showSlide(current-1);}
+
+// === KEYBOARD NAV ===
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();nextSlide();}
+  else if(e.key==='ArrowLeft'){e.preventDefault();prevSlide();}
+  else if(e.key>='1'&&e.key<='5'){
+    const secMap={'1':3,'2':9,'3':15,'4':20,'5':29};
+    if(secMap[e.key]!==undefined)showSlide(secMap[e.key]);
+  }
+});
+
+// === TOUCH / SWIPE ===
+let tsx=0,tsy=0;
+document.addEventListener('touchstart',e=>{tsx=e.touches[0].clientX;tsy=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=tsx-e.changedTouches[0].clientX;
+  const dy=tsy-e.changedTouches[0].clientY;
+  if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){dx>0?nextSlide():prevSlide();}
+},{passive:true});
+
+showSlide(0);
+</script>
+</body>
+</html>

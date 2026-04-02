@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chương 1: Lịch Sử Tiến Hóa Phương Pháp PTPM</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Cormorant+Garamond:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --matrix-green: #00ff55;
+    --matrix-mid: #00e64a;
+    --matrix-dark: #00bb38;
+    --matrix-dim: #008f2a;
+    --bg: #011500;
+    --bg2: #021d00;
+    --text: #ffffff;
+    --text-dim: #ccffcc;
+    --text-faint: #7de87d;
+    --card-bg: rgba(0, 255, 65, 0.09);
+    --card-border: rgba(0, 255, 65, 0.5);
+    --glow: 0 0 10px rgba(0,255,65,0.5), 0 0 30px rgba(0,255,65,0.2);
+    --glow-strong: 0 0 20px rgba(0,255,65,0.8), 0 0 60px rgba(0,255,65,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(ellipse at 50% 0%, #022800 0%, #011500 60%, #010f00 100%);
+    color: var(--text);
+    font-family: 'Josefin Sans', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    user-select: none;
+  }
+
+  /* Matrix Rain Canvas */
+  #matrix-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0.09;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Scanlines overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.04) 3px,
+      rgba(0,0,0,0.04) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Progress Bar */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--matrix-green), var(--matrix-mid));
+    transition: width 0.4s ease;
+    z-index: 200;
+    box-shadow: var(--glow);
+  }
+
+  /* Navigation UI */
+  #nav-ui {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 200;
+    background: rgba(0, 12, 0, 0.88);
+    border: 1px solid var(--card-border);
+    padding: 10px 24px;
+    border-radius: 2px;
+    backdrop-filter: blur(6px);
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: 1px solid var(--matrix-dark);
+    color: var(--matrix-green);
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 18px;
+    width: 36px; height: 36px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-btn:hover {
+    border-color: var(--matrix-green);
+    box-shadow: var(--glow);
+    background: rgba(0,255,65,0.05);
+  }
+  .nav-btn:disabled { opacity: 0.2; cursor: default; }
+
+  #slide-counter {
+    color: #ffffff;
+    font-size: 15px;
+    letter-spacing: 4px;
+    min-width: 80px;
+    text-align: center;
+    font-weight: 300;
+  }
+
+  /* Slide Container */
+  #slideshow {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+  }
+
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 40px 52px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .slide.active {
+    display: flex;
+    opacity: 1;
+  }
+  .slide.fade-in { animation: fadeIn 0.5s ease forwards; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Slide Type: Title */
+  .slide-title {
+    text-align: center;
+    gap: 0;
+  }
+
+  .chapter-label {
+    font-family: 'Josefin Sans', sans-serif;
+    color: var(--text-faint);
+    font-size: 16px;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    font-weight: 300;
+    margin-bottom: 20px;
+  }
+
+  h1.title-main {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--matrix-green);
+    font-size: clamp(44px, 6.5vw, 80px);
+    font-weight: 700;
+    line-height: 1.15;
+    text-shadow: var(--glow-strong);
+    margin-bottom: 16px;
+    letter-spacing: 4px;
+  }
+
+  .title-sub {
+    font-family: 'Josefin Sans', sans-serif;
+    color: #ffffff;
+    font-size: clamp(18px, 2.2vw, 28px);
+    font-weight: 300;
+    letter-spacing: 2px;
+    margin-bottom: 40px;
+    max-width: 760px;
+  }
+
+  .title-divider {
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--matrix-green), transparent);
+    margin: 20px auto;
+  }
+
+  .title-footer {
+    font-size: 15px;
+    color: var(--matrix-dim);
+    letter-spacing: 5px;
+    font-weight: 300;
+    text-transform: uppercase;
+  }
+
+  .title-credit {
+    margin-top: 14px;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--text-faint);
+  }
+
+  /* Slide Type: Section Header */
+  .slide-section-header {
+    text-align: center;
+    position: relative;
+  }
+
+  .section-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(60px, 10vw, 120px);
+    font-weight: 900;
+    color: rgba(0,255,65,0.08);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    letter-spacing: -5px;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .section-tag {
+    font-family: 'Josefin Sans', sans-serif;
+    color: var(--matrix-dark);
+    font-size: 15px;
+    letter-spacing: 7px;
+    text-transform: uppercase;
+    font-weight: 300;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  h2.section-title {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--matrix-green);
+    font-size: clamp(34px, 4.5vw, 60px);
+    font-weight: 700;
+    text-shadow: var(--glow);
+    position: relative;
+    z-index: 1;
+    line-height: 1.25;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  .section-desc {
+    font-family: 'Josefin Sans', sans-serif;
+    color: #ffffff;
+    font-size: clamp(17px, 1.9vw, 24px);
+    max-width: 680px;
+    line-height: 1.7;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Slide Type: Content */
+  .slide-content {
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 48px;
+    gap: 0;
+  }
+
+  .slide-header {
+    margin-bottom: 28px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .slide-tag {
+    font-size: 13px;
+    color: var(--matrix-dark);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    font-weight: 300;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  h2.content-title {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--matrix-green);
+    font-size: clamp(28px, 3.4vw, 48px);
+    font-weight: 700;
+    text-shadow: var(--glow);
+    line-height: 1.25;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+
+  h3.content-subtitle {
+    font-family: 'Josefin Sans', sans-serif;
+    color: var(--matrix-mid);
+    font-size: clamp(18px, 2vw, 26px);
+    font-weight: 600;
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+
+  .content-body {
+    font-family: 'Josefin Sans', sans-serif;
+    color: #ffffff;
+    font-size: clamp(18px, 1.9vw, 26px);
+    line-height: 1.8;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    width: 100%;
+  }
+
+  p.para { margin-bottom: 14px; }
+
+  /* Cards */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 18px 24px;
+    margin-bottom: 16px;
+    position: relative;
+    width: 100%;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--matrix-green);
+    box-shadow: var(--glow);
+  }
+
+  .card-title {
+    font-family: 'Josefin Sans', sans-serif;
+    color: var(--matrix-green);
+    font-size: 13px;
+    letter-spacing: 4px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* Bullet Lists */
+  .bullet-list {
+    list-style: none;
+    width: 100%;
+  }
+
+  .bullet-list li {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: clamp(15px, 1.6vw, 20px);
+    color: #ffffff;
+    padding: 10px 0 10px 26px;
+    border-bottom: 1px solid rgba(0,255,65,0.1);
+    position: relative;
+    line-height: 1.65;
+    letter-spacing: 0.3px;
+  }
+
+  .bullet-list li::before {
+    content: '▸';
+    color: var(--matrix-green);
+    position: absolute;
+    left: 0;
+    font-size: 12px;
+  }
+
+  /* Quote */
+  blockquote.matrix-quote {
+    border-left: 3px solid var(--matrix-green);
+    padding: 16px 24px;
+    background: rgba(0,255,65,0.07);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(17px, 1.8vw, 24px);
+    color: #ffffff;
+    line-height: 1.75;
+    margin: 16px 0;
+    width: 100%;
+  }
+
+  blockquote.matrix-quote cite {
+    display: block;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--matrix-dark);
+    font-family: 'Josefin Sans', sans-serif;
+    font-style: normal;
+    letter-spacing: 3px;
+    font-weight: 300;
+  }
+
+  /* Big Quote Slide */
+  .big-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(26px, 3.2vw, 44px);
+    color: #ffffff;
+    text-align: center;
+    line-height: 1.65;
+    font-style: italic;
+    max-width: 900px;
+    text-shadow: none;
+    position: relative;
+    font-weight: 400;
+  }
+
+  .big-quote::before { content: '"'; font-size: 80px; color: rgba(0,255,65,0.1); position: absolute; top: -30px; left: -20px; font-style: normal; line-height: 1; font-family: Georgia, serif; }
+
+  .big-quote cite {
+    display: block;
+    margin-top: 28px;
+    font-size: 12px;
+    color: var(--matrix-dark);
+    font-family: 'Josefin Sans', sans-serif;
+    letter-spacing: 5px;
+    font-style: normal;
+    font-weight: 300;
+    text-transform: uppercase;
+  }
+
+  /* Tables */
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 10px;
+  }
+
+  table.matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: clamp(11px, 1vw, 13px);
+  }
+
+  table.matrix-table th {
+    background: rgba(0,255,65,0.18);
+    color: var(--matrix-green);
+    padding: 12px 18px;
+    text-align: left;
+    border: 1px solid rgba(0,255,65,0.5);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  table.matrix-table td {
+    padding: 11px 18px;
+    border: 1px solid rgba(0,255,65,0.18);
+    color: #ffffff;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: clamp(13px, 1.3vw, 16px);
+    line-height: 1.55;
+    letter-spacing: 0.2px;
+    vertical-align: top;
+  }
+
+  table.matrix-table tr:hover td {
+    background: rgba(0,255,65,0.06);
+  }
+
+  table.matrix-table tr:nth-child(even) td {
+    background: rgba(0,255,65,0.03);
+  }
+
+  .table-title {
+    font-family: 'Josefin Sans', sans-serif;
+    color: var(--matrix-mid);
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Data Points */
+  .data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .data-point {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+
+  .data-point::after {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 40px; height: 40px;
+    background: radial-gradient(circle at bottom right, rgba(0,255,65,0.1), transparent);
+  }
+
+  .data-stat {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--matrix-green);
+    font-size: clamp(32px, 3.8vw, 52px);
+    font-weight: 700;
+    text-shadow: var(--glow);
+    line-height: 1;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+
+  .data-desc {
+    font-family: 'Josefin Sans', sans-serif;
+    color: #ffffff;
+    font-size: clamp(14px, 1.4vw, 17px);
+    line-height: 1.55;
+    font-weight: 300;
+    letter-spacing: 0.3px;
+  }
+
+  .data-source {
+    font-size: 12px;
+    color: var(--matrix-dim);
+    margin-top: 8px;
+    letter-spacing: 2px;
+    font-weight: 300;
+    text-transform: uppercase;
+  }
+
+  /* Two Column Layout */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+  }
+
+  /* Alert/Warning */
+  .alert-box {
+    border: 1px solid;
+    padding: 16px 20px;
+    margin: 12px 0;
+    position: relative;
+    width: 100%;
+  }
+
+  .alert-box.info { border-color: #44aaff; background: rgba(0,100,255,0.1); }
+  .alert-box.info .alert-icon { color: #44aaff; }
+
+  .alert-box.warn { border-color: #ffcc00; background: rgba(255,200,0,0.08); }
+  .alert-box.warn .alert-icon { color: #ffcc00; }
+
+  .alert-box.danger { border-color: #ff5555; background: rgba(255,50,50,0.08); }
+  .alert-box.danger .alert-icon { color: #ff5555; }
+
+  .alert-box.tip { border-color: var(--matrix-green); background: rgba(0,255,65,0.08); }
+  .alert-box.tip .alert-icon { color: var(--matrix-green); }
+
+  .alert-icon {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 600;
+  }
+
+  .alert-text {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: clamp(15px, 1.5vw, 19px);
+    line-height: 1.75;
+    color: #ffffff;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+  }
+
+  /* TOC */
+  .toc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .toc-item {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .toc-item:hover {
+    border-color: var(--matrix-green);
+    background: rgba(0,255,65,0.08);
+    box-shadow: var(--glow);
+  }
+
+  .toc-num {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--matrix-dim);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    min-width: 30px;
+  }
+
+  .toc-text {
+    font-family: 'Josefin Sans', sans-serif;
+    color: #ffffff;
+    font-size: clamp(15px, 1.5vw, 19px);
+    line-height: 1.55;
+    letter-spacing: 0.5px;
+  }
+
+  /* Tags for approaches */
+  .approach-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    border: 1px solid;
+    margin-right: 8px;
+    margin-bottom: 4px;
+  }
+
+  .tag-green { border-color: var(--matrix-green); color: var(--matrix-green); }
+  .tag-blue { border-color: #00aaff; color: #00aaff; }
+  .tag-orange { border-color: #ffaa00; color: #ffaa00; }
+  .tag-red { border-color: #ff4444; color: #ff4444; }
+  .tag-star { border-color: #ffdd00; color: #ffdd00; }
+
+  /* Summary checklist */
+  .summary-list {
+    list-style: none;
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  .summary-list li {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: clamp(16px, 1.7vw, 21px);
+    color: #ffffff;
+    padding: 14px 0 14px 32px;
+    border-bottom: 1px solid rgba(0,255,65,0.12);
+    position: relative;
+    line-height: 1.6;
+    letter-spacing: 0.3px;
+  }
+  .summary-list li::before {
+    content: '✓';
+    color: var(--matrix-green);
+    position: absolute;
+    left: 0;
+    text-shadow: var(--glow);
+    font-size: 16px;
+  }
+
+  /* Next chapter box */
+  .next-chapter {
+    background: rgba(0,255,65,0.07);
+    border: 1px solid rgba(0,255,65,0.4);
+    padding: 22px 32px;
+    text-align: center;
+    margin-top: 24px;
+    max-width: 640px;
+  }
+  .next-label { font-size: 11px; color: var(--matrix-dark); letter-spacing: 5px; margin-bottom: 10px; font-weight: 300; font-family: 'Josefin Sans', sans-serif; text-transform: uppercase; }
+  .next-title { font-family: 'Cormorant Garamond', serif; color: #ffffff; font-size: clamp(14px, 1.5vw, 18px); font-weight: 600; letter-spacing: 1px; }
+
+  /* Separator line */
+  .sep { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, var(--matrix-dim), transparent); margin: 16px 0; }
+
+  /* Highlight span */
+  .hl { color: var(--matrix-green); font-weight: 600; }
+  .hl-b { color: #55ccff; }
+  .hl-o { color: #ffc844; }
+  .hl-r { color: #ff7070; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .slide { padding: 48px 24px 72px; }
+    .two-col { grid-template-columns: 1fr; }
+    .toc-grid { grid-template-columns: 1fr; }
+    .data-grid { grid-template-columns: 1fr 1fr; }
+  }
+  #author{position:fixed;bottom:10px;left:20px;z-index:200;font-family:'Josefin Sans',sans-serif;
+    font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(0,255,65,.35);
+    pointer-events:none;user-select:none}
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+<div id="progress-bar"></div>
+<div id="author">LinhNDM &mdash; Nguyễn Đình Mạnh Linh</div>
+
+<div id="slideshow">
+
+  <!-- SLIDE 1: TITLE -->
+  <div class="slide slide-title active fade-in" data-slide="1">
+    <div class="chapter-label">// PLAYBOOK: SPEC-DRIVEN & AGENT-DRIVEN DEVELOPMENT</div>
+    <h1 class="title-main">Lịch Sử Tiến Hóa<br>Phương Pháp PTPM</h1>
+    <div class="title-divider"></div>
+    <div class="title-sub">Từ Waterfall đến Agentic AI · và tại sao mọi thứ bạn biết về lập trình đang được viết lại</div>
+    <div class="title-footer">CHƯƠNG 1 &nbsp;·&nbsp; SDD BOOTCAMP &nbsp;·&nbsp; 2026</div>
+    <div class="title-credit">@2025 LinhNDM - Nguyễn Đình Mạnh Linh</div>
+  </div>
+
+  <!-- SLIDE 2: GIỚI THIỆU -->
+  <div class="slide slide-content" data-slide="2">
+    <div class="slide-header">
+      <div class="slide-tag">// GIỚI THIỆU CHƯƠNG</div>
+      <h2 class="content-title">Tổng Quan Chương 1</h2>
+    </div>
+    <div class="content-body" style="max-width: 900px;">
+      <p class="para">Chương này đưa bạn qua hành trình <span class="hl">nửa thế kỷ tiến hóa</span> của phương pháp phát triển phần mềm — từ Waterfall cứng nhắc, qua Agile linh hoạt, đến DevOps tự động hóa, và cuối cùng là <span class="hl">kỷ nguyên AI Agents</span> đang định hình lại toàn bộ cách chúng ta viết phần mềm.</p>
+      <p class="para">Đây không phải lịch sử thuần túy, mà là bối cảnh để hiểu vì sao <span class="hl">SDD</span> và <span class="hl">ADD</span> xuất hiện như một tất yếu trong giai đoạn 2025-2026.</p>
+      <p class="para">Ba paradigm lớn được phân tích theo thứ tự tiến hóa: <span class="hl">Vibe Coding</span>, <span class="hl">Spec-Driven Development</span>, và <span class="hl">Agent-Driven Development</span>. Mỗi paradigm được trình bày với ví dụ thực tế, ưu nhược điểm, và trường hợp sử dụng.</p>
+      <div class="sep"></div>
+      <div class="card">
+        <div class="card-title">ℹ ĐIỂM TRỌNG TÂM CỦA CHƯƠNG</div>
+        <ul class="bullet-list">
+          <li>Phương pháp này giải quyết vấn đề gì của thế hệ trước?</li>
+          <li>Nó tạo ra vấn đề mới nào?</li>
+          <li>Ai nên dùng paradigm nào — và khi nào?</li>
+          <li>Tiếp cận như kỹ sư có tư duy hệ thống, không học theo trào lưu</li>
+        </ul>
+      </div>
+      <div class="alert-box info" style="margin-top: 12px;">
+        <div class="alert-icon">ℹ YÊU CẦU TIÊN QUYẾT</div>
+        <div class="alert-text">Không có yêu cầu tiên quyết · Kiến thức cơ bản về lập trình · Có thể đọc và hiểu code ở mức cơ bản · Sẵn sàng tư duy phê phán về phương pháp và công cụ<br>
+        <span style="color: var(--text-faint); font-size: 12px; margin-top: 6px; display:block;">Tools minh họa: GitHub Copilot · ChatGPT · Claude · Cursor</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: MỤC LỤC -->
+  <div class="slide slide-content" data-slide="3">
+    <div class="slide-header">
+      <div class="slide-tag">// TABLE OF CONTENTS</div>
+      <h2 class="content-title">Mục Lục Chương 1</h2>
+    </div>
+    <div class="toc-grid">
+      <div class="toc-item">
+        <div class="toc-num">1.1</div>
+        <div class="toc-text">Từ Waterfall đến Agile:<br><span style="color: var(--text-dim);">Nửa Thế Kỷ Cô Đặc</span></div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">1.2</div>
+        <div class="toc-text">Sự Xuất Hiện Của AI<br><span style="color: var(--text-dim);">Trong Quy Trình Phát Triển</span></div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">1.3</div>
+        <div class="toc-text">Vibe Coding &amp; Nhu Cầu<br><span style="color: var(--text-dim);">Cấu Trúc — Ba Paradigm</span></div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">1.4</div>
+        <div class="toc-text">Bức Tranh Toàn Cảnh 2026:<br><span style="color: var(--text-dim);">SDD, ADD &amp; Hybrid Approach</span></div>
+      </div>
+      <div class="toc-item" style="grid-column: span 2;">
+        <div class="toc-num" style="font-size: 16px; min-width: 24px;">⚡</div>
+        <div class="toc-text">Hands-on &amp; Thực Tế: Ứng dụng thực tiễn cho đồ án và công việc</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: 1.1 SECTION HEADER -->
+  <div class="slide slide-section-header" data-slide="4">
+    <div class="section-number">1.1</div>
+    <div class="section-tag">// SECTION ONE</div>
+    <h2 class="section-title">Từ Waterfall đến Agile:<br>Nửa Thế Kỷ Cô Đặc</h2>
+    <div class="title-divider" style="margin: 16px 0;"></div>
+    <div class="section-desc">Mỗi phương pháp phát triển phần mềm không xuất hiện từ hư không — nó ra đời để giải quyết vấn đề của phương pháp trước đó.</div>
+  </div>
+
+  <!-- SLIDE 5: WATERFALL -->
+  <div class="slide slide-content" data-slide="5">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.1 · KỶ NGUYÊN WATERFALL</div>
+      <h2 class="content-title">Waterfall (1970–1990s): "Lên Kế Hoạch Mọi Thứ Trước Khi Code"</h2>
+    </div>
+    <div class="content-body">
+      <p class="para">Năm 1970, <span class="hl">Winston Royce</span> xuất bản bài báo mô tả quy trình phát triển phần mềm tuần tự: <span class="hl">Requirements → Design → Implementation → Verification → Maintenance</span>. Mô hình Waterfall chỉ chảy một chiều từ trên xuống. Điều thú vị là chính Royce cũng cảnh báo mô hình này có nhiều rủi ro.</p>
+      <div class="two-col" style="margin-top: 10px;">
+        <div class="card">
+          <div class="card-title">✓ WATERFALL HOẠT ĐỘNG TỐT KHI...</div>
+          <ul class="bullet-list">
+            <li>Phần mềm giao trên đĩa mềm hoặc băng từ — thay đổi sau khi ship cực kỳ tốn kém</li>
+            <li>Yêu cầu phần mềm tương đối ổn định (hệ thống quân sự, ngân hàng)</li>
+            <li>Cần quy trình rõ ràng, tài liệu hóa đầy đủ cho dự án lớn</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color: #ff5555;">✗ VẤN ĐỀ CỐT LÕI</div>
+          <ul class="bullet-list">
+            <li><span class="hl-r">Khách hàng không biết chính xác mình muốn gì</span> cho đến khi thấy sản phẩm chạy</li>
+            <li>Khi phần mềm hoàn thành sau 2–3 năm, yêu cầu đã thay đổi</li>
+            <li>Sản phẩm trở nên lỗi thời ngay khi giao</li>
+          </ul>
+        </div>
+      </div>
+      <blockquote class="matrix-quote" style="margin-top: 14px;">
+        Kế hoạch chi tiết là cần thiết, nhưng kế hoạch không thể thay đổi là nguy hiểm. Đây cũng là bài học sẽ quay lại khi chúng ta nói về Spec-Driven Development — viết spec tốt không có nghĩa là "đông cứng" spec.
+        <cite>💡 BÀI HỌC TỪ WATERFALL</cite>
+      </blockquote>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: AGILE -->
+  <div class="slide slide-content" data-slide="6">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.1 · KỶ NGUYÊN AGILE</div>
+      <h2 class="content-title">Agile (2001–2015): "Thay Đổi Là Bình Thường"</h2>
+    </div>
+    <div class="content-body">
+      <p class="para">Tháng 2 năm 2001, <span class="hl">17 nhà phát triển phần mềm</span> gặp nhau tại Utah và viết ra <span class="hl">Agile Manifesto</span> — một tài liệu chỉ vỏn vẹn <span class="hl">68 từ</span> đã thay đổi toàn bộ ngành phần mềm.</p>
+      <div class="two-col" style="margin-top: 10px;">
+        <div class="card">
+          <div class="card-title">4 GIÁ TRỊ CỐT LÕI AGILE</div>
+          <ul class="bullet-list">
+            <li><span class="hl">Con người &amp; tương tác</span> hơn là quy trình &amp; công cụ</li>
+            <li><span class="hl">Phần mềm chạy được</span> hơn là tài liệu đầy đủ</li>
+            <li><span class="hl">Hợp tác với khách hàng</span> hơn là đàm phán hợp đồng</li>
+            <li><span class="hl">Phản hồi với thay đổi</span> hơn là tuân theo kế hoạch</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">CÁC FRAMEWORK AGILE</div>
+          <ul class="bullet-list">
+            <li><span class="hl">Scrum</span> — Sprint 2 tuần, daily standup, retrospective</li>
+            <li><span class="hl">Kanban</span> — Việc chảy liên tục, giới hạn WIP</li>
+            <li><span class="hl">XP / Extreme Programming</span> — Pair programming, TDD, CI</li>
+          </ul>
+        </div>
+      </div>
+      <div class="alert-box warn" style="margin-top: 14px;">
+        <div class="alert-icon">⚠ VẤN ĐỀ MỚI CỦA AGILE</div>
+        <div class="alert-text">Agile giải quyết tốt "yêu cầu thay đổi", nhưng tạo ra thách thức mới: Làm thế nào để giao hàng liên tục mà không hy sinh chất lượng? Làm thế nào để code luôn sẵn sàng deploy? → Câu trả lời dẫn đến <span class="hl">DevOps</span>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: DEVOPS -->
+  <div class="slide slide-content" data-slide="7">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.1 · KỶ NGUYÊN DEVOPS & CI/CD</div>
+      <h2 class="content-title">DevOps &amp; CI/CD (2010s–2022): "Tự Động Hóa Mọi Thứ Có Thể"</h2>
+    </div>
+    <div class="content-body">
+      <p class="para">DevOps là một <span class="hl">văn hóa</span>: xóa bỏ bức tường giữa <span class="hl">Development</span> và <span class="hl">Operations</span>. CI/CD trở thành tiêu chuẩn: mỗi lần commit code, hệ thống tự động build, test, và deploy.</p>
+      <div class="two-col" style="margin-top: 10px;">
+        <div class="card">
+          <div class="card-title">CÔNG CỤ TIÊU BIỂU</div>
+          <ul class="bullet-list">
+            <li>Jenkins · GitLab CI · GitHub Actions</li>
+            <li>Docker · Kubernetes (container orchestration)</li>
+            <li>Terraform · Ansible (infrastructure as code)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">GOOGLE DORA METRICS</div>
+          <ul class="bullet-list">
+            <li>Deployment frequency (tần suất deploy)</li>
+            <li>Lead time (thời gian từ code đến prod)</li>
+            <li>Change failure rate (tỷ lệ lỗi sau deploy)</li>
+            <li>Recovery time (thời gian phục hồi)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="alert-box danger" style="margin-top: 14px;">
+        <div class="alert-icon">⚡ BOTTLENECK VẪN CÒN ĐÓ</div>
+        <div class="alert-text">Dù CI/CD có nhanh đến mấy, nếu developer mất <span class="hl">3 ngày để viết một feature</span>, thì pipeline vẫn phải chờ 3 ngày. Bottleneck lớn nhất vẫn là: <span class="hl">con người viết code</span>. Đây là lúc AI bước vào cuộc chơi.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: TABLE 1.1 -->
+  <div class="slide slide-content" data-slide="8">
+    <div class="slide-header">
+      <div class="slide-tag">// BẢNG 1.1</div>
+      <h2 class="content-title">Timeline Tiến Hóa Phương Pháp Phát Triển Phần Mềm</h2>
+    </div>
+    <div class="table-wrapper">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Giai đoạn</th>
+            <th>Phương pháp</th>
+            <th>Giải quyết vấn đề</th>
+            <th>Tạo vấn đề mới</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="hl">1970s</span></td>
+            <td>Waterfall</td>
+            <td>Cần quy trình rõ ràng cho dự án lớn</td>
+            <td><span class="hl-r">Không thích ứng được thay đổi</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">1990s</span></td>
+            <td>RUP / Iterative</td>
+            <td>Chia thành iterations nhỏ hơn</td>
+            <td><span class="hl-r">Quá nhiều documentation</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">2001</span></td>
+            <td>Agile / Scrum</td>
+            <td>Thích ứng nhanh, phản hồi sớm với thay đổi</td>
+            <td><span class="hl-r">Giao hàng liên tục = áp lực ops</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">2010s</span></td>
+            <td>DevOps / CI/CD</td>
+            <td>Tự động hóa deploy, giảm bottleneck ops</td>
+            <td><span class="hl-r">Bottleneck: tốc độ viết code</span></td>
+          </tr>
+          <tr style="background: rgba(0,255,65,0.04);">
+            <td><span class="hl">2022+</span></td>
+            <td><span class="hl">AI-Assisted</span></td>
+            <td><span class="hl">Tăng tốc viết code đột biến</span></td>
+            <td><span class="hl-o">Chất lượng, kiểm soát, trust?</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: 1.2 SECTION HEADER -->
+  <div class="slide slide-section-header" data-slide="9">
+    <div class="section-number">1.2</div>
+    <div class="section-tag">// SECTION TWO</div>
+    <h2 class="section-title">Sự Xuất Hiện Của AI<br>Trong Coding (2022–2026)</h2>
+    <div class="title-divider" style="margin: 16px 0;"></div>
+    <div class="section-desc">Nếu Agile mất 20 năm để trở thành mainstream, thì AI coding tools chỉ mất 3 năm. Tốc độ áp dụng là chưa từng có tiền lệ trong lịch sử ngành.</div>
+  </div>
+
+  <!-- SLIDE 10: AI STAGE 1 -->
+  <div class="slide slide-content" data-slide="10">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.2 · GIAI ĐOẠN 1</div>
+      <h2 class="content-title">Autocomplete: "Gợi Ý Dòng Tiếp Theo" (2021–2023)</h2>
+    </div>
+    <div class="content-body">
+      <p class="para"><span class="hl">GitHub Copilot</span> ra mắt bản technical preview vào tháng 6/2021 và GA tháng 6/2022. Đây là công cụ đầu tiên mang AI vào IDE của hàng triệu developer dưới dạng một thứ rất quen thuộc: <span class="hl">autocomplete</span>.</p>
+      <div class="two-col" style="margin-top: 14px;">
+        <div class="card">
+          <div class="card-title">ĐẶC ĐIỂM</div>
+          <ul class="bullet-list">
+            <li>AI hoạt động ở mức <span class="hl">dòng code và hàm</span></li>
+            <li>Không hiểu dự án, không biết kiến trúc tổng thể</li>
+            <li>Không đọc file khác ngoài file hiện tại</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">WORKFLOW</div>
+          <ul class="bullet-list">
+            <li>Bạn gõ một vài dòng → AI gợi ý phần còn lại</li>
+            <li>Tab để accept, Esc để reject</li>
+            <li>Đơn giản, nhanh, lập tức hữu ích</li>
+          </ul>
+        </div>
+      </div>
+      <blockquote class="matrix-quote" style="margin-top: 16px;">
+        Giống một người bạn ngồi cạnh biết rất nhiều pattern code, nhưng không biết gì về dự án bạn đang làm.
+      </blockquote>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: AI STAGE 2 -->
+  <div class="slide slide-content" data-slide="11">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.2 · GIAI ĐOẠN 2</div>
+      <h2 class="content-title">Chat-Based: "Hỏi AI, Nhận Code" (2023–2024)</h2>
+    </div>
+    <div class="content-body">
+      <p class="para"><span class="hl">ChatGPT</span> ra mắt tháng 11/2022 và thay đổi mọi thứ. Lần đầu tiên, developer có thể mô tả vấn đề bằng ngôn ngữ tự nhiên và nhận lại một khối code hoàn chỉnh. Tiếp theo: <span class="hl">Claude</span> (Anthropic), <span class="hl">Gemini</span> (Google), <span class="hl">Cursor</span> (2023).</p>
+      <div class="two-col" style="margin-top: 14px;">
+        <div class="card">
+          <div class="card-title">ĐẶC ĐIỂM</div>
+          <ul class="bullet-list">
+            <li>AI hoạt động ở mức <span class="hl">khối code và file</span></li>
+            <li>Bạn copy-paste code vào chat, AI sửa và trả lại</li>
+            <li>Context = những gì bạn paste vào</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">WORKFLOW</div>
+          <ul class="bullet-list">
+            <li>Hỏi → Nhận code → Copy về IDE → Test</li>
+            <li>Không chạy → Hỏi lại → Vòng lặp tiếp tục</li>
+            <li><span class="hl-r">Điểm yếu: vòng lặp copy-paste</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="alert-box warn" style="margin-top: 14px;">
+        <div class="alert-icon">⚠ GIỚI HẠN</div>
+        <div class="alert-text">Mô hình hỏi-đáp tạo ra vòng lặp thủ công tốn thời gian. AI không có khả năng tự chạy code, kiểm tra kết quả, hay đọc toàn bộ codebase — đây là giới hạn cần vượt qua.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: AI STAGE 3 -->
+  <div class="slide slide-content" data-slide="12">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.2 · GIAI ĐOẠN 3</div>
+      <h2 class="content-title">Agentic: "AI Tự Làm, Bạn Duyệt" (2025–Nay)</h2>
+    </div>
+    <div class="content-body">
+      <p class="para">Bước nhảy lớn nhất xảy ra từ đầu 2025. <span class="hl">Claude Code</span> (Anthropic, 02/2025), GitHub Copilot Agent Mode, Cursor Agent Mode, OpenAI Codex CLI — tất cả chuyển từ mô hình "hỏi-đáp" sang mô hình <span class="hl">"ủy quyền"</span>.</p>
+      <div class="two-col" style="margin-top: 14px;">
+        <div class="card">
+          <div class="card-title">ĐẶC ĐIỂM</div>
+          <ul class="bullet-list">
+            <li>AI hoạt động ở mức <span class="hl">toàn bộ dự án</span></li>
+            <li>Tự đọc cả codebase, hiểu kiến trúc, biết file nào liên quan đến file nào</li>
+            <li>Có thể chạy terminal commands, tự kiểm tra kết quả</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">WORKFLOW MỚI</div>
+          <ul class="bullet-list">
+            <li>Bạn <span class="hl">mô tả mục tiêu</span> → Agent tự lên kế hoạch</li>
+            <li>Agent tự edit nhiều file, chạy test, sửa lỗi</li>
+            <li>Tất cả trong <span class="hl">một phiên làm việc duy nhất</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="alert-box tip" style="margin-top: 14px;">
+        <div class="alert-icon">⚡ TOOLS TIÊU BIỂU 2025</div>
+        <div class="alert-text">Claude Code · Cursor Agent Mode · GitHub Copilot Agent · OpenAI Codex CLI · Windsurf</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 13: BIG QUOTE -->
+  <div class="slide slide-section-header" data-slide="13">
+    <div class="big-quote">
+      Thực tế đã chuyển từ bổ trợ code sang ủy quyền code. 10x engineer có thể trở thành 100x engineer — không bằng cách viết nhiều code hơn, mà bằng cách điều phối nhiều agent hơn.
+      <cite>— DEV COMMUNITY · "THE AI REVOLUTION IN 2026"</cite>
+    </div>
+  </div>
+
+  <!-- SLIDE 14: TABLE 1.2 -->
+  <div class="slide slide-content" data-slide="14">
+    <div class="slide-header">
+      <div class="slide-tag">// BẢNG 1.2</div>
+      <h2 class="content-title">Ba Giai Đoạn Tiến Hóa Của AI Coding</h2>
+    </div>
+    <div class="table-wrapper">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Tiêu chí</th>
+            <th>Autocomplete</th>
+            <th>Chat-Based</th>
+            <th>Agentic</th>
+            <th>Xu hướng 2026+</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="hl">Phạm vi</span></td>
+            <td>Dòng / hàm</td>
+            <td>Khối code / file</td>
+            <td><span class="hl">Toàn dự án</span></td>
+            <td><span class="hl-b">Multi-dự án</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">Workflow</span></td>
+            <td>Gõ → Tab</td>
+            <td>Hỏi → Copy → Paste</td>
+            <td><span class="hl">Mô tả → Duyệt</span></td>
+            <td><span class="hl-b">Spec → Auto</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">Context</span></td>
+            <td>File hiện tại</td>
+            <td>Những gì bạn paste</td>
+            <td><span class="hl">Cả codebase</span></td>
+            <td><span class="hl-b">Codebase + MCP</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">Kiểm soát</span></td>
+            <td>Từng dòng</td>
+            <td>Từng khối</td>
+            <td><span class="hl">Từng task</span></td>
+            <td><span class="hl-b">Từng spec</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">Tool tiêu biểu</span></td>
+            <td>Copilot v1</td>
+            <td>ChatGPT, Claude</td>
+            <td><span class="hl">Claude Code, Cursor Agent</span></td>
+            <td><span class="hl-b">Spec Kit + Agent</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">Rủi ro chính</span></td>
+            <td style="color: var(--matrix-dim);">Thấp</td>
+            <td style="color: #ffaa00;">Copy sai context</td>
+            <td style="color: #ff7777;">Agent "tự ý"</td>
+            <td style="color: #ff5555;">Over-reliance</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SLIDE 15: DATA POINTS -->
+  <div class="slide slide-content" data-slide="15">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.2 · DỮ LIỆU THỰC TẾ</div>
+      <h2 class="content-title">Mức Độ Áp Dụng AI Trong Lập Trình</h2>
+    </div>
+    <div class="alert-box info" style="margin-bottom: 14px;">
+      <div class="alert-icon">INFO · DỮ LIỆU CHO SINH VIÊN</div>
+      <div class="alert-text">Nếu làm đồ án SE mà không dùng AI tools, bạn đang ở vị trí bất lợi so với 84-92% developer toàn cầu. Nhưng dùng AI không đúng cách còn nguy hiểm hơn không dùng.</div>
+    </div>
+    <div class="data-grid">
+      <div class="data-point">
+        <div class="data-stat">84%</div>
+        <div class="data-desc">developer đang sử dụng hoặc có kế hoạch sử dụng AI tools</div>
+        <div class="data-source">Stack Overflow Developer Survey 2025</div>
+      </div>
+      <div class="data-point">
+        <div class="data-stat">90%</div>
+        <div class="data-desc">chuyên gia phát triển phần mềm sử dụng AI, trung bình 2 giờ/ngày</div>
+        <div class="data-source">Google DORA Report 2025</div>
+      </div>
+      <div class="data-point">
+        <div class="data-stat">92%</div>
+        <div class="data-desc">US developers sử dụng AI coding tools hàng ngày tính đến đầu 2026</div>
+        <div class="data-source">Industry Report 2026</div>
+      </div>
+      <div class="data-point">
+        <div class="data-stat">25%</div>
+        <div class="data-desc">startups trong Y Combinator W2025 có codebase <span class="hl">95% do AI tạo</span></div>
+        <div class="data-source">YC Winter 2025</div>
+      </div>
+      <div class="data-point" style="grid-column: span 2; background: rgba(0,255,65,0.06); border-color: rgba(0,255,65,0.4);">
+        <div class="data-stat" style="font-size: clamp(18px,2vw,28px);">12/12 điểm tối đa</div>
+        <div class="data-desc">Hệ thống AI của OpenAI đạt điểm tối đa tại <span class="hl">ICPC World Finals 2025</span>, xếp thứ nhất nếu là đội người</div>
+        <div class="data-source">ICPC World Finals 2025</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 16: 1.3 SECTION HEADER -->
+  <div class="slide slide-section-header" data-slide="16">
+    <div class="section-number">1.3</div>
+    <div class="section-tag">// SECTION THREE</div>
+    <h2 class="section-title">Vibe Coding &amp; Nhu Cầu Cấu Trúc:<br>Ba Paradigm Lớn</h2>
+    <div class="title-divider" style="margin: 16px 0;"></div>
+    <div class="section-desc">Vibe Coding nhanh nhưng nguy hiểm. Để hiểu tại sao SDD và ADD ra đời, ta cần hiểu rõ vấn đề mà Vibe Coding tạo ra.</div>
+  </div>
+
+  <!-- SLIDE 17: VIBE CODING DEFINITION -->
+  <div class="slide slide-content" data-slide="17">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.3 · VIBE CODING LÀ GÌ?</div>
+      <h2 class="content-title">Vibe Coding — Định Nghĩa &amp; Sức Hút</h2>
+    </div>
+    <div class="content-body">
+      <p class="para">Tháng 2 năm 2025, <span class="hl">Andrej Karpathy</span> — đồng sáng lập OpenAI, cựu giám đốc AI tại Tesla — đăng bài mô tả cách lập trình mới:</p>
+      <blockquote class="matrix-quote">
+        "Hoàn toàn buông theo cảm xúc, đón nhận sự tăng trưởng theo cấp số nhân, và quên rằng code thậm chí đang tồn tại."
+        <cite>— ANDREJ KARPATHY, 02/2025</cite>
+      </blockquote>
+      <div class="two-col" style="margin-top: 14px;">
+        <div class="card">
+          <div class="card-title">TẠI SAO VIBE CODING HẤP DẪN?</div>
+          <ul class="bullet-list">
+            <li>Cảm giác "siêu năng lực": tạo app hoàn chỉnh trong vài giờ</li>
+            <li>Prototype nhanh chưa bao giờ dễ đến vậy</li>
+            <li>Hackathon trở nên sôi động hơn bao giờ hết</li>
+            <li>Phù hợp cho đồ án ngắn hạn với áp lực deadline</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">VIBE CODING = GÌ TRONG THỰC TẾ?</div>
+          <ul class="bullet-list">
+            <li>Viết prompt → Nhận code từ AI</li>
+            <li>Chạy thử → Thấy chạy được → Tiếp tục</li>
+            <li>Không cần hiểu sâu code đang làm gì</li>
+            <li><span class="hl-r">Giống xây nhà không có bản vẽ</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 18: VIBE CODING PROBLEMS 1&2 -->
+  <div class="slide slide-content" data-slide="18">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.3 · VẤN ĐỀ CỦA VIBE CODING</div>
+      <h2 class="content-title">Vấn Đề 1 &amp; 2: Code Complexity + Bảo Mật</h2>
+    </div>
+    <div class="content-body">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title" style="color: #ff5555;">✗ VẤN ĐỀ 1: CODE COMPLEXITY BÙ NỔ</div>
+          <ul class="bullet-list">
+            <li>AI-assisted coding làm tăng độ phức tạp code lên <span class="hl-r">+41%</span></li>
+            <li>Cảnh báo từ static analysis tăng <span class="hl-r">+30%</span></li>
+            <li>AI tạo code dài hơn, nhiều abstraction hơn, dùng nhiều dependencies hơn cần thiết</li>
+            <li>Sau vài tuần, <span class="hl-r">không ai trong nhóm hiểu toàn bộ codebase</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color: #ff5555;">✗ VẤN ĐỀ 2: BẢO MẬT BỊ BỎ QUA</div>
+          <ul class="bullet-list">
+            <li>LLM tạo code có lỗ bảo mật với tỷ lệ từ <span class="hl-r">9.8% đến 42.1%</span> tùy benchmark</li>
+            <li>Khoảng <span class="hl-r">2% các issues là lỗ bảo mật</span></li>
+            <li><span class="hl-r">56–93% các lỗ đó</span> được đánh giá mức Blocker hoặc Critical</li>
+            <li>AI không chủ động nghĩ về bảo mật trừ khi được yêu cầu rõ ràng</li>
+          </ul>
+        </div>
+      </div>
+      <blockquote class="matrix-quote" style="margin-top: 16px;">
+        Tháng 9/2025, Fast Company xuất bản bài "The Vibe Coding Hangover Has Arrived" — các senior software engineer mô tả trải nghiệm làm việc với code do AI tạo mà không ai hiểu được.
+      </blockquote>
+    </div>
+  </div>
+
+  <!-- SLIDE 19: VIBE CODING PROBLEMS 3&4 -->
+  <div class="slide slide-content" data-slide="19">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.3 · VẤN ĐỀ CỦA VIBE CODING</div>
+      <h2 class="content-title">Vấn Đề 3 &amp; 4: Final 20% + Technical Debt</h2>
+    </div>
+    <div class="content-body">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title" style="color: #ffaa00;">⚠ VẤN ĐỀ 3: "FINAL 20% PROBLEM"</div>
+          <ul class="bullet-list">
+            <li>AI có thể build <span class="hl">80% ứng dụng</span> trong vài giờ</li>
+            <li>20% còn lại — edge cases, polish, integration, performance — mất thời gian bằng cả dự án trước đây</li>
+            <li><span class="hl-o">15.000 dòng code mà không ai hiểu</span> = cơn ác mộng khi sửa</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color: #ffaa00;">⚠ VẤN ĐỀ 4: TECHNICAL DEBT TÍCH LŨY</div>
+          <ul class="bullet-list">
+            <li>Code tối ưu cho "chạy được ngay" không phải "dễ bảo trì"</li>
+            <li>Naming không nhất quán, patterns lẫn lộn giữa các file</li>
+            <li>Cùng một vấn đề giải quyết theo 3 cách khác nhau trong 3 file</li>
+            <li><span class="hl-o">Tuần 15–20 của đồ án 20 tuần = cơn ác mộng</span></li>
+          </ul>
+        </div>
+      </div>
+      <blockquote class="matrix-quote" style="margin-top: 16px;">
+        "Tốc độ là thật... nhưng founder nào chưa từng học cách quản lý context sẽ gặp rắc lớn khi AI tạo ra 15.000 dòng code mà họ không hiểu."
+        <cite>— REDDIT · r/programming, 2025</cite>
+      </blockquote>
+    </div>
+  </div>
+
+  <!-- SLIDE 20: TABLE 1.3 -->
+  <div class="slide slide-content" data-slide="20">
+    <div class="slide-header">
+      <div class="slide-tag">// BẢNG 1.3</div>
+      <h2 class="content-title">Vibe Coding vs. Structured AI Development (SDD + ADD)</h2>
+    </div>
+    <div class="table-wrapper">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Tiêu chí</th>
+            <th style="color: #ff7777;">Vibe Coding</th>
+            <th style="color: var(--matrix-green);">Structured (SDD + ADD)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="hl">Triết lý</span></td>
+            <td>Prompt → Code → Ship</td>
+            <td><span class="hl">Spec → Plan → Code → Validate</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">Tốc độ ban đầu</span></td>
+            <td><span style="color: var(--matrix-green);">Rất nhanh (giờ)</span></td>
+            <td>Chậm hơn (ngày)</td>
+          </tr>
+          <tr>
+            <td><span class="hl">Tốc độ lâu dài</span></td>
+            <td><span class="hl-r">Chậm dần (nợ kỹ thuật)</span></td>
+            <td><span class="hl">Duy trì ổn định</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">Chất lượng code</span></td>
+            <td><span class="hl-r">Không đảm bảo</span></td>
+            <td><span class="hl">Có validation gates</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">Bảo mật</span></td>
+            <td><span class="hl-r">Phụ thuộc may rủi</span></td>
+            <td><span class="hl">Spec định nghĩa constraints</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">Team collaboration</span></td>
+            <td><span class="hl-r">Khó (ai hiểu code?)</span></td>
+            <td><span class="hl">Dễ (spec là ngôn ngữ chung)</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">Bàn giao / Handoff</span></td>
+            <td><span class="hl-r">Rất khó</span></td>
+            <td><span class="hl">Spec + docs tự nhiên</span></td>
+          </tr>
+          <tr>
+            <td><span class="hl">Phù hợp cho</span></td>
+            <td>Prototype, hackathon, 1 người</td>
+            <td><span class="hl">Đồ án thực, team, sản phẩm</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SLIDE 21: WARNING -->
+  <div class="slide slide-content" data-slide="21">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.3 · CẢNH BÁO THỰC TẾ</div>
+      <h2 class="content-title">Bẫy Vibe Coding Cho Nhóm Đồ Án</h2>
+    </div>
+    <div class="content-body" style="justify-content: center; align-items: center; display: flex; flex-direction: column; height: 100%;">
+      <div class="alert-box danger" style="max-width: 800px; padding: 28px 32px;">
+        <div class="alert-icon" style="font-size: 14px; margin-bottom: 16px;">⚠ CẢNH BÁO CHO NHÓM ĐỒ ÁN</div>
+        <div class="alert-text" style="font-size: clamp(14px, 1.4vw, 18px); line-height: 1.8;">
+          Nhiều nhóm sinh viên bắt đầu bằng <span class="hl-r">Vibe Coding</span> vì nó nhanh, rồi gặp <span class="hl-r">khủng hoảng ở giữa kỳ</span> khi cần tích hợp, test, và demo cho giáo viên.<br><br>
+          Playbook này giúp bạn tránh bẫy đó bằng cách dành <span class="hl">2–3 tuần đầu để setup đúng</span>, và <span class="hl">thu hoạch tốc độ suốt 17 tuần còn lại</span>.
+        </div>
+      </div>
+      <div style="display: flex; gap: 20px; margin-top: 24px; flex-wrap: wrap; justify-content: center;">
+        <div style="text-align: center; padding: 16px 20px; border: 1px solid rgba(255,50,50,0.3); background: rgba(255,50,50,0.04); min-width: 160px;">
+          <div style="font-family: 'Cormorant Garamond', serif; color: #ff5555; font-size: 28px; font-weight: 900;">+41%</div>
+          <div style="color: var(--text-dim); font-size: 12px; font-family: 'Josefin Sans', sans-serif;">Code Complexity</div>
+        </div>
+        <div style="text-align: center; padding: 16px 20px; border: 1px solid rgba(255,170,0,0.3); background: rgba(255,170,0,0.04); min-width: 160px;">
+          <div style="font-family: 'Cormorant Garamond', serif; color: #ffaa00; font-size: 28px; font-weight: 900;">42%</div>
+          <div style="color: var(--text-dim); font-size: 12px; font-family: 'Josefin Sans', sans-serif;">Security Vulnerabilities/Lỗ hổng bảo mật</div>
+        </div>
+        <div style="text-align: center; padding: 16px 20px; border: 1px solid rgba(0,255,65,0.3); background: rgba(0,255,65,0.04); min-width: 160px;">
+          <div style="font-family: 'Cormorant Garamond', serif; color: var(--matrix-green); font-size: 28px; font-weight: 900;">20%</div>
+          <div style="color: var(--text-dim); font-size: 12px; font-family: 'Josefin Sans', sans-serif;">Final Problem Trap</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 22: 1.4 SECTION HEADER -->
+  <div class="slide slide-section-header" data-slide="22">
+    <div class="section-number">1.4</div>
+    <div class="section-tag">// SECTION FOUR</div>
+    <h2 class="section-title">Bức Tranh Toàn Cảnh 2026:<br>SDD, ADD &amp; Hybrid Approach</h2>
+    <div class="title-divider" style="margin: 16px 0;"></div>
+    <div class="section-desc">Để giải quyết vấn đề chất lượng của Vibe Coding, hai approach đã xuất hiện gần như đồng thời trong năm 2025.</div>
+  </div>
+
+  <!-- SLIDE 23: SDD -->
+  <div class="slide slide-content" data-slide="23">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.4 · APPROACH 1</div>
+      <h2 class="content-title">Spec-Driven Development (SDD)</h2>
+    </div>
+    <div class="content-body">
+      <blockquote class="matrix-quote" style="margin-bottom: 18px;">
+        "Vấn đề không phải AI kém, mà là chúng ta đưa cho AI input kém." Nếu bạn viết một specification rõ ràng, chi tiết, và có thể kiểm chứng được, thì AI sẽ tạo ra code chất lượng cao hơn nhiều.
+      </blockquote>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">NGUYÊN TẮC CORE</div>
+          <ul class="bullet-list">
+            <li><span class="hl">Spec là artifact chính</span>, code là sản phẩm dẫn xuất</li>
+            <li>Quy trình: <span class="hl">Specify → Plan → Tasks → Implement → Validate</span></li>
+            <li>Tools tiêu biểu: GitHub Spec Kit, Amazon Kiro</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">ĐÁNH GIÁ</div>
+          <ul class="bullet-list">
+            <li style="color: var(--matrix-green);">✓ Reproducible, quality gates rõ ràng</li>
+            <li style="color: var(--matrix-green);">✓ Team alignment — spec là ngôn ngữ chung</li>
+            <li style="color: var(--matrix-green);">✓ Dễ bàn giao, dễ kiểm tra</li>
+            <li style="color: #ffaa00;">△ Overhead viết spec ban đầu</li>
+            <li style="color: #ffaa00;">△ Nguy cơ over-specification</li>
+            <li style="color: #ffaa00;">△ Chậm hơn cho task nhỏ</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 24: ADD -->
+  <div class="slide slide-content" data-slide="24">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.4 · APPROACH 2</div>
+      <h2 class="content-title">Agent-Driven Development (ADD)</h2>
+    </div>
+    <div class="content-body">
+      <blockquote class="matrix-quote" style="margin-bottom: 18px;">
+        "AI đã đủ thông minh để tự làm, chỉ cần chỉ đường đúng." Thay vì viết spec chi tiết, hãy cung cấp context đầy đủ rồi để agent tự lên kế hoạch và thực thi.
+      </blockquote>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">NGUYÊN TẮC CORE</div>
+          <ul class="bullet-list">
+            <li><span class="hl">Agent là collaborator</span>, không phải tool</li>
+            <li>Context setup gồm AGENTS.md, constraints, domain knowledge</li>
+            <li>Quy trình: <span class="hl">Context Setup → Intent → Agentic Execution → Human Review</span></li>
+            <li>Tools tiêu biểu: Claude Code, Cursor Agent Mode, Codex CLI</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">ĐÁNH GIÁ</div>
+          <ul class="bullet-list">
+            <li style="color: var(--matrix-green);">✓ Nhanh, flexible, linh hoạt</li>
+            <li style="color: var(--matrix-green);">✓ Explore codebase tốt</li>
+            <li style="color: var(--matrix-green);">✓ Xử lý tốt boilerplate(cấu trúc m) và repetitive tasks</li>
+            <li style="color: #ffaa00;">△ Context drift khi task dài</li>
+            <li style="color: #ffaa00;">△ Hallucination, tự ý thay đổi</li>
+            <li style="color: #ffaa00;">△ Khó kiểm soát với team lớn</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 25: HYBRID PRINCIPLE -->
+  <div class="slide slide-content" data-slide="25">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.4 · APPROACH 3 · RECOMMENDED</div>
+      <h2 class="content-title">Hybrid Approach: Kết Hợp Tốt Nhất Của Cả Hai</h2>
+    </div>
+    <div class="content-body">
+      <div class="alert-box tip" style="padding: 24px 28px; margin-bottom: 20px;">
+        <div class="alert-icon" style="font-size: 13px;">⭐ NGUYÊN TẮC CỐT LÕI CỦA HYBRID</div>
+        <div class="alert-text" style="font-size: clamp(14px, 1.4vw, 17px); line-height: 1.8; margin-top: 8px;">
+          Dùng <span class="hl">SDD</span> cho những gì cần <span class="hl">ĐÚNG TỪ ĐẦU</span> (kiến trúc, API contracts, data models, security).<br>
+          Dùng <span class="hl">ADD</span> cho những gì cần <span class="hl">NHANH VÀ ITERATIVE</span> (UI components, business logic, tests, boilerplate).<br>
+          <strong>Spec ở tầng kiến trúc, Agent ở tầng implementation.</strong>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">SDD LAYER (ARCHITECTURE)</div>
+          <ul class="bullet-list">
+            <li>Kiến trúc hệ thống → Full spec</li>
+            <li>API contracts → Full spec</li>
+            <li>Database schema → Full spec</li>
+            <li>Security constraints → Full spec</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">ADD LAYER (IMPLEMENTATION)</div>
+          <ul class="bullet-list">
+            <li>UI components → Agent tự do</li>
+            <li>Unit tests → Agent tự do</li>
+            <li>Bug fixing → Agent tự do</li>
+            <li>Boilerplate / scaffold → Multi-agent</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 26: TABLE 1.4 -->
+  <div class="slide slide-content" data-slide="26">
+    <div class="slide-header">
+      <div class="slide-tag">// BẢNG 1.4</div>
+      <h2 class="content-title">Khi Nào Dùng SDD, Khi Nào Dùng ADD?</h2>
+    </div>
+    <div class="alert-box warn" style="margin-bottom: 14px;">
+      <div class="alert-icon">⚠ LƯU Ý QUAN TRỌNG</div>
+      <div class="alert-text">Hybrid không phải là "dùng cả hai lung tung". Đây là framework có nguyên tắc rõ ràng: khi nào cần spec chặt, khi nào để agent tự do, và cách hai approach bổ sung cho nhau.</div>
+    </div>
+    <div class="table-wrapper">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Loại task</th>
+            <th>Spec Depth</th>
+            <th>Agent Autonomy</th>
+            <th>Approach</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Kiến trúc hệ thống</td>
+            <td><span class="hl">Full spec</span></td>
+            <td>Guided</td>
+            <td><span class="approach-tag tag-blue">SDD</span></td>
+          </tr>
+          <tr>
+            <td>API contracts</td>
+            <td><span class="hl">Full spec</span></td>
+            <td>Guided</td>
+            <td><span class="approach-tag tag-blue">SDD</span></td>
+          </tr>
+          <tr>
+            <td>Database schema</td>
+            <td><span class="hl">Full spec</span></td>
+            <td>Agentic</td>
+            <td><span class="approach-tag tag-star">Hybrid</span></td>
+          </tr>
+          <tr>
+            <td>Feature logic (core)</td>
+            <td>Standard spec</td>
+            <td>Agentic</td>
+            <td><span class="approach-tag tag-star">Hybrid</span></td>
+          </tr>
+          <tr>
+            <td>UI components</td>
+            <td>Light spec</td>
+            <td><span class="hl">Agentic</span></td>
+            <td><span class="approach-tag tag-green">ADD</span></td>
+          </tr>
+          <tr>
+            <td>Unit tests</td>
+            <td style="color: var(--text-faint);">None</td>
+            <td><span class="hl">Agentic</span></td>
+            <td><span class="approach-tag tag-green">ADD</span></td>
+          </tr>
+          <tr>
+            <td>Bug fixing</td>
+            <td style="color: var(--text-faint);">None</td>
+            <td><span class="hl">Agentic</span></td>
+            <td><span class="approach-tag tag-green">ADD</span></td>
+          </tr>
+          <tr>
+            <td>Boilerplate / scaffold</td>
+            <td style="color: var(--text-faint);">None</td>
+            <td><span class="hl">Multi-agent</span></td>
+            <td><span class="approach-tag tag-green">ADD</span></td>
+          </tr>
+          <tr>
+            <td>Refactoring</td>
+            <td>Light spec</td>
+            <td>Agentic</td>
+            <td><span class="approach-tag tag-star">Hybrid</span></td>
+          </tr>
+          <tr>
+            <td>Documentation</td>
+            <td style="color: var(--text-faint);">None</td>
+            <td><span class="hl">Agentic</span></td>
+            <td><span class="approach-tag tag-green">ADD</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SLIDE 27: WHY HYBRID FOR STUDENTS -->
+  <div class="slide slide-content" data-slide="27">
+    <div class="slide-header">
+      <div class="slide-tag">// 1.4 · TẠI SAO HYBRID?</div>
+      <h2 class="content-title">Hybrid Phù Hợp Cho Nhóm Sinh Viên: 5 Lý Do</h2>
+    </div>
+    <div class="content-body">
+      <p class="para" style="margin-bottom: 16px; color: var(--text-dim);">Với nhóm 5 người làm đồ án 20 tuần, Hybrid mang lại những lợi ích cụ thể:</p>
+      <ul class="bullet-list">
+        <li><strong style="color: var(--matrix-green);">Spec làm ngôn ngữ chung của nhóm</strong> — Khi 5 người cùng code, spec rõ ràng giúp tránh hiểu lầm và code mâu thuẫn</li>
+        <li><strong style="color: var(--matrix-green);">Agent tăng tốc viết code</strong> — Mỗi thành viên hoàn thành nhiều hơn trong cùng thời gian, đặc biệt khi vừa học vừa làm</li>
+        <li><strong style="color: var(--matrix-green);">Validation gates bảo vệ chất lượng</strong> — Spec-based review phát hiện lỗi sớm, trước khi lan sang module khác</li>
+        <li><strong style="color: var(--matrix-green);">Dễ phân công và theo dõi</strong> — Mỗi người assign spec + tasks rõ ràng, giáo viên đánh giá cá nhân dễ dàng hơn</li>
+        <li><strong style="color: var(--matrix-green);">Chuẩn bị cho career thực tế</strong> — SDD và ADD đều là kỹ năng đang được tìm kiếm trên thị trường lao động 2026</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SLIDE 28: TÓM TẮT -->
+  <div class="slide slide-content" data-slide="28">
+    <div class="slide-header">
+      <div class="slide-tag">// TÓM TẮT CHƯƠNG 1</div>
+      <h2 class="content-title">Key Takeaways</h2>
+    </div>
+    <div class="content-body" style="align-items: center;">
+      <ul class="summary-list">
+        <li>Phương pháp phát triển phần mềm tiến hóa theo <span class="hl">vòng lặp</span>: mỗi bước mới giải quyết vấn đề của bước trước</li>
+        <li>AI coding trải qua 3 giai đoạn: <span class="hl">Autocomplete → Chat → Agentic</span>. Chúng ta đang ở đầu giai đoạn Agentic</li>
+        <li>Vibe Coding nhanh nhưng nguy hiểm: code complexity <span class="hl-r">+41%</span>, security risks, <span class="hl-r">"Final 20% Problem"</span></li>
+        <li><span class="hl">SDD</span> giải quyết chất lượng bằng specification · <span class="hl">ADD</span> giải quyết tốc độ bằng agent autonomy</li>
+        <li><span class="hl">Hybrid</span> = SDD ở tầng kiến trúc + ADD ở tầng implementation — approach tối ưu cho nhóm và team nhỏ</li>
+      </ul>
+      <div class="next-chapter">
+        <div class="next-label">// TIẾP THEO</div>
+        <div class="next-title">Chương 2: Từ "Người Viết Code" Sang "Kiến Trúc Sư + Nhạc Trưởng"<br>
+        <span style="font-family: 'Josefin Sans', sans-serif; font-size: clamp(11px,1.1vw,14px); color: var(--text-faint); font-weight: 400;">Mô hình tư duy mới của developer trong kỷ nguyên AI</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end slideshow -->
+
+<!-- Navigation -->
+<div id="nav-ui">
+  <button class="nav-btn" id="btn-prev" onclick="navigate(-1)" title="Previous (←)">←</button>
+  <span id="slide-counter">1 / 28</span>
+  <button class="nav-btn" id="btn-next" onclick="navigate(1)" title="Next (→)">→</button>
+</div>
+
+<script>
+  // Matrix Rain
+  const canvas = document.getElementById('matrix-canvas');
+  const ctx = canvas.getContext('2d');
+  let drops = [];
+
+  function initMatrix() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const cols = Math.floor(canvas.width / 16);
+    drops = Array(cols).fill(0).map(() => Math.random() * -canvas.height / 16);
+  }
+
+  const matrixChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*<>{}[]|\\アイウエオカキクケコサシスセソタチツテトナニヌネノ';
+
+  function drawMatrix() {
+    ctx.fillStyle = 'rgba(1, 18, 0, 0.06)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#00ff41';
+    ctx.font = '14px Share Tech Mono, monospace';
+    drops.forEach((y, i) => {
+      const char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+      ctx.fillText(char, i * 16, y * 16);
+      if (y * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i] += 0.5;
+    });
+  }
+
+  initMatrix();
+  window.addEventListener('resize', initMatrix);
+  setInterval(drawMatrix, 50);
+
+  // Slideshow
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let current = 0;
+
+  function updateUI() {
+    const progressBar = document.getElementById('progress-bar');
+    const counter = document.getElementById('slide-counter');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+
+    progressBar.style.width = ((current + 1) / totalSlides * 100) + '%';
+    counter.textContent = (current + 1) + ' / ' + totalSlides;
+    btnPrev.disabled = current === 0;
+    btnNext.disabled = current === totalSlides - 1;
+  }
+
+  function showSlide(index) {
+    slides[current].classList.remove('active', 'fade-in');
+    current = Math.max(0, Math.min(index, totalSlides - 1));
+    const slide = slides[current];
+    slide.classList.add('active');
+    // Trigger reflow for animation
+    void slide.offsetWidth;
+    slide.classList.add('fade-in');
+    updateUI();
+  }
+
+  function navigate(dir) {
+    const next = current + dir;
+    if (next >= 0 && next < totalSlides) showSlide(next);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); navigate(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); navigate(-1); }
+    if (e.key === 'Home') showSlide(0);
+    if (e.key === 'End') showSlide(totalSlides - 1);
+    // Number keys for quick navigation to sections
+    if (e.key === '1') showSlide(3);  // Section 1.1
+    if (e.key === '2') showSlide(8);  // Section 1.2
+    if (e.key === '3') showSlide(15); // Section 1.3
+    if (e.key === '4') showSlide(21); // Section 1.4
+  });
+
+  // Touch/swipe support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) navigate(diff > 0 ? 1 : -1);
+  }, { passive: true });
+
+  // Init
+  showSlide(0);
+</script>
+</body>
+</html>

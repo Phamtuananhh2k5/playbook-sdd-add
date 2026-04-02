@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Playbook SDD + ADD - Chương 12</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #011500;
+      --accent: #00ff55;
+      --text: #ffffff;
+      --text-sub: #ccffcc;
+      --text-mute: #7de87d;
+      --card-border: rgba(0, 255, 65, 0.5);
+      --card-bg: rgba(0, 255, 65, 0.09);
+      --table-header: rgba(0, 255, 65, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Josefin Sans', sans-serif;
+      color: var(--text);
+      background: radial-gradient(ellipse at 50% 0%, #022800, #011500, #010f00);
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #matrix-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.09;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 2px, rgba(0,0,0,0.07) 2px 4px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00ff55, #00cc44);
+      transition: width 0.3s ease;
+      z-index: 96;
+    }
+
+    #slide-counter {
+      position: fixed;
+      top: 12px;
+      right: 16px;
+      z-index: 96;
+      border: 1px solid var(--card-border);
+      background: rgba(0, 20, 0, 0.7);
+      color: var(--accent);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    #slideshow {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      padding: 60px 80px 80px 80px;
+      gap: 18px;
+    }
+
+    .slide.active {
+      display: flex;
+      animation: fadeIn 0.45s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .slide-header {
+      text-align: center;
+    }
+
+    .slide-tag {
+      display: inline-block;
+      padding: 6px 14px;
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 12px;
+      color: var(--text-mute);
+      background: rgba(0, 255, 65, 0.08);
+      margin-bottom: 8px;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--accent);
+    }
+
+    h1.main-title {
+      font-size: clamp(44px, 6.5vw, 80px);
+      line-height: 1.02;
+      text-shadow: 0 0 30px rgba(0,255,85,0.5), 0 0 60px rgba(0,255,85,0.2);
+    }
+
+    h2.section-title {
+      font-size: clamp(34px, 4.5vw, 60px);
+      line-height: 1.05;
+      text-shadow: 0 0 30px rgba(0,255,85,0.5), 0 0 60px rgba(0,255,85,0.2);
+    }
+
+    h2.content-title {
+      font-size: clamp(28px, 3.4vw, 48px);
+      line-height: 1.08;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: clamp(22px, 2.2vw, 32px);
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    .slide-body {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      text-align: left;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0,255,85,0.5) rgba(0,40,0,0.5);
+    }
+
+    .slide-body::-webkit-scrollbar { width: 7px; }
+    .slide-body::-webkit-scrollbar-thumb { background: rgba(0,255,85,0.5); border-radius: 8px; }
+    .slide-body::-webkit-scrollbar-track { background: rgba(0,40,0,0.4); }
+
+    p.body-text {
+      margin: 0;
+      font-size: clamp(16px, 1.7vw, 22px);
+      color: var(--text-sub);
+      line-height: 1.52;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid rgba(0, 255, 65, 0.25);
+      border-left: 3px solid var(--accent);
+      border-radius: 12px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .bullet-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .bullet-list li {
+      position: relative;
+      padding-left: 18px;
+      color: var(--text-sub);
+      font-size: clamp(15px, 1.6vw, 20px);
+      line-height: 1.45;
+    }
+
+    .bullet-list li::before {
+      content: '▸';
+      color: #00ff55;
+      position: absolute;
+      left: 0;
+    }
+
+    blockquote.matrix-quote {
+      margin: 0;
+      border-left: 3px solid var(--accent);
+      background: rgba(0,255,65,0.08);
+      padding: 14px 16px;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: clamp(17px, 1.8vw, 24px);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .big-quote {
+      margin: auto 0;
+      text-align: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: clamp(26px, 3.2vw, 44px);
+      line-height: 1.3;
+      color: var(--text);
+      text-shadow: 0 0 30px rgba(0,255,85,0.35);
+    }
+
+    table.matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--card-border);
+      background: rgba(0, 20, 0, 0.68);
+    }
+
+    .matrix-table th,
+    .matrix-table td {
+      border: 1px solid rgba(0,255,65,0.35);
+      padding: 10px 12px;
+      vertical-align: top;
+      font-size: clamp(13px, 1.3vw, 16px);
+      color: var(--text-sub);
+      line-height: 1.35;
+    }
+
+    .matrix-table th {
+      background: var(--table-header);
+      color: var(--text);
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .alert-box {
+      border-radius: 10px;
+      padding: 12px 14px;
+      border: 1px solid;
+      background: rgba(255,255,255,0.03);
+      font-size: clamp(15px, 1.6vw, 20px);
+      line-height: 1.45;
+    }
+
+    .alert-box.info { border-color: #55ccff; color: #55ccff; }
+    .alert-box.warn { border-color: #ffc844; color: #ffc844; }
+    .alert-box.danger { border-color: #ff7070; color: #ff7070; }
+    .alert-box.tip { border-color: #00ff55; color: #00ff55; }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+    }
+
+    .data-point {
+      border: 1px solid var(--card-border);
+      background: rgba(0,255,65,0.07);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .data-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(28px, 3.6vw, 50px);
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .data-label {
+      margin-top: 6px;
+      font-size: 12px;
+      letter-spacing: 1.4px;
+      color: var(--text-mute);
+      text-transform: uppercase;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .toc-item {
+      border: 1px solid var(--card-border);
+      background: rgba(0,255,65,0.08);
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .toc-item:hover {
+      transform: translateY(-2px);
+      background: rgba(0,255,65,0.16);
+    }
+
+    .toc-item strong { color: var(--accent); font-size: 18px; }
+    .toc-item p { margin: 6px 0 0; color: var(--text-sub); font-size: clamp(14px, 1.5vw, 18px); }
+
+    .code-block {
+      background: rgba(0,20,0,0.7);
+      border: 1px solid rgba(0,255,65,0.45);
+      border-radius: 10px;
+      padding: 12px;
+      color: #90ee90;
+      font-family: 'Courier New', Courier, monospace;
+      white-space: pre;
+      overflow: auto;
+      max-height: 280px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .cb-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-mute);
+      margin-bottom: 6px;
+    }
+
+    .pipeline {
+      border: 1px solid rgba(0,255,65,0.45);
+      background: rgba(0,12,0,0.62);
+      border-radius: 10px;
+      padding: 14px;
+      font-family: 'Courier New', Courier, monospace;
+      color: #b9ffb9;
+      display: grid;
+      gap: 8px;
+    }
+
+    .ph {
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: 0.8px;
+    }
+
+    .ph-item {
+      font-size: 13px;
+      line-height: 1.45;
+      color: #d4ffd4;
+    }
+
+    .next-chapter {
+      background: rgba(85,204,255,0.07);
+      border: 1px solid rgba(85,204,255,0.3);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .nc-label {
+      color: #55ccff;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .next-chapter h3 {
+      color: #55ccff;
+      margin: 0 0 6px;
+      font-size: clamp(24px, 2.6vw, 34px);
+    }
+
+    .next-chapter p {
+      margin: 0;
+      color: #d6f0ff;
+      font-size: clamp(15px, 1.6vw, 20px);
+    }
+
+    .section-hero {
+      margin: auto 0;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .section-num-bg {
+      position: absolute;
+      top: -58px;
+      left: 0;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(110px, 18vw, 260px);
+      color: rgba(0,255,85,0.11);
+      line-height: 0.9;
+      pointer-events: none;
+    }
+
+    .hl { color: #00ff55; }
+    .hl-r { color: #ff7070; }
+    .hl-o { color: #ffc844; }
+    .hl-b { color: #55ccff; }
+
+    .nav-controls {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 97;
+      display: flex;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      border: 1px solid var(--card-border);
+      background: rgba(0,255,65,0.12);
+      color: var(--accent);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      letter-spacing: 0.8px;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: rgba(0,255,65,0.25);
+      box-shadow: 0 0 18px rgba(0,255,65,0.3);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+
+    .watermark {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(0,255,85,0.35);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      z-index: 99;
+      pointer-events: none;
+    }
+
+    .title-footer {
+      position: absolute;
+      bottom: 30px;
+      left: 80px;
+      right: 80px;
+      text-align: center;
+      color: var(--text-mute);
+      font-size: 12px;
+      letter-spacing: 1.3px;
+    }
+
+    @media (max-width: 768px) {
+      .slide { padding: 44px 18px 78px 18px; }
+      .two-col { grid-template-columns: 1fr; }
+      .toc-grid { grid-template-columns: 1fr; }
+      .title-footer { left: 16px; right: 16px; bottom: 42px; }
+      .section-num-bg { top: -34px; }
+      .watermark { letter-spacing: 1.5px; font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix-canvas"></canvas>
+  <div class="scanlines"></div>
+  <div id="progress-bar"></div>
+  <div id="slide-counter">1 / 1</div>
+
+  <div id="slideshow">
+    <section class="slide active" data-section="0">
+      <div class="slide-header">
+        <span class="slide-tag">Chương 12</span>
+        <h1 class="main-title">Phân Tích Phê Bình về ADD</h1>
+        <div class="subtitle">Ưu, Nhược và Ranh Giới của Agent-Driven Development</div>
+      </div>
+      <div class="slide-body">
+        <div class="card">
+          <p class="body-text">Chương này đi thẳng vào mặt trái của ADD: không phủ nhận tốc độ, nhưng bóc tách rõ <span class="hl">chi phí ẩn</span>, rủi ro vận hành, và các tình huống mà ADD nên bị giới hạn hoặc không được dùng.</p>
+          <p class="body-text">Badge: <span class="hl-b">Playbook SDD + ADD | Chương 12</span></p>
+        </div>
+        <div class="data-grid">
+          <div class="data-point"><div class="data-num">6</div><div class="data-label">Sections</div></div>
+          <div class="data-point"><div class="data-num">8</div><div class="data-label">Pha/Bước Chính</div></div>
+          <div class="data-point"><div class="data-num">3</div><div class="data-label">Bảng Dữ Liệu</div></div>
+          <div class="data-point"><div class="data-num">10</div><div class="data-label">Trang PDF</div></div>
+        </div>
+      </div>
+      <div class="title-footer">© 2025 — Playbook SDD + ADD | LinhNDM | Nguyễn Đình Mạnh Linh</div>
+    </section>
+
+    <section class="slide" data-section="0">
+      <div class="slide-header">
+        <span class="slide-tag">Giới Thiệu Chương</span>
+        <h2 class="content-title">Vì Sao Chương 12 Quan Trọng</h2>
+      </div>
+      <div class="slide-body">
+        <p class="body-text">Sau các chương trước tập trung vào kiến trúc agentic, workflow 4 pha và orchestration, chương này tạo một điểm cân bằng: <span class="hl">không thần thánh hóa ADD</span>. Mục tiêu là hiểu rằng công cụ càng mạnh thì biên sai số càng đắt, đặc biệt khi team đẩy tốc độ release lên cao.</p>
+        <p class="body-text">Nội dung chương làm rõ nghịch lý của ADD: phần đầu dự án tăng tốc mạnh, nhưng phần cuối dễ chậm lại vì edge case, legacy integration và các quyết định kiến trúc đã bị đẩy qua quá nhanh. Đây là nơi năng lực review và specification của con người quyết định kết quả cuối cùng.</p>
+        <p class="body-text">Về mối liên hệ, chương 12 là nhịp cầu từ phần ADD thuần sang phần Hybrid ở chương tiếp theo. Nếu các chương trước trả lời <span class="hl-b">"làm ADD như thế nào"</span>, thì chương này trả lời <span class="hl-o">"khi nào phải hãm ADD lại"</span> để bảo toàn chất lượng dài hạn.</p>
+        <div class="alert-box info">Tóm tắt: ADD cho tốc độ thực thi, SDD cho độ đúng và khả năng kiểm toán. Chương 12 chuẩn bị tư duy để chuyển sang mô hình Hybrid dùng cả hai đúng ngữ cảnh.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="0">
+      <div class="slide-header">
+        <span class="slide-tag">Mục Lục</span>
+        <h2 class="content-title">Toàn Bộ Nội Dung Chương 12</h2>
+      </div>
+      <div class="slide-body">
+        <div class="toc-grid">
+          <div class="toc-item" onclick="goToSection(1)"><strong>12.1</strong><p>Sức mạnh thực sự của ADD</p></div>
+          <div class="toc-item" onclick="goToSection(2)"><strong>12.2</strong><p>Những nguy hiểm thực sự</p></div>
+          <div class="toc-item" onclick="goToSection(3)"><strong>12.3</strong><p>Last Mile và technical debt</p></div>
+          <div class="toc-item" onclick="goToSection(4)"><strong>12.4</strong><p>Khi nào ADD không phù hợp</p></div>
+          <div class="toc-item" onclick="goToSection(5)"><strong>12.5</strong><p>Bảng so sánh SDD vs ADD</p></div>
+          <div class="toc-item" onclick="goToSection(6)"><strong>12.6</strong><p>Tương lai junior developers</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="1">
+      <div class="slide-body section-hero">
+        <div class="section-num-bg">12.1</div>
+        <h2 class="section-title">Sức Mạnh Thực Sự của ADD</h2>
+        <p class="body-text">Mục này công nhận những điểm mà ADD làm tốt vượt trội: giảm ma sát nhận thức, rút ngắn thời gian từ ý tưởng sang code, và tăng tốc onboarding trong hệ thống phức tạp.</p>
+        <ul class="bullet-list">
+          <li>Tốc độ 3-5x không chỉ từ tốc độ gõ code mà từ giảm chuyển ngữ ý tưởng.</li>
+          <li>Loại bỏ boilerplate lặp lại để tập trung vào phần bài toán khó.</li>
+          <li>Khả năng <span class="hl">nối tầng tri thức</span> từ nhiều nguồn context khác nhau.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide" data-section="1">
+      <div class="slide-header"><span class="slide-tag">12.1</span><h2 class="content-title">Tốc Độ Không Phải Huyền Thoại</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Nhiều tổ chức 2025-2026 báo cáo tăng tốc phát triển <span class="hl">3-5x</span> khi dùng ADD đúng cách. Giá trị cốt lõi không nằm ở thao tác bàn phím, mà ở việc bỏ qua các đoạn chuyển đổi tốn năng lượng giữa ý tưởng nghiệp vụ và cú pháp cụ thể.</p>
+        <div class="two-col">
+          <div class="card">
+            <ul class="bullet-list">
+              <li>84% developers toàn cầu đã dùng AI tools (Stack Overflow 2025).</li>
+              <li>Thị trường Mỹ năm 2026 đạt khoảng <span class="hl">92%</span> mức sử dụng.</li>
+              <li>ADD đã chuyển từ <span class="hl-b">xu hướng</span> sang trạng thái thực tế vận hành.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <ul class="bullet-list">
+              <li>Không còn 30 phút tra API docs cho tác vụ lặp.</li>
+              <li>Không còn gõ đi gõ lại `useState`, `useEffect`, `try-catch`.</li>
+              <li>Giảm mạnh <span class="hl-o">brain context switching</span> giữa logic và syntax.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="1">
+      <div class="slide-header"><span class="slide-tag">12.1</span><h2 class="content-title">Giảm Boilerplate, Trả Lại Chất Xám</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Một backend developer trung bình có thể dành khoảng 40% thời gian cho các đoạn code đã biết trước kết quả như CRUD, middleware setup, error handling hay migrations. ADD xử lý phần này trong vài giây, nhờ đó năng lực tư duy được dồn về điểm nghẽn thực sự của sản phẩm.</p>
+        <div class="alert-box tip">Điểm mấu chốt: ADD không thay thế tư duy kiến trúc; nó loại bỏ phần lặp để bạn có thêm băng thông tư duy cho quyết định quan trọng.</div>
+        <blockquote class="matrix-quote">Tăng tốc bền vững chỉ xảy ra khi phần thời gian được tiết kiệm chuyển thành thời gian cho thiết kế hệ thống, không phải thêm scope thiếu kiểm soát.</blockquote>
+      </div>
+    </section>
+
+    <section class="slide" data-section="1">
+      <div class="slide-header"><span class="slide-tag">12.1</span><h2 class="content-title">Explore Codebase Lạ Trong 5-10 Phút</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Với codebase legacy 200.000 dòng, onboarding truyền thống thường cần 2-4 tuần mới nắm được flow chính. ADD có thể đọc nhanh cấu trúc, dependency, anti-pattern và đường đi dữ liệu để tạo một bản đồ vận hành đủ dùng trong vài phút đầu.</p>
+        <div class="card">
+          <ul class="bullet-list">
+            <li>Đọc đồng thời nhiều lớp artifact: code, commit messages, docs cũ.</li>
+            <li>Tóm tắt nhanh khu vực rủi ro cao để ưu tiên review có chủ đích.</li>
+            <li>Giúp kỹ sư mới có điểm bắt đầu rõ thay vì lần mò tuyến tính.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="1">
+      <div class="slide-header"><span class="slide-tag">12.1</span><h2 class="content-title">"Nối Tầng Tri Thức" Là Lợi Thế Khác Biệt</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Trong bối cảnh vừa phải đọc tài liệu Word cũ, vừa maintain PHP legacy, vừa tích hợp microservice Rust mới, giới hạn lớn nhất của con người thường là working memory. Agent không có giới hạn này theo cùng cách, nên có thể kết nối các mảnh context rời rạc nhanh hơn.</p>
+        <div class="two-col">
+          <div class="card">
+            <p class="body-text">Junior thường cần 2-3 tuần để gom đủ ngữ cảnh trước khi ra quyết định tích hợp.</p>
+          </div>
+          <div class="card">
+            <p class="body-text">Agent có thể tổng hợp nhiều nguồn cùng lúc và đề xuất hướng đi ban đầu trong một phiên ngắn, nhất là khi có <span class="hl">CLAUDE.md/AGENTS.md</span> chất lượng.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="2">
+      <div class="slide-body section-hero">
+        <div class="section-num-bg">12.2</div>
+        <h2 class="section-title">Những Nguy Hiểm Thực Sự</h2>
+        <p class="body-text">Đây là phần trọng tâm của chương: tốc độ cao tạo ảo giác kiểm soát. Nếu không khóa quy trình review và spec, ADD sẽ đẩy lỗi đi xa hơn trong vòng đời, nơi chi phí sửa lỗi tăng cấp số nhân.</p>
+        <ul class="bullet-list">
+          <li>"Final 20%" là nơi edge cases và business logic đặc thù bùng nổ.</li>
+          <li>Context drift, hallucination và security vulnerabilities tích lũy âm thầm.</li>
+          <li><span class="hl-r">Lười tư duy</span> và <span class="hl-r">cognitive alienation</span> là rủi ro nhân sự cốt lõi.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide" data-section="2">
+      <div class="slide-header"><span class="slide-tag">12.2</span><h2 class="content-title">The Final 20% Problem</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Ảo giác phổ biến là: nếu 80% feature được build trong 20% thời gian, thì 20% còn lại cũng nhanh tương tự. Thực tế ngược lại: phần đầu thường là happy path và pattern chuẩn; phần cuối là integration khó, edge case lắt léo và tuning theo traffic thật.</p>
+        <div class="alert-box warn">Nhiều team ghi nhận 20% cuối tốn thời gian bằng hoặc hơn toàn bộ 80% đầu, vì đó là đoạn cần hiểu sâu hệ thống mà team chưa kịp rèn trong giai đoạn tăng tốc ban đầu.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="2">
+      <div class="slide-header"><span class="slide-tag">12.2</span><h2 class="content-title">Context Drift, Hallucination, Security</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Trong phiên làm việc dài, agent có thể trôi khỏi context ban đầu, tạo lệch nhỏ về naming, thư viện, quyết định kiến trúc; các lệch này cộng dồn thành khác biệt lớn. Hallucination kiểu API không tồn tại hoặc signature sai đặc biệt nguy hiểm khi code nhìn bề ngoài vẫn hợp lý.</p>
+        <div class="data-grid">
+          <div class="data-point"><div class="data-num">2%</div><div class="data-label">Issue là Security</div></div>
+          <div class="data-point"><div class="data-num">56-93%</div><div class="data-label">Critical trong nhóm đó</div></div>
+          <div class="data-point"><div class="data-num">15k</div><div class="data-label">Dòng code ví dụ</div></div>
+          <div class="data-point"><div class="data-num">~300</div><div class="data-label">Điểm rủi ro tiềm ẩn</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="2">
+      <div class="slide-header"><span class="slide-tag">12.2</span><h2 class="content-title">Hiệu Ứng "Lười Tư Duy"</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Khi agent đúng 95%, não người tự động giảm mức cảnh giác để tiết kiệm năng lượng. 5% sai còn lại lại thường là lỗi logic tinh vi, assumption sai về business rule, hoặc edge case thiếu context nên dễ lọt review hơn bình thường.</p>
+        <div class="alert-box danger">Đây không chỉ là vấn đề kỷ luật cá nhân. Đây là cơ chế nhận thức tự nhiên; vì thế phải bù bằng quy trình review có cấu trúc thay vì trông chờ "cẩn thận hơn".</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="2">
+      <div class="slide-header"><span class="slide-tag">12.2</span><h2 class="content-title">Cognitive Alienation Trong Tình Huống Khẩn Cấp</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Kịch bản 2 giờ sáng: production payment lỗi, downtime tính bằng tiền mỗi phút. Bạn mở module 15.000 dòng được agent tạo qua nhiều sprint, đã review từng PR nhưng chưa từng nắm toàn bộ flow. Bạn sở hữu code nhưng không sở hữu hiểu biết vận hành.</p>
+        <blockquote class="matrix-quote">Cognitive alienation tích lũy chậm, vô hình và thường chỉ lộ diện khi hệ thống gặp sự cố thật.</blockquote>
+        <p class="body-text">Hệ quả tổ chức là tốc độ xử lý sự cố giảm đúng lúc áp lực cao nhất. Đây là rủi ro chiến lược, không chỉ rủi ro kỹ thuật.</p>
+      </div>
+    </section>
+
+    <section class="slide" data-section="2">
+      <div class="slide-header"><span class="slide-tag">Bảng 1</span><h2 class="content-title">Chi Phí Sửa Lỗi Theo Giai Đoạn</h2></div>
+      <div class="slide-body">
+        <table class="matrix-table">
+          <thead>
+            <tr><th>Giai đoạn phát hiện lỗi</th><th>Chi phí tương đối</th><th>Hệ số nhân</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Viết Spec (SDD)</td><td>$1</td><td>x1 (chuẩn)</td></tr>
+            <tr><td>Code Review (SDD/ADD)</td><td>$10</td><td>x10</td></tr>
+            <tr><td>QA / Testing (ADD)</td><td>$40</td><td>x40</td></tr>
+            <tr><td>Staging (ADD)</td><td>$70</td><td>x70</td></tr>
+            <tr><td>Production (ADD)</td><td>$200</td><td>x200</td></tr>
+          </tbody>
+        </table>
+        <div class="alert-box warn">Thông điệp của bảng: 1 lỗi ở spec nếu để trôi đến production có thể đội chi phí sửa lỗi lên 200 lần.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="2">
+      <div class="slide-header"><span class="slide-tag">Quote Spotlight</span><h2 class="content-title">Khoảnh Khắc Cảnh Tỉnh</h2></div>
+      <div class="slide-body">
+        <div class="big-quote">"Bạn sở hữu code nhưng không sở hữu sự hiểu biết về code đó."</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="3">
+      <div class="slide-body section-hero">
+        <div class="section-num-bg">12.3</div>
+        <h2 class="section-title">Last Mile và Technical Debt</h2>
+        <p class="body-text">ADD tối ưu cho mục tiêu code chạy được. Maintainability dài hạn cần can thiệp chủ động của con người qua refactoring, chuẩn hóa pattern và tài liệu hóa debt.</p>
+        <ul class="bullet-list">
+          <li>Agent học từ kho dữ liệu thiên về giải quyết nhanh trước mắt.</li>
+          <li>Code bloat tăng do copy-paste thay vì abstraction nhất quán.</li>
+          <li>Human-led refactoring là quy trình bắt buộc, không phải tùy chọn.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide" data-section="3">
+      <div class="slide-header"><span class="slide-tag">12.3</span><h2 class="content-title">Chạy Được Chưa Phải Duy Trì Được</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Đây là vấn đề hệ thống: agent được huấn luyện trên lượng lớn code tối ưu cho việc giải quyết bài toán hiện tại, không nhất thiết cho vòng đời 5 năm. Kết quả thường đúng chức năng ngắn hạn nhưng chưa tối ưu kiến trúc và khả năng bảo trì.</p>
+        <div class="card">
+          <ul class="bullet-list">
+            <li>Ít ưu tiên ranh giới module rõ ràng khi không được ép bằng spec.</li>
+            <li>Dễ tăng coupling ngầm giữa các phần vừa được generate nhanh.</li>
+            <li>Chi phí thay đổi tăng dần sau mỗi sprint nếu không dọn debt.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="3">
+      <div class="slide-header"><span class="slide-tag">12.3</span><h2 class="content-title">Code Bloat: Copy-Paste vs Abstraction</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Pattern hay gặp là nhân bản logic gần giống nhau theo từng use case. Sau vài sprint, bạn có nhiều hàm 90% giống nhau; mỗi lần sửa một rule chung phải sửa nhiều nơi và rủi ro lệch behavior tăng mạnh.</p>
+        <div class="two-col">
+          <div class="card">
+            <h3>Thực trạng xấu</h3>
+            <ul class="bullet-list">
+              <li>5 hàm `processPayment*` gần giống nhau.</li>
+              <li>Sửa logic chung phải chase nhiều file.</li>
+              <li>Regression khó đoán, test khó bao phủ.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Hướng tốt</h3>
+            <ul class="bullet-list">
+              <li>Trích xuất abstraction dùng chung theo domain.</li>
+              <li>Đóng gói rule vào utility/class có test độc lập.</li>
+              <li>Giảm duplication để giảm chi phí change.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="3">
+      <div class="slide-header"><span class="slide-tag">12.3</span><h2 class="content-title">Human-Led Refactoring (Quy Trình Bắt Buộc)</h2></div>
+      <div class="slide-body">
+        <div class="pipeline">
+          <div class="ph">PHA 1 - CODE AUDIT (30')</div>
+          <div class="ph-item">Identify duplication, magic numbers, hàm >30 dòng, coupling không cần thiết, thiếu error handling.</div>
+          <div class="ph">PHA 2 - PATTERN EXTRACTION (45')</div>
+          <div class="ph-item">Trích xuất logic chung thành utility/functions/classes và viết test cho abstraction mới.</div>
+          <div class="ph">PHA 3 - DEBT DOCUMENTATION (15')</div>
+          <div class="ph-item">Ghi TECH_DEBT.md, gán mức ưu tiên Critical/High/Medium/Low.</div>
+          <div class="ph">PHA 4 - CLAUDE.md UPDATE (15')</div>
+          <div class="ph-item">Cập nhật pattern học được, thêm constraints để tránh lặp anti-pattern cũ.</div>
+        </div>
+        <div class="card">
+          <div class="cb-title">Template debt entry</div>
+          <div class="code-block">- id: TD-2026-04-12
+  area: payment-service
+  issue: duplicated processing rules across 5 handlers
+  impact: high regression risk
+  priority: High
+  action: extract shared validator + retry policy
+  owner: backend-lead</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="3">
+      <div class="slide-header"><span class="slide-tag">12.3</span><h2 class="content-title">Không Để Agent Tự Refactor Không Giám Sát</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Theo tài liệu, để agent tự refactor code do chính nó tạo mà thiếu human oversight dễ tạo cảm giác "sạch hơn" nhưng có thể đổi behavior tinh tế. Với hệ thống đang chạy production, đây là rủi ro cần kiểm soát bằng review sâu và regression tests.</p>
+        <div class="alert-box danger">Quy tắc vận hành: mọi refactor có tác động business-critical phải có reviewer nắm domain và test xác nhận behavior trước/sau.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="4">
+      <div class="slide-body section-hero">
+        <div class="section-num-bg">12.4</div>
+        <h2 class="section-title">Khi Nào ADD KHÔNG Phù Hợp</h2>
+        <p class="body-text">Không phải dự án nào cũng nên đẩy ADD lên trung tâm. Với các miền cần chứng minh đúng đắn hoặc ràng buộc pháp lý cao, ADD có thể gây hại nhiều hơn lợi nếu dùng sai ngữ cảnh.</p>
+        <ul class="bullet-list">
+          <li>Safety-critical systems cần traceability và formal verification.</li>
+          <li>Team thiếu năng lực review sẽ nhân lỗi nhanh hơn nhân giá trị.</li>
+          <li>Compliance có thể yêu cầu tỷ lệ human-written code và tài liệu nguồn gốc.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide" data-section="4">
+      <div class="slide-header"><span class="slide-tag">12.4</span><h2 class="content-title">Danh Sách Tình Huống Không Nên Dùng ADD</h2></div>
+      <div class="slide-body">
+        <div class="two-col">
+          <div class="card">
+            <ul class="bullet-list">
+              <li><span class="hl-r">Safety-Critical</span>: y tế, điều phối hàng không, xe tự lái.</li>
+              <li><span class="hl-r">Formal Verification</span>: yêu cầu chứng minh toán học (TLA+, Coq, Isabelle/HOL).</li>
+            </ul>
+          </div>
+          <div class="card">
+            <ul class="bullet-list">
+              <li>Team không đủ skill review output AI thì ADD chỉ khuếch đại điểm yếu.</li>
+              <li>Compliance ở EU/Mỹ có thể yêu cầu rõ tỷ lệ AI-generated code.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="alert-box warn">Nguyên lý: ADD chỉ khuếch đại năng lực sẵn có, không tự tạo năng lực nền.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="4">
+      <div class="slide-header"><span class="slide-tag">12.4</span><h2 class="content-title">"Deep Innovation" - Điểm Mù Của Agent</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Khi bạn ở frontier domain, thiếu precedent trong training data, agent khó đưa ra giải pháp đáng tin cậy. ADD khi đó có thể vô dụng hoặc nguy hiểm nếu team nhầm lẫn độ tự tin của câu trả lời với độ đúng của mô hình.</p>
+        <div class="two-col">
+          <div class="card">
+            <h3>Tình huống 1: Ngây thơ sáng tạo</h3>
+            <p class="body-text">Agent áp pattern quen thuộc cho bài toán mới hoàn toàn. Code vẫn chạy nhưng giải sai bài toán.</p>
+          </div>
+          <div class="card">
+            <h3>Tình huống 2: Tự tin sai</h3>
+            <p class="body-text">Giải pháp nghe hợp lý kỹ thuật nhưng assumption business sai, chỉ domain expert mới nhận ra.</p>
+          </div>
+        </div>
+        <div class="alert-box tip">Thực tiễn: với bài toán frontier, code tay trước để dựng mental model rồi mới dùng agent tăng tốc phần đã hiểu.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="4">
+      <div class="slide-header"><span class="slide-tag">Bảng 2A</span><h2 class="content-title">Ma Trận Phù Hợp ADD Theo Loại Dự Án (Phần 1/2)</h2></div>
+      <div class="slide-body">
+        <table class="matrix-table">
+          <thead><tr><th>Loại dự án</th><th>Phù hợp</th><th>Lý do</th></tr></thead>
+          <tbody>
+            <tr><td>CRUD Web App / API</td><td>9/10 ✓</td><td>Pattern rõ ràng, agent giỏi nhất ở đây.</td></tr>
+            <tr><td>E-commerce Platform</td><td>8/10 ✓</td><td>Nhiều boilerplate, business logic không quá đặc thù.</td></tr>
+            <tr><td>Data Pipeline / ETL</td><td>7/10 ✓</td><td>Cần spec kỹ cho data contracts.</td></tr>
+            <tr><td>Hệ thống Tài chính</td><td>5/10 ±</td><td>Cần SDD mạnh và human review kỹ lưỡng.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="slide" data-section="4">
+      <div class="slide-header"><span class="slide-tag">Bảng 2B</span><h2 class="content-title">Ma Trận Phù Hợp ADD Theo Loại Dự Án (Phần 2/2)</h2></div>
+      <div class="slide-body">
+        <table class="matrix-table">
+          <thead><tr><th>Loại dự án</th><th>Phù hợp</th><th>Lý do</th></tr></thead>
+          <tbody>
+            <tr><td>Game Prototyping</td><td>6/10 ±</td><td>Tốt cho mechanics chuẩn, kém cho creative logic.</td></tr>
+            <tr><td>Legacy System Extension</td><td>6/10 ±</td><td>Khó nắm context cũ, cần AGENTS.md chi tiết.</td></tr>
+            <tr><td>Research / Deep Innovation</td><td>2/10 ✗</td><td>Vượt ra ngoài vùng dữ liệu huấn luyện.</td></tr>
+            <tr><td>Safety-Critical Systems</td><td>0/10 ✗</td><td>Không được dùng, không thương lượng.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="slide" data-section="5">
+      <div class="slide-body section-hero">
+        <div class="section-num-bg">12.5</div>
+        <h2 class="section-title">Bảng So Sánh Tổng Hợp: SDD vs. ADD</h2>
+        <p class="body-text">Điểm quan trọng của phần này là đặt hai phương pháp vào đúng vai trò. SDD tối ưu cho correctness và auditability; ADD tối ưu cho velocity và linh hoạt iteration.</p>
+        <ul class="bullet-list">
+          <li>So sánh theo triết lý, workflow, điểm mạnh/yếu, best-fit, tools.</li>
+          <li>Bổ sung góc nhìn team size, project type, risk tolerance, auditability.</li>
+          <li>Kết luận: không đối đầu, mà bổ trợ trong mô hình Hybrid.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide" data-section="5">
+      <div class="slide-header"><span class="slide-tag">Bảng 3A</span><h2 class="content-title">So Sánh SDD vs ADD (Phần 1/2)</h2></div>
+      <div class="slide-body">
+        <table class="matrix-table">
+          <thead><tr><th>Chiều đánh giá</th><th>SDD</th><th>ADD</th></tr></thead>
+          <tbody>
+            <tr><td>Triết lý</td><td>"Đúng từ đầu"; Spec là source of truth.</td><td>"Nhanh và iterate"; Intent drives execution.</td></tr>
+            <tr><td>Workflow</td><td>Linear: Spec → Plan → Code → Validate.</td><td>Cyclical: Intent → Execute → Observe → Adjust.</td></tr>
+            <tr><td>Điểm mạnh</td><td>Predictability, auditability, team alignment.</td><td>Speed, flexibility, boilerplate reduction.</td></tr>
+            <tr><td>Điểm yếu</td><td>Overhead cao, đôi khi cản sáng tạo.</td><td>Tech debt tích lũy, cognitive alienation.</td></tr>
+            <tr><td>Best fit</td><td>Logic phức tạp, rủi ro cao, team ≥ 3.</td><td>Prototyping, boilerplate, domain quen thuộc.</td></tr>
+            <tr><td>Tools</td><td>Spec Kit, Kiro, Cline (spec mode).</td><td>Claude Code, Cursor Agent Mode, Codex CLI.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="slide" data-section="5">
+      <div class="slide-header"><span class="slide-tag">Bảng 3B</span><h2 class="content-title">So Sánh SDD vs ADD (Phần 2/2)</h2></div>
+      <div class="slide-body">
+        <table class="matrix-table">
+          <thead><tr><th>Chiều đánh giá</th><th>SDD</th><th>ADD</th></tr></thead>
+          <tbody>
+            <tr><td>Learning curve</td><td>Trung bình; cần kỹ năng viết spec.</td><td>Thấp ban đầu, tăng nhanh khi gặp edge case.</td></tr>
+            <tr><td>Team size</td><td>3-15 người, mọi level.</td><td>1-5 người, cần ít nhất 1 senior reviewer.</td></tr>
+            <tr><td>Project type</td><td>Greenfield phức tạp, brownfield extension.</td><td>Internal tools, standard features, prototypes.</td></tr>
+            <tr><td>Risk tolerance</td><td>Thấp; lỗi được phát hiện sớm.</td><td>Cao; lỗi có thể phát hiện muộn.</td></tr>
+            <tr><td>Auditability</td><td>Cao; mọi quyết định nằm trong spec.</td><td>Thấp hơn; logic nằm trong session context.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="slide" data-section="5">
+      <div class="slide-header"><span class="slide-tag">12.5</span><h2 class="content-title">Kết Luận Của Phần So Sánh</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Tài liệu nhấn mạnh: kết luận không phải "SDD tốt hơn ADD" hay ngược lại. Hai công cụ phục vụ hai mục tiêu khác nhau trong cùng dự án. <span class="hl">SDD cho correctness</span>, <span class="hl">ADD cho velocity</span>, còn mô hình hybrid cho cả hai khi team đủ trưởng thành vận hành.</p>
+        <div class="alert-box info">Đây là lý do phần IV tồn tại: không chọn phe, mà thiết kế nhịp phối hợp giữa spec rigor và execution speed.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="6">
+      <div class="slide-body section-hero">
+        <div class="section-num-bg">12.6</div>
+        <h2 class="section-title">The Future of Junior Developers</h2>
+        <p class="body-text">Câu hỏi trung tâm: nếu agent làm gần hết phần thực thi, junior sẽ học "đau" ở đâu để trưởng thành thành kỹ sư độc lập? Đây là vấn đề nhân sự chiến lược, không chỉ vấn đề tooling.</p>
+        <ul class="bullet-list">
+          <li>Nguy cơ kỹ năng nền bị bỏ qua khi mọi tác vụ đều có trợ lực AI.</li>
+          <li>Cần lộ trình học song song thay vì để junior chỉ đóng vai người prompt.</li>
+          <li>Vai trò của tech lead là thiết kế môi trường học có chủ đích.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide" data-section="6">
+      <div class="slide-header"><span class="slide-tag">12.6</span><h2 class="content-title">Câu Hỏi Không Ai Muốn Hỏi</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Nếu agent viết code, debug, tối ưu và refactor phần lớn tác vụ, junior developer lấy đâu ra cơ hội phạm sai lầm có kiểm soát để hình thành trực giác kỹ thuật? Nhiều team ghi nhận sau 6 tháng dùng ADD, junior vẫn không debug được stack trace cơ bản nếu thiếu agent.</p>
+        <p class="body-text">Kinh nghiệm kỹ thuật tích lũy từ những lần tự mình đi qua bug khó: memory leak, N+1 query, trace execution dài. Khi bỏ qua hành trình này, kỹ năng nhìn hệ thống và phản xạ xử lý sự cố phát triển rất chậm.</p>
+      </div>
+    </section>
+
+    <section class="slide" data-section="6">
+      <div class="slide-header"><span class="slide-tag">12.6</span><h2 class="content-title">Ba Rủi Ro Cụ Thể Với Junior</h2></div>
+      <div class="slide-body">
+        <div class="card">
+          <ul class="bullet-list">
+            <li><span class="hl-r">Shallow Understanding</span>: nhận ra code tốt/xấu nhưng không tự tạo được code tốt khi mất agent.</li>
+            <li><span class="hl-r">Prompt Dependency</span>: giỏi mô tả để agent làm thay hơn là tự giải bài toán.</li>
+            <li><span class="hl-r">Loss of Debugging Intuition</span>: thiếu mental model vì thiếu giờ đọc code và lần trace thủ công.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="6">
+      <div class="slide-header"><span class="slide-tag">12.6</span><h2 class="content-title">Scaffolded Learning Path Cho Tech Lead</h2></div>
+      <div class="slide-body">
+        <div class="pipeline">
+          <div class="ph">BƯỚC 5 - SHADOW SESSIONS (2 GIỜ/TUẦN)</div>
+          <div class="ph-item">Junior giải task nhỏ không dùng agent; senior review và chỉ ra điểm agent sẽ làm khác.</div>
+          <div class="ph">BƯỚC 6 - AGENT DISSECTION (1 GIỜ/TUẦN)</div>
+          <div class="ph-item">Junior phải giải thích từng dòng code agent tạo để đảm bảo code ownership.</div>
+          <div class="ph">BƯỚC 7 - NO-AI FRIDAYS (TÙY CHỌN)</div>
+          <div class="ph-item">Một buổi/tuần xử lý bug nhỏ và minor features thủ công.</div>
+          <div class="ph">BƯỚC 8 - INCIDENT RETROSPECTIVES</div>
+          <div class="ph-item">Sau incident, junior trình bày root cause mà không dựa vào agent.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="6">
+      <div class="slide-header"><span class="slide-tag">12.6</span><h2 class="content-title">Không Phải Tương Lai Đen Tối</h2></div>
+      <div class="slide-body">
+        <p class="body-text">Lịch sử ngành cho thấy mỗi bước trừu tượng hóa đều tạo lo ngại tương tự: compiler, garbage collection, framework web. Lo ngại có cơ sở, nhưng hệ thống đào tạo và kỳ vọng kỹ năng sẽ điều chỉnh theo.</p>
+        <p class="body-text">Thế hệ tiếp theo có thể không cần nhớ chi tiết syntax như trước, nhưng phải mạnh hơn ở <span class="hl-b">system thinking</span>, <span class="hl-b">specification writing</span>, quyết định kiến trúc, và năng lực nhận diện lúc <span class="hl-o">không nên dùng AI</span>.</p>
+      </div>
+    </section>
+
+    <section class="slide" data-section="6">
+      <div class="slide-header"><span class="slide-tag">Quote Spotlight</span><h2 class="content-title">Thông Điệp Cốt Lõi</h2></div>
+      <div class="slide-body">
+        <div class="big-quote">“AI Agent không thay thế lập trình viên, nó thay thế những lập trình viên không biết viết Spec và không biết Review code.”</div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="0">
+      <div class="slide-header"><span class="slide-tag">Summary + Next Chapter</span><h2 class="content-title">Tổng Kết Chương 12</h2></div>
+      <div class="slide-body">
+        <table class="matrix-table">
+          <thead><tr><th>Section</th><th>Key Technique</th><th>Điểm cốt lõi</th></tr></thead>
+          <tbody>
+            <tr><td>12.1</td><td>Tăng tốc có cấu trúc</td><td>ADD mạnh ở giảm ma sát nhận thức và boilerplate.</td></tr>
+            <tr><td>12.2</td><td>Risk-first review</td><td>Final 20%, lười tư duy, cognitive alienation là cụm rủi ro lớn.</td></tr>
+            <tr><td>12.3</td><td>Human-led refactoring</td><td>Không refactor tự động thiếu giám sát; kiểm soát debt định kỳ.</td></tr>
+            <tr><td>12.4</td><td>Contextual fit check</td><td>Safety-critical/deep innovation/team yếu review: không nên đẩy ADD.</td></tr>
+            <tr><td>12.5</td><td>Hybrid framing</td><td>SDD cho correctness, ADD cho velocity, phối hợp theo pha.</td></tr>
+            <tr><td>12.6</td><td>Scaffolded learning</td><td>Tech lead phải bảo toàn đường học kỹ năng lõi cho junior.</td></tr>
+          </tbody>
+        </table>
+        <div class="next-chapter">
+          <div class="nc-label">Next Chapter</div>
+          <h3>Phần IV - Hybrid Playbook: Kết Hợp SDD + ADD Cho Dự Án Thực Tế</h3>
+          <p>Chương kế tiếp chuyển từ phân tích rủi ro sang thiết kế cách vận hành thực chiến để vừa giữ tốc độ, vừa giữ độ đúng và khả năng bảo trì dài hạn.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="0">
+      <div class="slide-header"><span class="slide-tag">5 Key Takeaways</span><h2 class="content-title">Năm Điểm Phải Nhớ</h2></div>
+      <div class="slide-body">
+        <div class="card"><p class="body-text"><span class="hl">1. Tốc độ ADD là thật</span>: lợi ích lớn nhất đến từ giảm ma sát nhận thức và boilerplate, không chỉ từ sinh code nhanh.</p></div>
+        <div class="card"><p class="body-text"><span class="hl-r">2. Rủi ro lớn nhất là nhận thức</span>: lười tư duy và cognitive alienation khiến team mất quyền kiểm soát thực chất.</p></div>
+        <div class="card"><p class="body-text"><span class="hl-o">3. Late bug cực đắt</span>: lỗi phát hiện ở production có thể đắt gấp 200 lần lỗi phát hiện ngay từ spec.</p></div>
+        <div class="card"><p class="body-text"><span class="hl">4. Refactoring phải do người dẫn dắt</span>: ADD bền vững chỉ khi có vòng dọn debt, trích pattern và cập nhật luật chơi liên tục.</p></div>
+        <div class="card"><p class="body-text"><span class="hl-b">5. Đích đến là Hybrid</span>: kết hợp SDD và ADD theo ngữ cảnh, đồng thời thiết kế learning path để junior vẫn trưởng thành kỹ thuật.</p></div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="0">
+      <div class="slide-header">
+        <span class="slide-tag">Author Closing</span>
+        <h1 class="main-title">Phân Tích Phê Bình về ADD</h1>
+        <div class="subtitle">Giữ tốc độ, nhưng không đánh đổi sự hiểu biết hệ thống</div>
+      </div>
+      <div class="slide-body" style="justify-content:center; align-items:center; text-align:center;">
+        <div style="font-family:'Cormorant Garamond',serif; font-size:clamp(56px,8vw,110px); color:var(--accent); text-shadow:0 0 30px rgba(0,255,85,0.5), 0 0 60px rgba(0,255,85,0.2); line-height:1;">LinhNDM</div>
+        <div style="font-family:'Cormorant Garamond',serif; font-size:clamp(28px,3.2vw,46px); color:var(--text); line-height:1.15;">Nguyễn Đình Mạnh Linh</div>
+        <p class="body-text" style="max-width:900px; text-align:center; margin-top:10px;">Playbook SDD + ADD nhấn mạnh một chuẩn nghề nghiệp mới: dùng AI để tăng đòn bẩy, nhưng quyền sở hữu chất lượng vẫn thuộc về kỹ sư biết viết spec và biết review sâu.</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="nav-controls">
+    <button id="btn-prev" class="nav-btn">◀ Prev</button>
+    <button id="btn-next" class="nav-btn">Next ▶</button>
+  </div>
+
+  <div class="watermark">LinhNDM — Nguyễn Đình Mạnh Linh</div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let current = 0;
+    let touchStartX = 0;
+    const slideCache = Array.from(slides, s => s.innerHTML);
+
+    const sectionMap = {};
+    slides.forEach((s, i) => {
+      const sec = parseInt(s.dataset.section, 10);
+      if (sec > 0 && sectionMap[sec] === undefined) sectionMap[sec] = i;
+    });
+
+    function updateRenderedWindow() {
+      for (let i = 0; i < total; i++) {
+        const inWindow = Math.abs(i - current) <= 1;
+        if (inWindow) {
+          if (slides[i].innerHTML === '') slides[i].innerHTML = slideCache[i];
+        } else if (slides[i].innerHTML !== '') {
+          slides[i].innerHTML = '';
+        }
+      }
+    }
+
+    function goToSlide(n) {
+      if (n < 0 || n >= total) return;
+      slides[current].classList.remove('active');
+      current = n;
+      updateRenderedWindow();
+      slides[current].classList.add('active');
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + total;
+      document.getElementById('btn-prev').disabled = current === 0;
+      document.getElementById('btn-next').disabled = current === total - 1;
+      document.getElementById('progress-bar').style.width = (((current + 1) / total) * 100).toFixed(1) + '%';
+    }
+
+    function nextSlide() { goToSlide(current + 1); }
+    function prevSlide() { goToSlide(current - 1); }
+    function goToSection(n) { if (sectionMap[n] !== undefined) goToSlide(sectionMap[n]); }
+
+    document.getElementById('btn-next').addEventListener('click', nextSlide);
+    document.getElementById('btn-prev').addEventListener('click', prevSlide);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      }
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      }
+      if (e.key >= '1' && e.key <= '9') {
+        const n = parseInt(e.key, 10);
+        if (sectionMap[n] !== undefined) goToSection(n);
+      }
+      if (e.key === 'Home') {
+        e.preventDefault();
+        goToSlide(0);
+      }
+      if (e.key === 'End') {
+        e.preventDefault();
+        goToSlide(total - 1);
+      }
+    });
+
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].clientX;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const delta = touchEndX - touchStartX;
+      if (Math.abs(delta) > 50) {
+        if (delta < 0) nextSlide();
+        else prevSlide();
+      }
+    }, { passive: true });
+
+    document.addEventListener('keydown', e => {
+      if(e.key==='F12' ||
+         (e.ctrlKey && e.shiftKey && ['I','J','K'].includes(e.key.toUpperCase())) ||
+         (e.ctrlKey && ['u','s','a','c','p','f'].includes(e.key.toLowerCase()))
+      ) e.preventDefault();
+    });
+
+    ['contextmenu','selectstart','dragstart','copy'].forEach(ev =>
+      document.addEventListener(ev, e => e.preventDefault())
+    );
+
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    let width = 0;
+    let height = 0;
+    let cols = 0;
+    let drops = [];
+    const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ{}[]<>/*+-=#$%&';
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      cols = Math.floor(width / 16);
+      drops = Array(cols).fill(1);
+    }
+
+    function drawMatrixRain() {
+      ctx.fillStyle = 'rgba(1,21,0,0.05)';
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = '#00ff41';
+      ctx.font = '14px monospace';
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars.charAt(Math.floor(Math.random() * chars.length));
+        ctx.fillText(text, i * 16, drops[i] * 16);
+        if (drops[i] * 16 > height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    setInterval(drawMatrixRain, 50);
+
+    updateRenderedWindow();
+    updateUI();
+    window.goToSection = goToSection;
+  </script>
+</body>
+</html>
