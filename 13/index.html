@@ -87,6 +87,11 @@ table.matrix-table td{border:1px solid rgba(0,255,65,0.25);padding:10px 12px;ver
   .section-num-bg{font-size:130px;right:-10px}
   .nav-btn{padding:8px 18px;font-size:11px}
 }
+  /* Mobile scroll fix */
+  @media (max-width: 768px) {
+    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+  }
 </style>
 </head>
 <body>

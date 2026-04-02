@@ -115,6 +115,11 @@ pre.code-block{background:rgba(0,0,0,0.6);border:1px solid rgba(0,255,65,0.2);bo
 /* VERDICT BOX */
 .verdict-box{border:1px solid var(--accent);background:rgba(0,255,85,0.07);padding:20px 28px;margin-top:20px;text-align:center;}
 .verdict-box p{font-family:'Cormorant Garamond',serif;font-size:clamp(18px,2vw,26px);color:var(--accent);font-style:italic;line-height:1.5;}
+  /* Mobile scroll fix */
+  @media (max-width: 768px) {
+    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+  }
 </style>
 </head>
 <body>

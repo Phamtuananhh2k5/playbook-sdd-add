@@ -392,6 +392,11 @@ pre.state-machine{
   white-space:pre;
   overflow-x:auto;
 }
+  /* Mobile scroll fix */
+  @media (max-width: 768px) {
+    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+  }
 </style>
 </head>
 <body>

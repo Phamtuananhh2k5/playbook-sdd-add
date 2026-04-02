@@ -490,7 +490,12 @@
       .section-num-bg { top: -34px; }
       .watermark { letter-spacing: 1.5px; font-size: 10px; }
     }
-  </style>
+    /* Mobile scroll fix */
+  @media (max-width: 768px) {
+    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+  }
+</style>
 </head>
 <body>
   <canvas id="matrix-canvas"></canvas>

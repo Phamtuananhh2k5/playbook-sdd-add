@@ -155,6 +155,11 @@ pre.code-block{background:rgba(0,0,0,0.55);border:1px solid rgba(0,255,85,0.15);
 .tier-label.t2{color:#00ff55;}
 .tier-label.t3{color:#ffcc00;}
 .tier-desc{font-size:clamp(10px,1vw,13px);color:var(--sub);line-height:1.6;}
+  /* Mobile scroll fix */
+  @media (max-width: 768px) {
+    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+  }
 </style>
 </head>
 <body>
