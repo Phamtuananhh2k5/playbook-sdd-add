@@ -1,17 +1,9 @@
-# SDD + ADD Playbook (Menu + Responsive Chapters 1-14)
+# SDD Playbook Slides
 
-## Cấu trúc
-- `index.html`: entry point (trùng nội dung `menu.html`)
-- `menu.html`: trang menu điều hướng
-- `1/responsive_1/index.html` ... `14/responsive_1/index.html`: bản responsive từng chương
+## Cấu trúc thư mục
 
-## Cách chạy
-- Mở trực tiếp `index.html` bằng trình duyệt
-- Hoặc dùng local server:
-
-```bash
-cd SDD-playbook-complete
-python3 -m http.server 8080
-```
-
-Sau đó truy cập `http://localhost:8080`.
+- `index.html`: trang vào chính
+- `menu.html`: menu tổng hợp
+- `1/index.html` ... `14/index.html`: nội dung từng chương
+- `1/responsive_1/index.html` ... `14/responsive_1/index.html`: đường dẫn tương thích cũ, tự redirect về `../index.html`
+- `shared-slide-nav.js`, `shared-footer-ui.js`: script dùng chung
