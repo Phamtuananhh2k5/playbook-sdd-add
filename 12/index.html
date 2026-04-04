@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PLAYBOOK SDD ADD & CODEX - Chương 12</title>
+  <title>Playbook SDD + ADD - Chương 12</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -54,29 +54,72 @@
       z-index: 1;
     }
 
-    #progress-bar {
+    #bar-wrap {
       position: fixed;
       top: 0;
       left: 0;
-      width: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #00ff55, #00cc44);
-      transition: width 0.3s ease;
+      width: 100%;
+      height: 2px;
+      background: rgba(0, 255, 85, 0.1);
       z-index: 96;
     }
 
-    #slide-counter {
+    #progress {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #00ff55, #00cc44);
+      transition: width 0.3s ease;
+    }
+
+    #footer-ui {
       position: fixed;
-      top: 12px;
-      right: 16px;
-      z-index: 96;
-      border: 1px solid var(--card-border);
-      background: rgba(0, 20, 0, 0.7);
-      color: var(--accent);
-      padding: 6px 10px;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+      z-index: 97;
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      pointer-events: none;
+      background: rgba(0,12,0,.5);
+      border: 1px solid rgba(0,255,85,.2);
       border-radius: 8px;
-      font-size: 12px;
-      letter-spacing: 1px;
+      padding: 6px 10px;
+    }
+
+    #author {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: .62rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(0,255,85,.35);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    #nav { display: flex; gap: .45rem; pointer-events: auto; }
+
+    .nb {
+      background: rgba(0,255,85,.08);
+      border: 1px solid rgba(0,255,85,.25);
+      color: #00ff55;
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: .68rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .nb:hover { background: rgba(0,255,85,.18); }
+    .nb:disabled { opacity: .25; cursor: not-allowed; }
+
+    #sc {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: .66rem;
+      color: rgba(0,255,85,.5);
+      letter-spacing: .1em;
     }
 
     #slideshow {
@@ -426,82 +469,90 @@
     .hl-o { color: #ffc844; }
     .hl-b { color: #55ccff; }
 
-    .nav-controls {
-      position: fixed;
-      bottom: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 97;
-      display: flex;
-      gap: 10px;
-    }
-
-    .nav-btn {
-      border: 1px solid var(--card-border);
-      background: rgba(0,255,65,0.12);
-      color: var(--accent);
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      letter-spacing: 0.8px;
-      transition: background 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .nav-btn:hover:not(:disabled) {
-      background: rgba(0,255,65,0.25);
-      box-shadow: 0 0 18px rgba(0,255,65,0.3);
-    }
-
-    .nav-btn:disabled {
-      opacity: 0.25;
-      cursor: not-allowed;
-    }
-
-    .watermark {
-      position: fixed;
-      bottom: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 11px;
-      color: rgba(0,255,85,0.35);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      z-index: 99;
-      pointer-events: none;
-    }
-
-    .title-footer {
-      position: absolute;
-      bottom: 30px;
-      left: 80px;
-      right: 80px;
-      text-align: center;
-      color: var(--text-mute);
-      font-size: 12px;
-      letter-spacing: 1.3px;
-    }
-
     @media (max-width: 768px) {
       .slide { padding: 44px 18px 78px 18px; }
       .two-col { grid-template-columns: 1fr; }
       .toc-grid { grid-template-columns: 1fr; }
-      .title-footer { left: 16px; right: 16px; bottom: 42px; }
       .section-num-bg { top: -34px; }
-      .watermark { letter-spacing: 1.5px; font-size: 10px; }
     }
-    /* Mobile scroll fix */
-  @media (max-width: 768px) {
-    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
-    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+/* responsive_1 safe mobile patch */
+@media (max-width: 800px) {
+  .slide {
+    padding: 52px 16px 96px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
   }
-</style>
+
+  .slide.active {
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+  }
+
+  .two-col,
+  .cols2,
+  .cols3,
+  .toc-grid,
+  .data-grid,
+  .card-grid.cols2,
+  .card-grid.cols3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .toc-grid .toc-item[style*="grid-column"],
+  .data-grid .data-point[style*="grid-column"] {
+    grid-column: auto !important;
+  }
+
+  #footer-ui {
+    width: calc(100% - 20px) !important;
+    bottom: 8px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+
+  #nav {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+  }
+
+  #nav .nb {
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  #sc {
+    order: 2;
+    width: 100%;
+    font-size: 13px !important;
+    letter-spacing: .08em !important;
+    min-width: 72px !important;
+    text-align: center;
+  }
+
+  #author {
+    order: 3;
+    display: block !important;
+    width: 100%;
+    padding: 2px 0 0;
+    text-align: center;
+    font-size: 10px !important;
+    letter-spacing: 0.08em !important;
+    color: rgba(0, 255, 65, 0.55);
+  }
+}
+  </style>
 </head>
 <body>
   <canvas id="matrix-canvas"></canvas>
   <div class="scanlines"></div>
-  <div id="progress-bar"></div>
-  <div id="slide-counter">1 / 1</div>
+  <div id="bar-wrap"><div id="progress"></div></div>
 
   <div id="slideshow">
     <section class="slide active" data-section="0">
@@ -513,7 +564,7 @@
       <div class="slide-body">
         <div class="card">
           <p class="body-text">Chương này đi thẳng vào mặt trái của ADD: không phủ nhận tốc độ, nhưng bóc tách rõ <span class="hl">chi phí ẩn</span>, rủi ro vận hành, và các tình huống mà ADD nên bị giới hạn hoặc không được dùng.</p>
-          <p class="body-text">Badge: <span class="hl-b">PLAYBOOK SDD ADD & CODEX | Chương 12</span></p>
+          <p class="body-text">Badge: <span class="hl-b">Playbook SDD + ADD | Chương 12</span></p>
         </div>
         <div class="data-grid">
           <div class="data-point"><div class="data-num">6</div><div class="data-label">Sections</div></div>
@@ -522,7 +573,6 @@
           <div class="data-point"><div class="data-num">10</div><div class="data-label">Trang PDF</div></div>
         </div>
       </div>
-      <div class="title-footer">© 2026 — PLAYBOOK SDD ADD & CODEX | LinhNDM | Nguyễn Đình Mạnh Linh</div>
     </section>
 
     <section class="slide" data-section="0">
@@ -531,9 +581,11 @@
         <h2 class="content-title">Vì Sao Chương 12 Quan Trọng</h2>
       </div>
       <div class="slide-body">
+        <div class="alert-box info">Lý thuyết 70% • Điểm nhìn đa chiều 30%</div>
         <p class="body-text">Sau các chương trước tập trung vào kiến trúc agentic, workflow 4 pha và orchestration, chương này tạo một điểm cân bằng: <span class="hl">không thần thánh hóa ADD</span>. Mục tiêu là hiểu rằng công cụ càng mạnh thì biên sai số càng đắt, đặc biệt khi team đẩy tốc độ release lên cao.</p>
         <p class="body-text">Nội dung chương làm rõ nghịch lý của ADD: phần đầu dự án tăng tốc mạnh, nhưng phần cuối dễ chậm lại vì edge case, legacy integration và các quyết định kiến trúc đã bị đẩy qua quá nhanh. Đây là nơi năng lực review và specification của con người quyết định kết quả cuối cùng.</p>
         <p class="body-text">Về mối liên hệ, chương 12 là nhịp cầu từ phần ADD thuần sang phần Hybrid ở chương tiếp theo. Nếu các chương trước trả lời <span class="hl-b">"làm ADD như thế nào"</span>, thì chương này trả lời <span class="hl-o">"khi nào phải hãm ADD lại"</span> để bảo toàn chất lượng dài hạn.</p>
+        <blockquote class="matrix-quote">Một công cụ mạnh mà không hiểu giới hạn là công cụ nguy hiểm.</blockquote>
         <div class="alert-box info">Tóm tắt: ADD cho tốc độ thực thi, SDD cho độ đúng và khả năng kiểm toán. Chương 12 chuẩn bị tư duy để chuyển sang mô hình Hybrid dùng cả hai đúng ngữ cảnh.</div>
       </div>
     </section>
@@ -618,6 +670,7 @@
       <div class="slide-header"><span class="slide-tag">12.1</span><h2 class="content-title">"Nối Tầng Tri Thức" Là Lợi Thế Khác Biệt</h2></div>
       <div class="slide-body">
         <p class="body-text">Trong bối cảnh vừa phải đọc tài liệu Word cũ, vừa maintain PHP legacy, vừa tích hợp microservice Rust mới, giới hạn lớn nhất của con người thường là working memory. Agent không có giới hạn này theo cùng cách, nên có thể kết nối các mảnh context rời rạc nhanh hơn.</p>
+        <div class="alert-box tip">Kịch bản verbatim: tài liệu API viết bằng Word từ 2018, code cũ do người đã nghỉ việc, và service mới viết bằng Rust. Agent có thể đọc đồng thời các nguồn này để dựng một context thống nhất ban đầu.</div>
         <div class="two-col">
           <div class="card">
             <p class="body-text">Junior thường cần 2-3 tuần để gom đủ ngữ cảnh trước khi ra quyết định tích hợp.</p>
@@ -633,6 +686,7 @@
       <div class="slide-body section-hero">
         <div class="section-num-bg">12.2</div>
         <h2 class="section-title">Những Nguy Hiểm Thực Sự</h2>
+        <div class="alert-box danger">Đây là phần quan trọng nhất chương này. Đọc chậm.</div>
         <p class="body-text">Đây là phần trọng tâm của chương: tốc độ cao tạo ảo giác kiểm soát. Nếu không khóa quy trình review và spec, ADD sẽ đẩy lỗi đi xa hơn trong vòng đời, nơi chi phí sửa lỗi tăng cấp số nhân.</p>
         <ul class="bullet-list">
           <li>"Final 20%" là nơi edge cases và business logic đặc thù bùng nổ.</li>
@@ -646,6 +700,7 @@
       <div class="slide-header"><span class="slide-tag">12.2</span><h2 class="content-title">The Final 20% Problem</h2></div>
       <div class="slide-body">
         <p class="body-text">Ảo giác phổ biến là: nếu 80% feature được build trong 20% thời gian, thì 20% còn lại cũng nhanh tương tự. Thực tế ngược lại: phần đầu thường là happy path và pattern chuẩn; phần cuối là integration khó, edge case lắt léo và tuning theo traffic thật.</p>
+        <div class="alert-box danger">Không phải vậy. 80% đầu là phần agent giỏi nhất; 20% cuối là phần agent kém nhất và thường tốn bằng hoặc hơn toàn bộ 80% đầu cộng lại.</div>
         <div class="alert-box warn">Nhiều team ghi nhận 20% cuối tốn thời gian bằng hoặc hơn toàn bộ 80% đầu, vì đó là đoạn cần hiểu sâu hệ thống mà team chưa kịp rèn trong giai đoạn tăng tốc ban đầu.</div>
       </div>
     </section>
@@ -675,6 +730,7 @@
       <div class="slide-header"><span class="slide-tag">12.2</span><h2 class="content-title">Cognitive Alienation Trong Tình Huống Khẩn Cấp</h2></div>
       <div class="slide-body">
         <p class="body-text">Kịch bản 2 giờ sáng: production payment lỗi, downtime tính bằng tiền mỗi phút. Bạn mở module 15.000 dòng được agent tạo qua nhiều sprint, đã review từng PR nhưng chưa từng nắm toàn bộ flow. Bạn sở hữu code nhưng không sở hữu hiểu biết vận hành.</p>
+        <div class="alert-box warn">Bạn sở hữu code nhưng không sở hữu sự hiểu biết về code đó. Đây là cognitive alienation.</div>
         <blockquote class="matrix-quote">Cognitive alienation tích lũy chậm, vô hình và thường chỉ lộ diện khi hệ thống gặp sự cố thật.</blockquote>
         <p class="body-text">Hệ quả tổ chức là tốc độ xử lý sự cố giảm đúng lúc áp lực cao nhất. Đây là rủi ro chiến lược, không chỉ rủi ro kỹ thuật.</p>
       </div>
@@ -696,6 +752,7 @@
           </tbody>
         </table>
         <div class="alert-box warn">Thông điệp của bảng: 1 lỗi ở spec nếu để trôi đến production có thể đội chi phí sửa lỗi lên 200 lần.</div>
+        <div class="alert-box danger">$1 lỗi trong Spec = $200 tổng thiệt hại khi phát hiện ở Production.</div>
       </div>
     </section>
 
@@ -840,6 +897,7 @@
             <p class="body-text">Giải pháp nghe hợp lý kỹ thuật nhưng assumption business sai, chỉ domain expert mới nhận ra.</p>
           </div>
         </div>
+        <div class="alert-box warn">Nguyên tắc thực tiễn: nếu đang ở frontier domain knowledge, hãy code thủ công trước để xây mental model, sau đó mới dùng agent tăng tốc phần đã hiểu rõ.</div>
         <div class="alert-box tip">Thực tiễn: với bài toán frontier, code tay trước để dựng mental model rồi mới dùng agent tăng tốc phần đã hiểu.</div>
       </div>
     </section>
@@ -996,6 +1054,15 @@
     <section class="slide" data-section="0">
       <div class="slide-header"><span class="slide-tag">Summary + Next Chapter</span><h2 class="content-title">Tổng Kết Chương 12</h2></div>
       <div class="slide-body">
+        <div class="card">
+          <ul class="bullet-list">
+            <li>ADD mang lại tốc độ thật và khả năng nối tầng tri thức, nhưng luôn có giá phải trả.</li>
+            <li>"Lười tư duy" và "Cognitive Alienation" là hai rủi ro âm thầm và nguy hiểm nhất.</li>
+            <li>Human-Led Refactoring là quy trình bắt buộc để ADD bền vững.</li>
+            <li>ADD không phù hợp cho safety-critical systems, deep innovation và team thiếu senior reviewer.</li>
+            <li>Kết luận: SDD và ADD không đối thủ, mà là đối tác theo mô hình Hybrid.</li>
+          </ul>
+        </div>
         <table class="matrix-table">
           <thead><tr><th>Section</th><th>Key Technique</th><th>Điểm cốt lõi</th></tr></thead>
           <tbody>
@@ -1034,18 +1101,19 @@
       </div>
       <div class="slide-body" style="justify-content:center; align-items:center; text-align:center;">
         <div style="font-family:'Cormorant Garamond',serif; font-size:clamp(56px,8vw,110px); color:var(--accent); text-shadow:0 0 30px rgba(0,255,85,0.5), 0 0 60px rgba(0,255,85,0.2); line-height:1;">LinhNDM</div>
-        <div style="font-family:'Cormorant Garamond',serif; font-size:clamp(28px,3.2vw,46px); color:var(--text); line-height:1.15;">Nguyễn Đình Mạnh Linh</div>
-        <p class="body-text" style="max-width:900px; text-align:center; margin-top:10px;">PLAYBOOK SDD ADD & CODEX nhấn mạnh một chuẩn nghề nghiệp mới: dùng AI để tăng đòn bẩy, nhưng quyền sở hữu chất lượng vẫn thuộc về kỹ sư biết viết spec và biết review sâu.</p>
+        <p class="body-text" style="max-width:900px; text-align:center; margin-top:10px;">Playbook SDD + ADD nhấn mạnh một chuẩn nghề nghiệp mới: dùng AI để tăng đòn bẩy, nhưng quyền sở hữu chất lượng vẫn thuộc về kỹ sư biết viết spec và biết review sâu.</p>
       </div>
     </section>
   </div>
 
-  <div class="nav-controls">
-    <button id="btn-prev" class="nav-btn">◀ Prev</button>
-    <button id="btn-next" class="nav-btn">Next ▶</button>
+  <div id="footer-ui">
+    <div id="author">LinhNDM &mdash; Nguyễn Đình Mạnh Linh</div>
+    <div id="nav">
+      <button class="nb" id="prev" onclick="goToSlide(current - 1)">&larr; Prev</button>
+      <button class="nb" id="next" onclick="goToSlide(current + 1)">Next &rarr;</button>
+    </div>
+    <div id="sc">1 / 1</div>
   </div>
-
-  <div class="watermark">LinhNDM — Nguyễn Đình Mạnh Linh</div>
 
   <script>
     const slides = document.querySelectorAll('.slide');
@@ -1081,18 +1149,17 @@
     }
 
     function updateUI() {
-      document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + total;
-      document.getElementById('btn-prev').disabled = current === 0;
-      document.getElementById('btn-next').disabled = current === total - 1;
-      document.getElementById('progress-bar').style.width = (((current + 1) / total) * 100).toFixed(1) + '%';
+      document.getElementById('sc').textContent = (current + 1) + ' / ' + total;
+      const prevBtn = document.getElementById('prev');
+      const nextBtn = document.getElementById('next');
+      if (prevBtn) prevBtn.disabled = current === 0;
+      if (nextBtn) nextBtn.disabled = current === total - 1;
+      document.getElementById('progress').style.width = (((current + 1) / total) * 100).toFixed(1) + '%';
     }
 
     function nextSlide() { goToSlide(current + 1); }
     function prevSlide() { goToSlide(current - 1); }
     function goToSection(n) { if (sectionMap[n] !== undefined) goToSlide(sectionMap[n]); }
-
-    document.getElementById('btn-next').addEventListener('click', nextSlide);
-    document.getElementById('btn-prev').addEventListener('click', prevSlide);
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight' || e.key === ' ') {
@@ -1177,5 +1244,6 @@
     updateUI();
     window.goToSection = goToSection;
   </script>
+<script src="../shared-slide-nav.js"></script>
 </body>
 </html>

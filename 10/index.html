@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chương 10: Agent-Driven Workflow — PLAYBOOK SDD ADD & CODEX</title>
+<title>Chương 10: Agent-Driven Workflow — Playbook SDD + ADD</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#011500;
   --accent:#00ff55;
-  --text:#ffffff;
-  --text-sub:#ccffcc;
+  --text:#c8ffd4;
+  --text-sub:#d8ffe0;
   --text-mute:#7de87d;
   --card-border:rgba(0,255,65,0.5);
   --card-bg:rgba(0,255,65,0.09);
@@ -27,18 +27,67 @@ body{background:radial-gradient(ellipse at 50% 0%,#022800,#011500,#010f00)}
 #matrix-canvas{position:fixed;top:0;left:0;width:100%;height:100%;opacity:0.09;pointer-events:none;z-index:0}
 .scanlines{position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);pointer-events:none;z-index:1}
 
-#progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#00ff55,#00cc44);z-index:100;transition:width 0.3s ease}
+#bar-wrap{position:fixed;top:0;left:0;width:100%;height:2px;background:rgba(0,255,85,0.1);z-index:120}
+#progress{height:100%;background:linear-gradient(90deg,#00ff55,#00cc44);transition:width .3s ease;width:0}
+#footer-ui{
+  position:fixed;
+  left:50%;
+  bottom:12px;
+  transform:translateX(-50%);
+  z-index:130;
+  display:flex;
+  align-items:center;
+  gap:.55rem;
+  pointer-events:none;
+  background:rgba(0,12,0,.5);
+  border:1px solid rgba(0,255,85,.2);
+  border-radius:8px;
+  padding:6px 10px;
+}
+#author{
+  font-family:'Josefin Sans',sans-serif;
+  font-size:.62rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(0,255,85,.35);
+  pointer-events:none;
+  user-select:none;
+}
+#sc{
+  font-family:'Josefin Sans',sans-serif;
+  font-size:.66rem;
+  color:rgba(0,255,85,.5);
+  letter-spacing:.1em;
+}
+#nav{display:flex;gap:.45rem;pointer-events:auto}
+.nb{
+  background:rgba(0,255,85,.08);
+  border:1px solid rgba(0,255,85,.25);
+  color:#00ff55;
+  font-family:'Josefin Sans',sans-serif;
+  font-size:.68rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  padding:5px 14px;
+  cursor:pointer;
+  transition:.2s;
+}
+.nb:hover{background:rgba(0,255,85,.18)}
+.nb:disabled{opacity:.25;cursor:not-allowed}
 
-.watermark{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-family:'Josefin Sans',sans-serif;font-size:11px;color:rgba(0,255,85,0.35);letter-spacing:3px;text-transform:uppercase;z-index:99;pointer-events:none;white-space:nowrap}
-
-#slide-counter{position:fixed;top:18px;right:28px;font-size:13px;color:var(--text-mute);letter-spacing:2px;z-index:100;font-family:'Josefin Sans',sans-serif}
-
-.nav-buttons{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:16px;z-index:100}
-.nav-btn{background:rgba(0,255,65,0.12);border:1px solid var(--card-border);color:var(--accent);padding:10px 28px;font-family:'Josefin Sans',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;transition:all .2s;text-transform:uppercase}
-.nav-btn:hover{background:rgba(0,255,65,0.25);box-shadow:0 0 18px rgba(0,255,65,0.3)}
-.nav-btn:disabled{opacity:0.25;cursor:not-allowed}
-
-#slideshow{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2}
+#slideshow{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  z-index:2;
+  border:none;
+  border-radius:0;
+  background:rgba(0, 22, 0, .45);
+  box-shadow:none;
+  overflow:hidden;
+}
 .slide{position:absolute;top:0;left:0;width:100%;height:100%;display:none;overflow:hidden;flex-direction:column;padding:60px 80px 80px 80px}
 .slide.active{display:flex;animation:fadeIn 0.45s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -77,6 +126,39 @@ table.matrix-table th{background:var(--table-header);color:var(--accent);padding
 table.matrix-table td{padding:11px 14px;border:1px solid rgba(0,255,65,0.2);color:var(--text-sub);vertical-align:top;line-height:1.45}
 table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,0.04)}
 table.matrix-table tr:hover td{background:rgba(0,255,65,0.09);transition:background .2s}
+.compare-focus .slide-tag{
+  text-align:center;
+  margin-top:8px;
+  margin-bottom:10px;
+  letter-spacing:8px;
+  color:#9effa7;
+  font-size:13px;
+  font-weight:600;
+}
+.compare-focus .content-title{
+  font-size:clamp(48px,4.7vw,76px);
+  margin-bottom:14px !important;
+  text-shadow:0 0 24px rgba(0,255,85,.22);
+}
+.compare-focus .body-text{
+  font-size:clamp(26px,2vw,36px);
+  text-align:left;
+  margin-bottom:16px !important;
+  font-weight:600;
+}
+.compare-focus .matrix-table th{
+  font-size:clamp(17px,1.35vw,22px);
+}
+.compare-focus .matrix-table td{
+  font-size:clamp(15px,1.22vw,19px);
+  line-height:1.5;
+}
+.compare-focus blockquote.matrix-quote{
+  margin-top:18px;
+  border-left:4px solid var(--accent);
+  background:rgba(0,255,65,.08);
+  font-size:clamp(23px,1.9vw,32px);
+}
 
 /* ALERT BOX */
 .alert-box{padding:16px 20px;border-radius:2px;margin:14px 0;font-size:clamp(14px,1.5vw,17px);line-height:1.6}
@@ -141,34 +223,113 @@ table.matrix-table tr:hover td{background:rgba(0,255,65,0.09);transition:backgro
 
 /* RESPONSIVE */
 @media(max-width:768px){
+  #slideshow{
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    border-radius:0;
+  }
   .slide{padding:40px 24px 70px 24px}
   .two-col{grid-template-columns:1fr}
   .toc-grid{grid-template-columns:1fr}
   .data-grid{grid-template-columns:1fr 1fr}
   .section-num-bg{font-size:140px;right:-10px}
-  .nav-btn{padding:8px 18px;font-size:11px}
 }
-  /* Mobile scroll fix */
-  @media (max-width: 768px) {
-    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
-    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+/* responsive_1 safe mobile patch */
+@media (max-width: 800px) {
+  #slideshow {
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
   }
+
+  .slide {
+    padding: 52px 16px 96px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .slide.active {
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+  }
+
+  .two-col,
+  .cols2,
+  .cols3,
+  .toc-grid,
+  .data-grid,
+  .card-grid.cols2,
+  .card-grid.cols3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .toc-grid .toc-item[style*="grid-column"],
+  .data-grid .data-point[style*="grid-column"] {
+    grid-column: auto !important;
+  }
+
+  #footer-ui {
+    width: calc(100% - 20px) !important;
+    bottom: 8px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+
+  #nav {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+  }
+
+  #nav .nb {
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  #sc {
+    order: 2;
+    width: 100%;
+    font-size: 13px !important;
+    letter-spacing: .08em !important;
+    min-width: 72px !important;
+    text-align: center;
+  }
+
+  #author {
+    order: 3;
+    display: block !important;
+    width: 100%;
+    padding: 2px 0 0;
+    text-align: center;
+    font-size: 10px !important;
+    letter-spacing: 0.08em !important;
+    color: rgba(0, 255, 65, 0.55);
+  }
+}
 </style>
 </head>
 <body>
 
 <canvas id="matrix-canvas"></canvas>
 <div class="scanlines"></div>
-<div id="progress-bar"></div>
-<div id="slide-counter">1 / 47</div>
-<div class="watermark">LinhNDM — Nguyễn Đình Mạnh Linh</div>
+<div id="bar-wrap"><div id="progress"></div></div>
 
 <div id="slideshow">
 
 <!-- SLIDE 1: TITLE -->
 <div class="slide slide-title-main active" data-section="0">
   <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center">
-    <div class="badge">PLAYBOOK SDD ADD & CODEX &nbsp;|&nbsp; Chương 10</div>
+    <div class="badge">Playbook SDD + ADD &nbsp;|&nbsp; Chương 10</div>
     <p style="font-family:'Josefin Sans',sans-serif;font-size:clamp(14px,1.5vw,18px);color:var(--text-mute);letter-spacing:4px;text-transform:uppercase;margin-bottom:16px">Chapter 10</p>
     <h1 class="main-title" style="margin-bottom:20px">Agent-Driven Workflow</h1>
     <p style="font-family:'Cormorant Garamond',serif;font-size:clamp(20px,2.5vw,32px);color:var(--text-sub);font-style:italic;margin-bottom:40px">Từ Intent Đến Delivery — ADD trong thực chiến</p>
@@ -182,7 +343,6 @@ table.matrix-table tr:hover td{background:rgba(0,255,65,0.09);transition:backgro
       "ADD không làm bạn code chậm hơn. Nó làm bạn <span class="hl">rework ít hơn</span>."
     </blockquote>
   </div>
-  <div class="title-footer">© 2026 — PLAYBOOK SDD ADD & CODEX &nbsp;|&nbsp; LinhNDM &nbsp;|&nbsp; Nguyễn Đình Mạnh Linh</div>
 </div>
 
 <!-- SLIDE 2: GIỚI THIỆU CHƯƠNG -->
@@ -1102,6 +1262,7 @@ Agent KHÔNG được add package mà không có approval.</div>
           <li>DELETE FROM ... WHERE không có WHERE clause</li>
           <li>Thay đổi column type của existing data (migration risk)</li>
           <li>Thêm package vào go.mod (hỏi trước)</li>
+          <li>Modify .github/workflows/ (CI changes = security sensitive)</li>
           <li>Thay đổi Docker base image (security review needed)</li>
           <li>Push vào main/master/production branches</li>
         </ul>
@@ -1112,7 +1273,9 @@ Agent KHÔNG được add package mà không có approval.</div>
           <li>Tạo git checkpoint trước mọi schema migration</li>
           <li>Test migration với rollback plan</li>
           <li>Backup reminder trước migration</li>
+          <li>Không access production database trực tiếp</li>
           <li>Không hardcode production endpoints, credentials</li>
+          <li>Không bypass auth middleware "cho nhanh"</li>
           <li>Khi không chắc chắn: dừng lại và báo cáo</li>
           <li>"Tôi không chắc về constraint X. Làm thế nào bạn muốn?"</li>
         </ul>
@@ -1170,6 +1333,8 @@ Nếu có FAIL: fix trước khi submit.</div>
       <div class="alert-title">ℹ️ Setup trước khi bắt đầu Lab</div>
       Cài đặt: Cursor (Agent Mode) hoặc Cline trong VSCode<br>
       API key: Mua qua Cline (model: claude-sonnet-4-5)<br>
+      Starter project: git clone https://github.com/your-org/add-lab-starter<br>
+      Hoặc tạo fresh: mkdir auth-lab && cd auth-lab && go mod init auth-lab<br>
       Time estimate: Round 1 ~15 phút, Round 2 ~45 phút<br>
       <span class="hl-r">Yêu cầu: Không sửa code tay trong cả hai rounds — chỉ prompt agent</span>
     </div>
@@ -1235,6 +1400,18 @@ Include registration and login.
         <tr><td>Database ORM/driver</td><td><span class="hl-o">(quan sát và ghi lại)</span></td><td>Thường: gorm (banned trong project)</td></tr>
       </tbody>
     </table>
+    <div class="code-block" style="margin-top:12px;max-height:170px"><div class="cb-title">Round 1 evaluation commands</div># Kiểm tra code quality
+go vet ./...
+golangci-lint run 2>/dev/null || echo "No linter configured"
+
+# Kiểm tra tests
+go test ./... 2>&1 | tail -10
+
+# Đếm lines of code
+find . -name "*.go" | xargs wc -l | tail -1
+
+# Check dependencies được thêm vào
+cat go.sum | wc -l</div>
   </div>
 </div>
 
@@ -1271,6 +1448,29 @@ Include registration and login.
         <li>Human review: scope đúng? File list đúng? Assumptions đúng?</li>
         <li>Execute với DoD: go vet pass, golangci-lint clean, tests ≥ 80%, no passwords in logs, no banned packages</li>
       </ul>
+    </div>
+    <div class="two-col" style="margin-top:0">
+      <div class="code-block" style="max-height:210px"><div class="cb-title">Round 2 setup script (rút gọn)</div># Tạo context documents
+mkdir -p .sdd/{constraints,features/feat-auth}
+
+# 1) AGENTS.md
+cat > AGENTS.md
+
+# 2) CLAUDE.md
+cat > CLAUDE.md
+
+# 3) Business constraints
+cat > .sdd/constraints/business.md</div>
+      <div class="code-block" style="max-height:210px"><div class="cb-title">SPEC + Plan Review + Execute</div># SPEC cho feature
+cat > .sdd/features/feat-auth/SPEC.md
+
+# Prompt Plan review:
+# Đọc AGENTS.md, CLAUDE.md, business.md, SPEC.md
+# Viết plan: files tạo mới/thay đổi, dependencies, test strategy, risks
+# DỪNG sau plan và chờ approval
+
+# Prompt Execute:
+# Implement theo plan approved + DoD + Shadow Plan trước khi chạy</div>
     </div>
   </div>
 </div>
@@ -1388,11 +1588,25 @@ DỪNG và hiển thị shadow plan. Đợi 'proceed' trước khi làm gì."
 # - Expected outcome có match intent không?
 # → "Proceed" → Agent bắt đầu execute
 # → "Adjust: [correction]" → Agent revise plan, shadow lại</div>
+    <div class="code-block" style="max-height:200px"><div class="cb-title">Ví dụ output Shadowing</div># === VÍ DỤ OUTPUT ===
+SHADOW PLAN:
+1. Task: Thêm email validation cho User registration
+2. Approach:
+- Đọc SPEC.md để hiểu validation rules
+- Đọc domain/user.go để hiểu User struct
+- Thêm validate_email() trong domain/validators.go
+- Update RegisterUser usecase để call validation
+- Viết tests cho happy path + invalid formats
+3. Files READ: SPEC.md, domain/user.go, usecase/register.go
+4. Files MODIFY: domain/validators.go, usecase/register.go
+   Files CREATE: tests/unit/validator_test.go
+5. Commands: go test ./domain/..., golangci-lint run
+6. Expected: Email validation working, tests green, linter clean</div>
   </div>
 </div>
 
 <!-- SLIDE 38: TABLE - SHADOWING VS CLARIFICATION FIRST -->
-<div class="slide" data-section="6">
+<div class="slide compare-focus" data-section="6">
   <div class="slide-tag">10.6.1 — So sánh Techniques</div>
   <h2 class="content-title" style="text-align:center;margin-bottom:18px">Shadowing vs Clarification-First (Chương 7.2)</h2>
   <div class="slide-body">
@@ -1412,6 +1626,10 @@ DỪNG và hiển thị shadow plan. Đợi 'proceed' trước khi làm gì."
     <blockquote class="matrix-quote" style="margin-top:16px">
       "Shadowing là 'insurance policy' trước mỗi execution — chi phí thấp (vài tokens), return cao (tránh wrong execution hoàn toàn)."
     </blockquote>
+    <div class="alert-box tip" style="margin-top:10px">
+      <div class="alert-title">Liên hệ với 10.pdf</div>
+      Clarification-First dùng khi <span class="hl-o">spec còn mơ hồ</span>; Shadowing dùng khi <span class="hl">spec đã rõ và chuẩn bị execute</span>. Hai kỹ thuật bổ sung nhau, không thay thế nhau.
+    </div>
   </div>
 </div>
 
@@ -1626,22 +1844,25 @@ secrets/</div>
 <!-- SLIDE 44: AUTHOR CLOSING -->
 <div class="slide slide-title-main" data-section="0">
   <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center">
-    <p style="font-family:'Josefin Sans',sans-serif;font-size:13px;color:var(--text-mute);letter-spacing:5px;text-transform:uppercase;margin-bottom:16px">PLAYBOOK SDD ADD & CODEX — © 2026</p>
+    <p style="font-family:'Josefin Sans',sans-serif;font-size:13px;color:var(--text-mute);letter-spacing:5px;text-transform:uppercase;margin-bottom:16px">Playbook SDD + ADD — © 2025</p>
     <h1 class="main-title" style="margin-bottom:16px">Agent-Driven Workflow</h1>
     <p style="font-family:'Cormorant Garamond',serif;font-size:clamp(20px,2.5vw,32px);color:var(--text-sub);font-style:italic;margin-bottom:40px">Chương 10 — Hoàn thành</p>
     <div style="width:60px;height:1px;background:var(--accent);margin:0 auto 30px auto;box-shadow:0 0 10px var(--accent)"></div>
     <p style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,56px);color:var(--accent);font-weight:700;text-shadow:0 0 25px rgba(0,255,85,0.5);letter-spacing:3px">LinhNDM</p>
     <p style="font-family:'Josefin Sans',sans-serif;font-size:clamp(14px,1.6vw,20px);color:var(--text-sub);letter-spacing:4px;margin-top:10px">Nguyễn Đình Mạnh Linh</p>
-    <p style="font-family:'Josefin Sans',sans-serif;font-size:12px;color:var(--text-mute);letter-spacing:2px;margin-top:14px">PLAYBOOK SDD ADD & CODEX &nbsp;|&nbsp; 2026</p>
+    <p style="font-family:'Josefin Sans',sans-serif;font-size:12px;color:var(--text-mute);letter-spacing:2px;margin-top:14px">Playbook SDD + ADD &nbsp;|&nbsp; 2025</p>
   </div>
-  <div class="title-footer">© 2026 — PLAYBOOK SDD ADD & CODEX &nbsp;|&nbsp; LinhNDM &nbsp;|&nbsp; Nguyễn Đình Mạnh Linh</div>
-</div>
+  
+
 
 </div><!-- end slideshow -->
-
-<div class="nav-buttons">
-  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>&#8592; Prev</button>
-  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Next &#8594;</button>
+<div id="footer-ui">
+  <div id="author">LinhNDM &mdash; Nguyễn Đình Mạnh Linh</div>
+  <div id="nav">
+    <button class="nb" id="prev" onclick="changeSlide(-1)">&larr; Prev</button>
+    <button class="nb" id="next" onclick="changeSlide(1)">Next &rarr;</button>
+  </div>
+  <div id="sc">1 / 44</div>
 </div>
 
 <script>
@@ -1691,7 +1912,7 @@ const total = slides.length;
 let current = 0;
 
 // Update total display
-document.getElementById('slide-counter').textContent = '1 / ' + total;
+document.getElementById('sc').textContent = '1 / ' + total;
 
 // Section map
 const sectionMap = {};
@@ -1701,11 +1922,13 @@ slides.forEach((s, i) => {
 });
 
 function updateUI(){
-  document.getElementById('slide-counter').textContent = (current+1)+' / '+total;
-  document.getElementById('btn-prev').disabled = current === 0;
-  document.getElementById('btn-next').disabled = current === total-1;
-  const pct = ((current+1)/total*100).toFixed(1);
-  document.getElementById('progress-bar').style.width = pct+'%';
+  document.getElementById('sc').textContent = (current+1)+' / '+total;
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  if(prevBtn) prevBtn.disabled = current === 0;
+  if(nextBtn) nextBtn.disabled = current === total-1;
+  const bar = document.getElementById('progress');
+  bar.style.width = (((current + 1) / total) * 100) + '%';
 }
 
 function goToSlide(n){
@@ -1742,6 +1965,8 @@ document.addEventListener('touchend', e=>{
 },{passive:true});
 
 updateUI();
+window.addEventListener('resize', updateUI);
 </script>
+<script src="../shared-slide-nav.js"></script>
 </body>
 </html>

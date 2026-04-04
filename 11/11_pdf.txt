@@ -1,0 +1,1606 @@
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+MỤC LỤC
+11.1 Tại sao 1 Agent không đủ?
+11.1.1 Context Window Limits
+11.1.2 Cognitive Load của AI — Khi "làm nhiều" = "làm kém"
+11.1.3 Parallel Execution — Tối ưu hóa thời gian chờ
+
+11.2 Kiến trúc Multi-Agent
+11.2.1
+11.2.2
+11.2.3
+11.2.4
+
+Vertical vs. Horizontal — Hai triết lý tổ chức
+Shared State & Context Synchronization
+Communication Patterns giữa Agents
+Thiết kế Agent Team — Nguyên tắc phân chia
+
+11.3 Skill System — Đóng gói Kinh nghiệm Senior vào File
+11.3.1 SKILL.md Format
+11.3.2 10 Must-Have Skills thực tế
+11.3.3 Cách tạo Custom Skill cho dự án
+
+11.4 Hooks và Automation — Hệ thống Tự-kiểm soát
+11.4.1
+11.4.2
+11.4.3
+11.4.4
+
+Lifecycle Hooks — Điểm chạm của Automation
+Pre-commit Hook — Code Luôn Sạch
+Self-Healing Loop — Đỉnh cao của Automation
+Hooks cấu hình cho Claude Code
+
+11.5 Hands-on Lab — Multi-Agent: Export Report sang PDF
+11.5.1
+11.5.2
+11.5.3
+11.5.4
+
+Setup — Thiết lập team 4 agents
+Step 1 — Lead Agent thiết lập Interface Contract
+Step 2 — Parallel Execution (3 agents đồng thời)
+Step 3 — Lead Agent Orchestrates & Merges
+
+11.6 MCP trong Multi-Agent — Hệ thần kinh của Agent Team
+11.6.1 Tool Borrowing — Agents Mượn Capability của Nhau
+11.6.2 MCP như Tool-Sharing Protocol
+
+© 2025 — Playbook SDD + ADD 1 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+Chương 11
+
+Multi-Agent & Orchestration
+Khi một AI không đủ — Xây đội ngũ thay vì siêu nhân
+
+© 2025 — Playbook SDD + ADD 2 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+Giới thiệu chương
+Cho đến chương này, chúng ta đã làm việc với một agent duy nhất. Một agent đọc spec, lên plan,
+viết code, chạy test, tự sửa lỗi — và làm khá tốt cho các feature vừa và nhỏ. Nhưng khi dự án lớn
+dần, khi team cần frontend agent, backend agent, và testing agent chạy song song, khi context của
+một feature vượt quá những gì một context window có thể chứa — một agent không còn đủ.
+Multi-agent orchestration là bước nhảy vọt tiếp theo. Không phải vì một agent "kém thông minh",
+mà vì những vấn đề của dự án thực sự đòi hỏi sự chuyên môn hóa, song song hóa, và phân chia
+trách nhiệm — giống hệt lý do tại sao một team developer tốt hơn một developer duy nhất, dù người
+đó tài năng đến đâu.
+ℹ Triết lý chương — "Kỹ sư quản lý AI"
+Kỹ sư giỏi trong tương lai không phải là người viết code giỏi nhất,
+mà là người biết tổ chức đội ngũ AI hiệu quả nhất.
+Cũng như một Tech Lead giỏi không phải là người code nhanh nhất,
+mà là người biết phân chia công việc, resolve conflict, và đảm bảo
+team deliver đúng hướng. Chương này dạy bạn trở thành Tech Lead của AI team.
+
+© 2025 — Playbook SDD + ADD 3 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+11.1 Tại sao 1 Agent không đủ?
+Câu trả lời không phải là "agent hiện tại kém". Đây là những giới hạn kiến trúc cơ bản — sẽ không
+biến mất kể cả khi context window mở rộng thêm 10 lần. Hiểu những giới hạn này giúp bạn biết khi
+nào cần scale up từ single-agent sang multi-agent.
+
+11.1.1 Context Window Limits — Giới hạn bộ nhớ làm việc
+Context window — dù 200K hay 2M tokens — vẫn là finite resource. Một codebase production thực
+tế thường có hàng trăm ngàn dòng code. Khi agent phải hold cả frontend components, backend
+services, database schemas, test files, và spec documents trong cùng một context, không gian cho
+reasoning thực sự trở nên chật hẹp.
+📊 Context Window Limits — Real codebase
+# Ví dụ: codebase thực tế không fit trong 1 context
+
+# Medium-sized monorepo:
+frontend/src/
+~15,000 lines TypeScript
+backend/src/
+~25,000 lines Go
+shared/types/
+~3,000 lines
+tests/
+~12,000 lines
+docs/specs/
+~8,000 lines
+──────────────────────────────────
+Total:
+~63,000 lines
+# Token estimation: ~63,000 lines × 15 tokens/line = ~945,000 tokens
+# Claude Sonnet context window: 200,000 tokens
+# → Codebase lớn hơn 4.7× context window
+# Kể cả nếu context window = 1M tokens:
+# Enterprise codebase: 500K+ lines = ~7.5M tokens
+# Vẫn không fit.
+# Solution: Không cần 1 agent biết hết.
+# Agent Frontend chỉ cần biết frontend code + shared types.
+# Agent Backend chỉ cần biết backend + DB schema + shared types.
+# Lead Agent chỉ cần biết interface contracts giữa các parts.
+
+11.1.2 Cognitive Load của AI — Khi "làm nhiều" = "làm kém"
+Cognitive Load không chỉ là concept của tâm lý học con người. Nó apply cho AI model ở một nghĩa
+kỹ thuật: khi model phải track quá nhiều concerns cùng lúc trong context window, attention
+mechanism bị phân tán, và reasoning quality cho mỗi concern giảm xuống.
+Nghiên cứu từ các team engineering lớn nhất quán: agent chuyên môn hóa cho một task type (ví
+dụ: chỉ viết CSS/UI) có output quality cao hơn đáng kể so với agent generalist được yêu cầu làm
+"full stack" trong cùng một session. Đây không phải về intelligence — đây là về focus.
+Scenario
+
+Agent phải track
+
+Reasoning quality
+
+Output quality
+
+Full-stack trong 1
+session
+
+CSS + SQL + Business
+Logic + Tests + Docs
+
+Phân tán, ~60%
+
+Inconsistent, needs
+much rework
+
+Frontend-only agent
+
+UI patterns, component
+state, a11y, CSS
+
+Focused, ~90%
+
+High quality, minimal
+rework
+
+Backend-only agent
+
+DB schema, business
+rules, API contracts
+
+Focused, ~90%
+
+High quality, minimal
+rework
+
+Test-only agent
+
+Test patterns, coverage
+criteria, mocking
+
+Focused, ~95%
+
+Thorough, catches
+edge cases
+
+© 2025 — Playbook SDD + ADD 4 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+ℹ Cognitive Load — Tại sao Agent chuyên nghiệp hóa tốt hơn
+Không phải vì agent "không thể" làm nhiều thứ — nó có thể.
+Vấn đề là khi attention bị split giữa CSS animations và SQL query optimization,
+agent không thể hold đủ "best practice context" cho cả hai cùng lúc.
+Kết quả: CSS đủ tốt nhưng không excellent, SQL đúng nhưng không optimized.
+Chuyên môn hóa = tập trung toàn bộ attention vào một domain = excellence.
+
+11.1.3 Parallel Execution — Tối ưu hóa thời gian chờ
+Đây là lợi ích ít được nhắc đến nhưng có impact trực tiếp đến developer experience. Nhiều task
+trong một feature cycle là independent — chúng có thể chạy song song nếu có đủ agents.
+⚡ Parallel Execution — Time optimization
+# Sequential workflow (1 agent):
+
+# Week: Mon → Fri
+Mon: Agent writes backend API
+(4h)
+Tue: Agent writes frontend components (4h)
+Wed: Agent writes integration tests
+(3h)
+Wed: Agent writes documentation
+(2h)
+Thu: Agent fixes test failures
+(3h)
+────────────────────────────────────────
+Total: ~16h developer-facing time + ~16h waiting
+# Parallel workflow (3 agents):
+# Day 1 (parallel):
+Agent A (Backend): writes API endpoints
+Agent B (Frontend): writes components
+Agent C (Docs): writes API documentation
+
+4h
+4h
+2h
+
+← CONCURRENT
+← CONCURRENT
+
+# Day 2 (sequential after backend done):
+Agent B: integrates with backend API
+2h
+Agent A: runs integration tests
+1h
+────────────────────────────────────────
+Total: ~7h developer-facing time (vs 16h sequential)
+→ 56% reduction in elapsed time
+# Developer benefit: while Agent A runs 5-min integration test,
+# Agent B writes documentation → zero idle time.
+
+© 2025 — Playbook SDD + ADD 5 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+11.2 Kiến trúc Multi-Agent
+Không phải mọi multi-agent system đều có cùng kiến trúc. Cũng như microservices có nhiều pattern
+khác nhau (event-driven, API gateway, service mesh), multi-agent cũng có những architectural
+choices với trade-off rõ ràng.
+
+11.2.1 Vertical vs. Horizontal — Hai triết lý tổ chức
+🏗 Vertical vs Horizontal — Multi-Agent Architecture
+╔═══════════════════════════════════════════════════════════════╗
+║
+VERTICAL (Orchestrator + Workers) — Hierarchical
+║
+╠═══════════════════════════════════════════════════════════════╣
+║
+║
+║
+┌────────────────────┐
+║
+║
+│
+LEAD AGENT
+│ ← Human interface
+║
+║
+│ (Orchestrator)
+│
+Receives high-level
+║
+║
+│ Plans + delegates │
+intent, delegates down ║
+║
+└─────────┬──────────┘
+║
+║
+│
+║
+║
+┌─────────────┼─────────────┐
+║
+║
+▼
+▼
+▼
+║
+║
+┌──────────┐ ┌──────────┐ ┌──────────┐
+║
+║
+│ Frontend │ │ Backend │ │ Testing │
+║
+║
+│ Agent
+│ │ Agent
+│ │ Agent
+│
+║
+║
+└──────────┘ └──────────┘ └──────────┘
+║
+║
+║
+║ Pros: Clear responsibility, easy to audit, simple conflict ║
+║ Cons: Orchestrator = bottleneck, single point of failure
+║
+║ Best for: Feature teams, bounded contexts
+║
+╠═══════════════════════════════════════════════════════════════╣
+║
+HORIZONTAL (Peer Agents) — Flat
+║
+╠═══════════════════════════════════════════════════════════════╣
+║
+║
+║
+┌──────────┐ ←→ ┌──────────┐ ←→ ┌──────────┐
+║
+║
+│ Agent A │
+│ Agent B │
+│ Agent C │
+║
+║
+│(Frontend)│
+│(Backend) │
+│(Testing) │
+║
+║
+└──────────┘
+└──────────┘
+└──────────┘
+║
+║
+↕
+↕
+↕
+║
+║
+└────────────────┴─────────────────┘
+║
+║
+Shared Context
+║
+║
+(shared_context.md
+║
+║
+or shared DB)
+║
+║
+║
+║ Pros: No single bottleneck, better parallelism
+║
+║ Cons: Complex conflict resolution, harder to audit
+║
+║ Best for: Independent parallel workstreams
+║
+╚═══════════════════════════════════════════════════════════════╝
+
+11.2.2 Shared State & Context Synchronization
+Đây là vấn đề lớn nhất của multi-agent system — không phải là làm cho từng agent làm việc tốt,
+mà là làm cho chúng communicate hiệu quả. Khi Agent Backend đổi tên field từ "user_id" thành
+"userId" (camelCase), Agent Frontend cần biết ngay. Nếu không có cơ chế synchronization, hai
+agents sẽ build trên những assumptions khác nhau và collision xảy ra ở integration time.
+
+shared_context.md — Backbone của Multi-Agent Communication
+📄 shared_context.md — Multi-agent backbone
+# .sdd/shared_context.md
+# File này là NGUỒN SỰ THẬT CHUNG cho mọi agents
+# Update bởi: Lead Agent sau mỗi major decision
+# Read bởi: Tất cả agents trước khi bắt đầu task
+# Version: timestamp-based (không phải semver)
+
+## LAST UPDATED: 2025-01-20 15:30 UTC
+© 2025 — Playbook SDD + ADD 6 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+## Updated by: Lead Agent (task: T007 backend implementation)
+## API CONTRACTS (Source of Truth)
+# Field names, types, và status của mọi API endpoint
+POST /auth/register
+Request: { email: string, password: string }
+Response: { user_id: string, created_at: ISO8601 }
+Status: ✅ IMPLEMENTED (backend-agent, commit: abc123)
+POST /auth/login
+Request: { email: string, password: string }
+Response: { access_token: string, refresh_token: string }
+Status: ✅ IMPLEMENTED (backend-agent, commit: def456)
+GET /orders
+Response: { orders: Order[], meta: { total: int, cursor: string } }
+Status: 🔄 IN PROGRESS (backend-agent, ETA: 2h)
+Note: Field name changed from "order_list" to "orders" — 2025-01-20 14:00
+## DATA TYPES
+# Canonical type definitions — no ambiguity
+Order:
+id: UUID string
+user_id: UUID string (NOT userId — snake_case throughout)
+status: enum ["pending", "processing", "shipped", "delivered"]
+created_at: ISO8601 string (NOT timestamp, NOT unix epoch)
+items: OrderItem[]
+## KNOWN BREAKING CHANGES
+# Log mọi API changes để agents khác biết cần update
+2025-01-20 14:00: Renamed "order_list" → "orders" in GET /orders
+Impact: Frontend agent cần update response parsing
+Status: ⚠ Frontend agent CHƯA UPDATE — pending
+## SHARED DEPENDENCIES
+# Libraries được dùng bởi nhiều agents — phải consistent
+Auth: golang-jwt/jwt (backend) ↔ jwt-decode (frontend)
+Date: time.Time (backend) ↔ date-fns (frontend) — format: ISO8601
+## ENVIRONMENT
+Dev DB:
+postgresql://localhost:5432/devdb
+Dev API: http://localhost:8080
+Dev Frontend: http://localhost:3000
+
+Conflict Resolution — Lead Agent như Trọng tài
+Xung đột trong multi-agent system thường không phải về logic code — nó là về shared resources:
+ai được phép sửa cùng một config file, cùng một database schema, cùng một API endpoint
+definition?
+⚖ Lead Agent Conflict Resolution
+# Conflict scenario: 2 agents muốn sửa api_contracts.yaml
+
+# Agent Frontend (09:00):
+# "Tôi cần thêm field imageUrl vào Product response"
+# Agent Backend (09:00, CONCURRENT):
+# "Tôi cần rename field image_path → image_url trong Product response"
+# Nếu không có conflict resolution:
+# Cả hai đều edit api_contracts.yaml
+# Git conflict → manual resolution needed
+# Worst case: both committed → inconsistent state
+© 2025 — Playbook SDD + ADD 7 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+# ── LEAD AGENT PROTOCOL ─────────────────────────────────────
+# Mọi write đến shared files phải đi qua Lead Agent
+# RULE trong AGENTS.md của các sub-agents:
+"Trước khi modify bất kỳ file trong .sdd/ hoặc api_contracts.yaml:
+1. POST request đến Lead Agent với change proposal
+2. Đợi approval từ Lead Agent
+3. Chỉ proceed khi nhận được confirmation"
+# Lead Agent nhận cả 2 requests:
+# Frontend: add imageUrl
+# Backend: rename image_path → image_url
+# Lead Agent THINKING:
+# "Hai requests thực ra compatible — Backend đang rename,
+# Frontend đang add field mới với tên đó.
+# Solution: Backend rename first, then Frontend adds to schema.
+# Order matters: Backend first (breaks existing), Frontend second (adds)"
+# Lead Agent DECISION:
+# 1. Approve Backend rename (first)
+# 2. After Backend done: approve Frontend add
+# 3. Update shared_context.md với final state
+# 4. Notify both agents về resolution
+
+11.2.3 Communication Patterns giữa Agents
+Pattern
+
+Cơ chế
+
+Use case
+
+Ví dụ
+
+File-based handoff
+
+Write task output to file,
+next agent reads
+
+Sequential pipeline
+
+Backend writes API
+spec → Frontend reads
+
+Shared database
+
+All agents read/write
+shared DB
+
+Real-time state sync
+
+shared_context.md or
+SQLite
+
+Event queue
+
+Agent A publishes
+event, B subscribes
+
+Loose coupling
+
+Backend done →
+Frontend notified
+
+Direct delegation
+
+Lead Agent spawns
+sub-agent with context
+
+Orchestrated execution
+
+Claude Code multiagent
+
+Spec-based contract
+
+Agents coordinate via
+SPEC.md
+
+Prevent conflicts
+upfront
+
+SDD workflow
+
+11.2.4 Thiết kế Agent Team — Nguyên tắc phân chia
+Không phải mọi dự án đều cần cùng số lượng agents. Nguyên tắc phân chia agent team: mỗi agent
+nên có một domain rõ ràng không overlap với agents khác, communication giữa agents nên minimal
+(loose coupling), và mỗi agent có thể fail/restart độc lập.
+Team size
+
+Agent team khuyến nghị
+
+Khi phù hợp
+
+1 developer
+
+1 agent (generalist)
+
+Personal project, prototype
+
+2-3 developers
+
+1 Lead + 2 Specialists (FE + BE)
+
+Small team, one product
+
+4-6 developers
+
+1 Lead + 3-4 Specialists
+
+Multiple modules/services
+
+7+ developers
+
+1 Lead + domain teams (each
+with sub-lead)
+
+Large product, multiple squads
+
+© 2025 — Playbook SDD + ADD 8 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+11.3 Skill System — Đóng gói Kinh nghiệm Senior
+vào File
+Một trong những thách thức lớn nhất của AI-assisted development là "knowledge transfer": làm thế
+nào để truyền đạt kinh nghiệm tích lũy qua nhiều năm của một Senior Developer vào AI? Coding
+conventions, performance patterns, security gotchas, domain-specific idioms — tất cả đều ở trong
+đầu của senior, không ở trong README.
+SKILL.md giải quyết vấn đề này: đóng gói kinh nghiệm thành playbook có thể execute được. Không
+phải tutorial để người đọc, mà là instruction set để agent thực thi. Khi senior developer viết một
+SKILL.md tốt, mọi agent trong team — kể cả agent chạy bởi intern mới — đều có thể execute theo
+chuẩn của senior.
+ℹ SKILL.md — "Kinh nghiệm Senior trong file cấu hình"
+Senior dev có 7 năm biết rằng: "Câu query này cần index composite trên (user_id, created_at)".
+Không có senior, junior dev viết query không có index → production slow query.
+SKILL.md: "Performance Tuner skill" chứa rule này → mọi agent đều biết.
+Knowledge không còn "nằm trong đầu" — nó được encode vào skill file.
+
+11.3.1 SKILL.md Format
+📄 SKILL.md — Template
+# SKILL.md — Format chuẩn
+# Mỗi skill là một file riêng trong .sdd/skills/
+
+--name: [Skill Name]
+version: 1.0.0
+author: @senior-dev-name
+domain: [backend | frontend | testing | database | security | devops]
+tools: [Cline, Cursor, Claude Code] # Tools nào hỗ trợ skill này
+trigger: [Khi nào agent tự động áp dụng skill này]
+--# [Skill Name]
+## ROLE
+# Một câu mô tả agent là ai khi apply skill này
+[Bạn là expert [X] với focus vào [Y].]
+## EXPERTISE
+# Domain knowledge cụ thể agent cần có
+## WORKFLOW
+# Step-by-step process agent phải follow
+1. [Step 1: action + outcome]
+2. [Step 2: ...]
+## PATTERNS (với code examples)
+# The "correct way" này agent phải dùng
+## ANTI-PATTERNS
+# Những gì agent KHÔNG được làm — với lý do
+## CHECKLIST
+# Tự-kiểm tra trước khi submit
+- [ ] [criterion 1]
+- [ ] [criterion 2]
+
+11.3.2 10 Must-Have Skills — Thực tế từ Production
+© 2025 — Playbook SDD + ADD 9 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+Dưới đây là 10 skills có ROI cao nhất trong thực tế, được tổng hợp từ kinh nghiệm của các teams
+áp dụng AI-assisted development. Mỗi skill giải quyết một "pain point" cụ thể mà agents thường
+xuyên fail khi không có guidance.
+
+Skill 1 — SQL Performance Tuner
+📄 Skill 1: SQL Performance Tuner
+# .sdd/skills/sql-performance-tuner.md
+--name: SQL Performance Tuner
+domain: database
+trigger: Khi viết hoặc review database queries
+---
+
+## ROLE
+Expert DBA với focus vào query optimization và index strategy.
+## WORKFLOW
+1. Identify query access patterns (single record vs range vs aggregate)
+2. Check existing indexes trước khi add new
+3. Estimate cardinality của WHERE clause columns
+4. Write EXPLAIN ANALYZE output trong comment
+## PATTERNS
+# ✅ Composite index cho common query patterns
+-- Query: WHERE user_id = ? AND created_at > ?
+-- Index: CREATE INDEX idx_orders_user_date
+-ON orders(user_id, created_at DESC)
+-- Rule: Most selective column FIRST
+# ✅ Avoid SELECT * in production
+SELECT id, user_id, status, created_at FROM orders
+-- NOT: SELECT * FROM orders
+# ✅ Pagination: cursor-based over offset for large tables
+SELECT * FROM orders WHERE id > $cursor ORDER BY id LIMIT 20
+-- NOT: SELECT * FROM orders LIMIT 20 OFFSET 10000
+## ANTI-PATTERNS
+# ❌ N+1 queries: đừng query trong loop
+# ❌ Non-sargable predicates: WHERE LOWER(email) = $1
+#
+(use: WHERE email = LOWER($1) để tận dụng index)
+# ❌ Missing index trên foreign keys
+## CHECKLIST
+- [ ] Query có index support chưa? (EXPLAIN ANALYZE)
+- [ ] Có N+1 pattern không?
+- [ ] Pagination dùng cursor, không offset?
+
+Skill 2 — API Security Auditor
+📄 Skill 2: API Security Auditor
+# .sdd/skills/api-security-auditor.md
+--name: API Security Auditor
+domain: security
+trigger: Khi implement hoặc review HTTP endpoints
+---
+
+## ROLE
+Security engineer chuyên về API security theo OWASP Top 10.
+## CHECKLIST (mandatory cho mọi endpoint)
+- [ ] Authentication: endpoint có require valid JWT không?
+- [ ] Authorization: user có quyền access resource này không?
+© 2025 — Playbook SDD + ADD 10 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+- [ ] Input validation: mọi parameter được validate?
+- [ ] Rate limiting: header X-RateLimit-* có present?
+- [ ] Error messages: không leak internal details?
+- [ ] SQL: dùng parameterized queries, không string concat?
+- [ ] Sensitive data: không log passwords, tokens, PII?
+## PATTERNS
+# ✅ Authorization check (RBAC)
+func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
+orderID := chi.URLParam(r, "id")
+userID := r.Context().Value("user_id").(string)
+order, err := h.svc.GetOrder(orderID)
+if err != nil { /* ... */ }
+
+}
+
+// IMPORTANT: verify ownership
+if order.UserID != userID {
+http.Error(w, "forbidden", http.StatusForbidden)
+return
+}
+
+## ANTI-PATTERNS
+# ❌ Assuming authentication = authorization
+# ❌ Using same error for "not found" vs "forbidden" (info leak)
+# ❌ Logging request body without sanitization
+
+Skills 3–10 — Danh sách đầy đủ với mô tả
+Skill
+
+Domain
+
+Vấn đề giải quyết
+
+Trigger
+
+3. React Component
+Architect
+
+Frontend
+
+Component design,
+state management, rerender optimization
+
+Khi viết React
+components
+
+4. Go Error Handler
+
+Backend
+
+Structured error
+wrapping, sentinel
+errors, logging
+
+Khi handle errors trong
+Go
+
+5. Test Coverage
+Engineer
+
+Testing
+
+Test strategy, boundary
+values, mock design
+
+Khi viết test files
+
+6. Docker/K8s Deployer
+
+DevOps
+
+Multi-stage builds,
+resource limits, health
+checks
+
+Khi viết
+Dockerfile/manifests
+
+7. Async Task Designer
+
+Backend
+
+Queue patterns, retry
+logic, idempotency
+
+Khi implement
+background jobs
+
+8. Frontend
+Performance
+
+Frontend
+
+Bundle size, lazy
+loading, Core Web
+Vitals
+
+Khi optimize frontend
+performance
+
+9. Data Migration Safe
+
+Database
+
+Zero-downtime
+migrations, rollback
+plans
+
+Khi viết DB migration
+files
+
+10. OpenAPI
+Documenter
+
+Documentation
+
+Consistent schema,
+examples, error
+responses
+
+Khi document API
+endpoints
+
+Skill 8 — Frontend Performance (Full example)
+📄 Skill 8: Frontend Performance (Full)
+# .sdd/skills/frontend-performance.md
+---
+
+© 2025 — Playbook SDD + ADD 11 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+name: Frontend Performance Optimizer
+domain: frontend
+trigger: Khi build hoặc review React/Next.js components
+--## ROLE
+Frontend engineer chuyên về Core Web Vitals và bundle optimization.
+## CORE METRICS (targets)
+LCP (Largest Contentful Paint): < 2.5s
+FID (First Input Delay):
+< 100ms
+CLS (Cumulative Layout Shift):
+< 0.1
+Bundle size per route:
+< 150KB gzipped
+## PATTERNS
+# ✅ Dynamic import cho large components
+const HeavyChart = dynamic(() => import("./HeavyChart"), {
+loading: () => <ChartSkeleton />,
+ssr: false
+})
+# ✅ Image optimization
+// NOT: <img src="/hero.png" />
+// USE: Next.js Image với priority cho above-the-fold
+<Image src="/hero.png" width={1200} height={600} priority alt="Hero" />
+# ✅ Avoid unnecessary re-renders
+// Memoize expensive calculations
+const sortedItems = useMemo(
+() => items.sort((a,b) => b.score - a.score),
+[items] // Only recompute when items change
+)
+## ANTI-PATTERNS
+# ❌ useEffect with no deps array (runs on every render)
+# ❌ Inline object/function props without useMemo/useCallback
+# ❌ Import full library: import _ from "lodash"
+#
+(use: import debounce from "lodash/debounce")
+## CHECKLIST
+- [ ] Bundle analyzer: webpack-bundle-analyzer run?
+- [ ] Images: Next.js Image component used?
+- [ ] Dynamic imports: large components lazy loaded?
+- [ ] React DevTools Profiler: no unexpected re-renders?
+
+11.3.3 Cách tạo Custom Skill cho dự án
+Skills đặc thù cho dự án — domain-specific knowledge, company-specific patterns, một business
+rule phức tạp — thường có giá trị cao nhất nhưng ít được build nhất. Workflow tạo custom skill:
+1. Identify pain point: agent thường làm sai điều gì? Cần review lại nhiều lần nhất?
+2. Interview senior: "Khi bạn review AI output, bạn thường sửa cái gì?" → đó là candidate skill
+3. Write skill draft: dùng SKILL.md template, focus vào patterns và anti-patterns cụ thể
+4. Test với agent: đưa skill vào session, check output cải thiện không
+5. Iterate: skill tốt cần 2-3 lần revision trước khi stable
+📄 Custom Skill: Payment Safety Guard
+# Ví dụ: Custom skill cho fintech project
+# .sdd/skills/payment-safety.md
+--name: Payment Safety Guard
+domain: business (fintech-specific)
+trigger: Khi implement bất kỳ thứ gì liên quan đến payment processing
+---
+
+© 2025 — Playbook SDD + ADD 12 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+## ROLE
+Payment systems engineer với focus vào idempotency và double-charge prevention.
+## DOMAIN KNOWLEDGE (company-specific)
+Payment flow: CartCheckout → PaymentIntent → GatewayCall → Webhook → Confirm
+Double-charge risk: Xảy ra khi GatewayCall timeout và client retry
+Idempotency key: phải bao gồm order_id + attempt_number
+## PATTERNS
+// ✅ Idempotent payment attempt
+idempotencyKey := fmt.Sprintf("%s-attempt-%d", orderID, attempt)
+result, err := gateway.Charge(amount, idempotencyKey)
+// ✅ Check for existing successful payment before retry
+existing, _ := paymentRepo.FindByIdempotencyKey(key)
+if existing != nil && existing.Status == "success" {
+return existing, nil // Already processed — return existing
+}
+## ANTI-PATTERNS
+# ❌ Retry without idempotency key = double charge
+# ❌ Process webhook without verifying HMAC signature
+# ❌ Allow concurrent payment attempts for same order
+## MANDATORY CHECKS
+- [ ] Idempotency key present in every payment call
+- [ ] Webhook signature verified
+- [ ] Concurrent attempt protection (distributed lock)
+- [ ] Amount invariant: amount không đổi sau order creation
+
+© 2025 — Playbook SDD + ADD 13 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+11.4 Hooks và Automation — Hệ thống Tự-kiểm soát
+Hooks là cơ chế chạy automation tại các điểm quan trọng trong agent workflow: trước khi agent
+sửa file, sau khi agent chạy tests, trước khi commit. Kết hợp với agent, hooks tạo ra một "SelfHealing Loop" — hệ thống tự phát hiện và tự sửa lỗi mà không cần human intervention cho những
+vấn đề đã được dự đoán trước.
+
+11.4.1 Lifecycle Hooks — Điểm chạm của Automation
+Hook
+
+Timing
+
+Use case
+
+Ví dụ action
+
+pre_file_edit
+
+Trước khi agent edit file
+
+Backup, validation
+
+Create checkpoint,
+validate constraints
+
+post_file_edit
+
+Sau khi agent edit file
+
+Auto-format, lint
+
+Run gofmt/prettier/eslint
+--fix
+
+pre_test
+
+Trước khi chạy tests
+
+Environment setup
+
+Start test DB, seed
+fixtures
+
+post_test
+
+Sau khi tests run
+
+Report, cleanup
+
+Generate coverage
+report, cleanup DB
+
+pre_commit
+
+Trước khi git commit
+
+Quality gate
+
+Run full test suite, lint,
+check secrets
+
+post_commit
+
+Sau khi commit
+
+Notification, sync
+
+Update plan.md, notify
+lead agent
+
+11.4.2 Pre-commit Hook — Code Luôn Sạch
+Agent rất giỏi viết logic nhưng thường "quên" format code. Pre-commit hook đảm bảo: bất kể agent
+có format hay không, code commit vào repo luôn đúng convention. Human reviewer không phải
+nhìn code "xấu" mà distract khỏi logic review.
+⚙ .git/hooks/pre-commit — Comprehensive
+#!/bin/bash
+# .git/hooks/pre-commit — Comprehensive pre-commit for AI-generated code
+# chmod +x .git/hooks/pre-commit để activate
+
+set -e
+
+# Exit on any error
+
+echo "🔍 Running pre-commit checks..."
+# ── 1. FORMAT ─────────────────────────────────────────────
+echo " → Formatting Go code..."
+gofmt -w $(find . -name "*.go" -not -path "./vendor/*")
+echo " → Formatting TypeScript/JS..."
+if command -v prettier &> /dev/null; then
+prettier --write "frontend/src/**/*.{ts,tsx,css}" 2>/dev/null || true
+fi
+# ── 2. LINT ──────────────────────────────────────────────
+echo " → Running Go linter..."
+if ! golangci-lint run --timeout=60s; then
+echo "❌ Lint errors found. Fix before committing."
+exit 1
+fi
+# ── 3. TYPE CHECK ─────────────────────────────────────────
+© 2025 — Playbook SDD + ADD 14 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+echo " → Go type check..."
+if ! go vet ./...; then
+echo "❌ Type errors found."
+exit 1
+fi
+# ── 4. SECURITY SCAN ─────────────────────────────────────
+echo " → Scanning for secrets..."
+if command -v gitleaks &> /dev/null; then
+gitleaks detect --staged --no-banner
+fi
+# ── 5. TESTS (fast unit tests only) ──────────────────────
+echo " → Running unit tests..."
+if ! go test ./... -tags=unit -timeout=30s; then
+echo "❌ Unit tests failed."
+exit 1
+fi
+# ── 6. RE-STAGE formatted files ──────────────────────────
+git add -u # Stage any auto-formatted changes
+echo "✅ All pre-commit checks passed!"
+exit 0
+
+11.4.3 Self-Healing Loop — Đỉnh cao của Automation
+Self-Healing Loop là kịch bản mà hook phát hiện lỗi → tự động trigger agent fixer → agent sửa →
+hook chạy lại. Không cần human intervention cho những loại lỗi đã được dự đoán. Đây là bước tiến
+từ "agent với human approval" sang "self-correcting system".
+🔄 Self-Healing Loop — Architecture
+# Self-Healing Loop Architecture
+
+┌──────────────────────────────────────────────────────────────┐
+│
+SELF-HEALING LOOP
+│
+└──────────────────────────────────────────────────────────────┘
+1. Agent commits code
+│
+▼
+2. pre-commit hook runs tests
+│
+├── Tests PASS → commit proceeds → done
+│
+└── Tests FAIL
+│
+▼
+3. Hook captures: failed tests + error output
+│
+▼
+4. Hook invokes "Fixer Agent" with:
+- Test failure output
+- Affected files
+- SPEC.md (acceptance criteria)
+│
+▼
+5. Fixer Agent analyzes + fixes code
+│
+▼
+6. Hook re-runs tests
+│
+├── Tests PASS → allow commit
+│
+└── Tests still FAIL (after N attempts)
+→ STOP, notify human, require manual review
+⚙ scripts/self_heal.sh — Automated fixer
+
+© 2025 — Playbook SDD + ADD 15 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+#!/bin/bash
+# scripts/self_heal.sh — Invoked by pre-commit when tests fail
+# Usage: ./scripts/self_heal.sh "test output" "affected files"
+TEST_OUTPUT="$1"
+MAX_ATTEMPTS=3
+ATTEMPT=1
+while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+echo "🔧 Self-healing attempt $ATTEMPT/$MAX_ATTEMPTS"
+# Invoke Cline/Claude Code with fix prompt
+# (Cline CLI mode — available in Cline v3+)
+cline --no-interactive --task "$(cat <<EOF
+Tests are failing. Fix the code WITHOUT changing tests.
+Failed test output:
+$TEST_OUTPUT
+Rules:
+- Fix the implementation, not the tests
+- Follow AGENTS.md conventions
+- Do not add new functionality — minimal fix only
+EOF
+)"
+# Re-run tests
+if go test ./... -tags=unit -timeout=30s; then
+echo "✅ Self-healing successful on attempt $ATTEMPT"
+exit 0
+fi
+ATTEMPT=$((ATTEMPT + 1))
+done
+# All attempts failed
+echo "❌ Self-healing failed after $MAX_ATTEMPTS attempts."
+echo "📌 Manual review required."
+# Send notification (Slack, email, etc.)
+# curl -X POST $SLACK_WEBHOOK -d "{"text": "🚨 Auto-fix failed: manual review
+needed"}"
+exit 1
+
+⚠ Self-Healing Boundaries — Khi nào dừng
+Self-healing chỉ nên áp dụng cho lỗi PREDICTABLE và LOW-RISK:
+✅ Lint errors (safe, mechanical fixes)
+✅ Format issues (safe, no logic change)
+✅ Simple test failures (failing assertion, wrong return value)
+❌ Security vulnerabilities (needs human judgment)
+❌ Architecture violations (needs deliberate decision)
+❌ Persistent failures (> 3 attempts = systemic issue)
+Rule: If fix requires creativity → human. If fix is mechanical → automate.
+
+11.4.4 Hooks cấu hình cho Claude Code
+⚙ .claude/settings.json — Hook configuration
+# .claude/settings.json — Claude Code hook configuration
+{
+"hooks": {
+"PreToolUse": [
+{
+"matcher": "Write|Edit",
+
+© 2025 — Playbook SDD + ADD 16 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+"hooks": [
+{
+"type": "command",
+"command": "echo 'Checkpoint: ' $(git rev-parse HEAD) >>
+.sdd/checkpoints.log"
+}
+]
+}
+],
+"PostToolUse": [
+{
+"matcher": "Write.*\.go$",
+"hooks": [
+{
+"type": "command",
+"command": "gofmt -w $FILE && go vet $PKG 2>&1 || true"
+}
+]
+},
+{
+"matcher": "Write.*\.(ts|tsx)$",
+"hooks": [
+{
+"type": "command",
+"command": "prettier --write $FILE 2>&1 || true"
+}
+]
+}
+],
+"PostToolUse": [
+{
+"matcher": "Bash.*go test",
+"hooks": [
+{
+"type": "command",
+"command": "go test ./... -coverprofile=coverage.out && go tool cover html=coverage.out -o coverage.html"
+}
+]
+}
+]
+}
+}
+
+© 2025 — Playbook SDD + ADD 17 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+11.5 Hands-on Lab — Multi-Agent: Export Report
+sang PDF
+Bài lab này mô phỏng một tính năng production-level: Export Report to PDF. Đây là feature lý tưởng
+để demo multi-agent vì nó tự nhiên chia thành 3 concerns độc lập: UI/UX (nút bấm, loading state),
+Business Logic (query DB, prepare data), và Worker (render PDF, upload storage). Không có
+overlap. Không có circular dependency. Tất cả đều có thể chạy song song sau khi interface contract
+được define.
+
+11.5.1 Setup — Thiết lập team 4 agents
+⚙ Lab setup — 4-agent team
+# Agent team cho Export Report feature:
+
+# LEAD AGENT (bạn trực tiếp chat với agent này)
+# Role: Orchestrates team, resolves conflicts, owns shared_context.md
+# Tool: Cline / Claude Code
+# Context: tất cả docs + shared_context.md
+# AGENT A — UI Agent
+# Role: Frontend — nút bấm, modal, loading state, error display
+# Tool: Cline (separate VSCode window) hoặc cursor --agent
+# Context: AGENTS.md + frontend constraints + UI component patterns
+# AGENT B — Logic Agent
+# Role: Business logic — DB query, data transformation, validation
+# Tool: Cline (separate terminal session)
+# Context: AGENTS.md + backend constraints + DB schema
+# AGENT C — Worker Agent
+# Role: PDF rendering, cloud storage upload, async processing
+# Tool: Cline (separate session)
+# Context: AGENTS.md + worker constraints + PDF lib docs
+# Trong thực tế với Claude Code multi-agent mode:
+# claude --mode=multi-agent --agents=4 --orchestrator=lead
+# Trong Cline: mở 4 VSCode windows, mỗi window = 1 agent
+# Dùng shared_context.md để synchronize giữa các windows
+
+11.5.2 Step 1 — Lead Agent thiết lập Interface Contract
+Trước khi các sub-agents bắt đầu, Lead Agent phải define interface contracts: những gì mỗi agent
+cần từ agent khác. Đây là "hợp đồng" giúp các agents làm việc độc lập mà không conflict.
+📄 Lead Agent: Interface Contract definition
+# Lead Agent Prompt:
+"Chúng ta sẽ implement feature: Export Report to PDF.
+Phân tích feature và define interface contracts cho 3 sub-agents.
+
+Output yêu cầu:
+1. API contract: endpoint mà UI gọi
+2. Job contract: data structure giữa Logic và Worker agents
+3. Shared types: TypeScript/Go types dùng chung
+Cập nhật .sdd/shared_context.md với contracts này.
+Sub-agents sẽ đọc file này trước khi bắt đầu."
+# Lead Agent output → shared_context.md:
+## EXPORT REPORT FEATURE — Interface Contracts
+
+© 2025 — Playbook SDD + ADD 18 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+### API Contract (UI → Backend)
+POST /api/reports/export
+Request: { report_type: string, date_range: DateRange, format: "pdf" }
+Response: { job_id: string, status_url: string }
+Auth:
+Bearer JWT required
+GET /api/reports/jobs/:id
+Response: { status: "pending|processing|done|failed",
+download_url?: string, error?: string }
+### Job Contract (Logic → Worker)
+ExportJob:
+id:
+UUID
+report_data: ReportData
+← Logic Agent fills this
+metadata:
+{ user_id, report_type, requested_at }
+output_path: string
+← Worker Agent fills this
+### Shared Types
+DateRange: { from: ISO8601, to: ISO8601 }
+ReportData: { title: string, sections: Section[], generated_at: ISO8601 }
+Section: { heading: string, data: Record<string, any>[] }
+### Status
+⏳ READY TO START
+UI Agent:
+Logic Agent: ⏳ READY TO START
+Worker Agent: ⏳ READY TO START
+
+11.5.3 Step 2 — Parallel Execution (3 agents đồng thời)
+Agent A — UI (Frontend)
+🎨 Agent A: UI implementation
+# Agent A Prompt:
+"Đọc .sdd/shared_context.md để biết API contract.
+Implement UI cho Export Report feature:
+- Nút "Export PDF" trong ReportHeader component
+- Loading state: spinner + "Đang tạo PDF..." text
+- Error state: toast notification
+- Success: auto-download khi done
+
+Poll GET /api/reports/jobs/:id mỗi 3 giây.
+Stop polling khi status = done hoặc failed.
+DoD: Component renders, polling works in test, no TypeScript errors."
+# Agent A hoạt động CONCURRENT với B và C
+# Chỉ cần: API endpoint shape từ shared_context.md
+# Không phụ thuộc: backend implementation
+
+Agent B — Business Logic (Backend)
+⚙ Agent B: Business Logic implementation
+# Agent B Prompt:
+"Đọc .sdd/shared_context.md để biết API và Job contracts.
+Implement business logic cho Export Report:
+- POST /api/reports/export handler
+- Query report data từ database theo report_type + date_range
+- Tạo ExportJob record, enqueue vào Kafka topic "export-jobs"
+- GET /api/reports/jobs/:id handler (read job status)
+
+Schema: xem /docs/db/schema.sql cho tables cần query.
+Kafka: dùng pattern hiện có trong /internal/events/
+DoD: Handlers work, unit tests pass, no linting errors.
+Update shared_context.md: status = DONE khi xong."
+
+© 2025 — Playbook SDD + ADD 19 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+# Agent B hoạt động CONCURRENT với A và C
+# Chỉ cần: DB schema + Kafka patterns
+# Không phụ thuộc: UI implementation, PDF library
+
+Agent C — Worker (PDF + Storage)
+📋 Agent C: Worker implementation
+# Agent C Prompt:
+"Đọc .sdd/shared_context.md để biết Job contract.
+Implement PDF Worker service:
+- Kafka consumer cho topic "export-jobs"
+- Convert ReportData → PDF sử dụng go-pdf library
+- Upload PDF lên S3 (bucket: exports-{env})
+- Update job status: processing → done (với download_url)
+- Error handling: update status → failed nếu PDF fail
+
+PDF format: A4, margins 20mm, company branding từ /assets/
+S3: dùng client đã có trong /internal/storage/
+DoD: Consumer processes jobs, PDF generated, URL returned.
+Update shared_context.md: Worker status = DONE khi xong."
+
+11.5.4 Step 3 — Lead Agent Orchestrates & Merges
+⚖ Lead Agent: Integration & Conflict Resolution
+# Lead Agent theo dõi tiến độ qua shared_context.md
+
+# Sau khi agents A, B, C report DONE:
+# Lead Agent Prompt:
+"Ba sub-agents đã hoàn thành. Kiểm tra integration:
+1. Đọc shared_context.md — tất cả có đúng contracts không?
+2. Run integration tests: make test-integration
+3. Nếu có lỗi: identify root cause (sai agent nào?),
+tạo fix task và assign cho agent phù hợp
+4. Khi tất cả tests pass: tạo summary PR description"
+# Lead Agent thực hiện integration check:
+# Check 1: UI đúng API path?
+cat frontend/src/hooks/useExportReport.ts | grep "api/reports"
+# → POST /api/reports/export ✅ (khớp contract)
+# Check 2: Backend handler đúng không?
+cat backend/internal/handler/report_handler.go | grep "export"
+# → /api/reports/export ✅ (khớp)
+# Check 3: Job structure match?
+# Diffing backend ExportJob vs Worker ExportJob types...
+# ❌ Mismatch: backend dùng "report_data" (snake_case)
+#
+worker dùng "reportData" (camelCase)
+# Lead Agent conflict resolution:
+"Tìm thấy naming conflict: snake_case vs camelCase.
+Decision: dùng snake_case (theo Go convention).
+Worker Agent: update struct field name và re-run tests."
+
+ℹ Bài học từ Lab
+Multi-agent không eliminate conflict — nó tập trung conflict vào integration point.
+Lead Agent là "traffic controller", không phải "doer".
+shared_context.md là "single source of truth" cho mọi agents.
+Khi conflicts xảy ra, Lead Agent quyết định, sub-agents execute.
+Naming conflicts như trên là rất phổ biến — shared types help prevent.
+
+© 2025 — Playbook SDD + ADD 20 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+© 2025 — Playbook SDD + ADD 21 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+11.6 MCP trong Multi-Agent — Hệ thần kinh của
+Agent Team
+Trong single-agent workflow, MCP servers cung cấp cho agent khả năng truy cập external
+resources: database, GitHub, Jira, Slack. Trong multi-agent context, MCP evolves thành thứ gì đó
+mạnh hơn nhiều: "hệ thần kinh" cho phép agents không chỉ access external resources mà còn
+mượn capability của nhau.
+
+11.6.1 Tool Borrowing — Agents "Mượn" Capability của Nhau
+Kịch bản: Agent Frontend cần query database để verify UI behavior. Nhưng Agent Frontend không
+nên có direct DB access — đó là domain của Agent Backend. Với MCP shared server, Agent
+Frontend có thể "mượn" DB query capability từ Agent Backend thông qua MCP interface — với
+access control đảm bảo chỉ read, không write.
+🕸 MCP as Agent Team Neural Network
+# MCP as "Neural Network" for Agent Team
+
+┌─────────────────────────────────────────────────────────────┐
+│
+SHARED MCP INFRASTRUCTURE
+│
+└─────────────────────────────────────────────────────────────┘
+┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐
+│
+Lead
+│ │ Frontend │ │ Backend │ │
+Worker │
+│
+Agent
+│ │
+Agent
+│ │
+Agent
+│ │
+Agent
+│
+└─────┬─────┘ └─────┬─────┘ └─────┬─────┘ └─────┬─────┘
+│
+│
+│
+│
+└───────────────┴───────────────┴───────────────┘
+│
+▼
+┌──────────────────────────────────────────────────┐
+│
+MCP SHARED SERVER HUB
+│
+│
+│
+│ ┌────────────────┐ ┌────────────────────────┐ │
+│ │ Database MCP │ │ File System MCP
+│ │
+│ │ (read-only
+│ │ (project root access) │ │
+│ │
+for FE/Worker│ │
+│ │
+│ │
+read+write
+│ └────────────────────────┘ │
+│ │
+for Backend) │
+│
+│ └────────────────┘ ┌────────────────────────┐ │
+│
+│ Kafka MCP
+│ │
+│ ┌────────────────┐ │ (publish: Backend,
+│ │
+│ │ GitHub MCP
+│ │
+consume: Worker)
+│ │
+│ │ (all agents
+│ └────────────────────────┘ │
+│ │
+read PRs/
+│
+│
+│ │
+issues)
+│ ┌────────────────────────┐ │
+│ └────────────────┘ │ S3/Storage MCP
+│ │
+│
+│ (write: Worker only) │ │
+│
+└────────────────────────┘ │
+└──────────────────────────────────────────────────┘
+Key insight: Same MCP servers, DIFFERENT permissions per agent
+
+Access Control per Agent — MCP Scopes
+🔑 MCP per-agent access control
+# .sdd/mcp-config.yaml — Per-agent MCP permissions
+
+agents:
+lead-agent:
+description: "Orchestrator — broad access to coordinate"
+mcp_servers:
+database:
+© 2025 — Playbook SDD + ADD 22 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+access: read_write
+schemas: [all]
+github:
+scopes: [repo:read, issues:write, pr:read]
+filesystem:
+paths: [".sdd/", "src/", "tests/"]
+access: read_write
+frontend-agent:
+description: "UI — needs to query data to verify UI, but read-only"
+mcp_servers:
+database:
+access: read_only
+# Can query, cannot write
+schemas: [public]
+# Only public schema
+filesystem:
+paths: ["frontend/src/", ".sdd/shared_context.md"]
+access: read_write
+# NO: kafka, s3 — not in scope for UI agent
+backend-agent:
+description: "Core logic — needs DB access to implement handlers"
+mcp_servers:
+database:
+access: read_write
+schemas: [public]
+kafka:
+access: produce
+# Can publish, not consume
+topics: ["export-jobs", "order-events"]
+filesystem:
+paths: ["backend/", ".sdd/"]
+access: read_write
+worker-agent:
+description: "Async worker — consumes jobs, writes to storage"
+mcp_servers:
+database:
+access: read_write
+# Updates job status
+schemas: [public]
+kafka:
+access: consume
+# Can consume, not produce
+topics: ["export-jobs"]
+s3:
+access: write
+buckets: ["exports-dev", "exports-staging"]
+# NO: exports-prod — requires separate approval
+filesystem:
+paths: ["worker/", ".sdd/"]
+access: read_write
+
+11.6.2 MCP như Tool-Sharing Protocol
+Một ứng dụng advanced của MCP trong multi-agent: một agent publish một MCP server cung cấp
+capability của nó cho agents khác. Ví dụ: Agent Backend publish một "Report Data MCP Server"
+— Agent Frontend hoặc Worker có thể gọi endpoint này để lấy data mà không cần biết về DB
+schema hay query logic.
+🔗 MCP Tool-Sharing between agents
+# Agent Backend expose MCP Server cho agents khác
+
+# backend/mcp-server/report-data-server.py
+"""
+Report Data MCP Server
+Cho phép Frontend và Worker agents query report data
+mà không cần DB access trực tiếp.
+"""
+from mcp.server import MCPServer
+from mcp.types import Tool, TextContent
+© 2025 — Playbook SDD + ADD 23 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+server = MCPServer("report-data")
+@server.tool()
+async def get_report_data(
+report_type: str,
+from_date: str,
+to_date: str
+) -> dict:
+"""
+Lấy report data đã được processed.
+Frontend Agent dùng để preview data.
+Worker Agent dùng để render PDF.
+"""
+# Backend Agent handles DB logic
+data = await report_service.fetch(report_type, from_date, to_date)
+return data.to_dict()
+
+# Frontend Agent sử dụng:
+# Thay vì query DB trực tiếp (KHÔNG được phép)
+# → Gọi Backend Agent's MCP Server:
+# .vscode/settings.json (Frontend Agent session)
+{
+"cline.mcpServers": {
+"report-data": {
+"url": "http://localhost:3001/mcp", // Backend agent MCP server
+"description": "Report data từ Backend Agent"
+}
+}
+}
+# Frontend Agent có thể query:
+# "Lấy report data cho type=sales, last 7 days để verify UI render đúng"
+# → MCP gọi Backend Agent → Backend query DB → data returned
+# → Frontend Agent nhận data mà không vi phạm access policy
+
+© 2025 — Playbook SDD + ADD 24 / 25
+
+Playbook SDD + ADD | Chương 11: Multi-Agent & Agent Orchestration
+
+Tổng kết Chương 11 — Và lời khuyên cuối
+Section
+
+Key concept
+
+Takeaway
+
+11.1 — Tại sao multi-agent
+
+Context limit + Cognitive Load +
+Parallelism
+
+Một agent tốt; nhiều agents
+chuyên hóa tốt hơn
+
+11.2 — Kiến trúc
+
+Vertical vs Horizontal +
+shared_context.md
+
+Communication là vấn đề lớn
+nhất, không phải capability
+
+11.3 — Skill System
+
+SKILL.md = kinh nghiệm senior
+được encode
+
+10 must-have skills, custom skill
+cho domain knowledge
+
+11.4 — Hooks
+
+Self-Healing Loop = automation
+chuỗi
+
+Pre-commit đảm bảo code sạch;
+self-heal cho lỗi predictable
+
+11.5 — Lab
+
+Export PDF với 4-agent team
+
+Interface contract → parallel
+execution → lead orchestrates
+
+11.6 — MCP
+
+MCP = neural network cho
+agent team
+
+Tool borrowing với access
+control, not direct sharing
+
+💡 Lời khuyên cuối — Tư duy "Kỹ sư quản lý AI"
+Trong tương lai, kỹ sư giỏi không phải là người viết code giỏi nhất,
+mà là người biết tổ chức đội ngũ AI hiệu quả nhất.
+Tư duy này giúp bạn thoát khỏi nỗi sợ "AI thay thế lập trình viên" và chuyển sang tư duy
+"Lập trình viên quản lý AI". Giống như cách Industrial Revolution không thay thế con
+người mà tạo ra loại công việc mới — Software Engineer với AI không viết ít code hơn,
+họ deliver nhiều giá trị hơn với cùng thời gian.
+Kỹ năng bạn xây dựng qua cuốn sách này — SDD, ADD, Specification Patterns, MultiAgent Orchestration — là kỹ năng của người quản lý AI team, không phải người bị quản
+lý bởi AI.
+
+ℹ Chương tiếp theo — Chương 12: Enterprise ADD
+Chương 12 đưa tất cả những gì bạn đã học vào enterprise context:
+Governance, compliance, multi-team coordination, và AI policy.
+Khi không chỉ một team mà cả organization áp dụng AI-driven development,
+cần những framework gì để đảm bảo consistency, security, và accountability?
+
+© 2025 — Playbook SDD + ADD 25 / 25
+
+

@@ -40,11 +40,12 @@ p{font-size:1.1rem;line-height:1.7;color:#c8ffd4;margin-bottom:.6rem}
 .sh .sub{font-family:'Josefin Sans',sans-serif;font-size:1rem;color:#66ffaa;letter-spacing:.2em;
   text-transform:uppercase;margin-top:.8rem;z-index:1}
 /* TITLE SLIDE */
-.ts{text-align:center}
+.ts{text-align:center;max-width:980px;margin:0 auto}
 .ts .badge{display:inline-block;border:1px solid #00ff55;color:#00ff55;font-size:.7rem;
   letter-spacing:.2em;text-transform:uppercase;padding:4px 14px;margin-bottom:1.2rem}
 .ts h1{font-size:clamp(2rem,4.5vw,3.4rem)}
 .ts .meta{color:#66ffaa;font-size:.85rem;letter-spacing:.1em;margin-top:1rem}
+.ts .card{margin-left:auto;margin-right:auto}
 /* CARDS */
 .card{background:rgba(0,255,85,.04);border:1px solid rgba(0,255,85,.2);border-radius:4px;
   padding:1.2rem 1.4rem;margin-bottom:.9rem}
@@ -114,18 +115,96 @@ p{font-size:1.1rem;line-height:1.7;color:#c8ffd4;margin-bottom:.6rem}
 #author{position:fixed;bottom:10px;left:20px;z-index:200;font-family:'Josefin Sans',sans-serif;
   font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(0,255,85,.35);
   pointer-events:none;user-select:none}
-  /* Mobile scroll fix */
-  @media (max-width: 768px) {
-    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
-    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+/* responsive_1 safe mobile patch */
+@media (max-width: 800px) {
+  .slide {
+    padding: 52px 16px 96px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
   }
+
+  .slide.active {
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+  }
+
+  .two-col,
+  .cols2,
+  .cols3,
+  .toc-grid,
+  .data-grid,
+  .card-grid.cols2,
+  .card-grid.cols3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .toc-grid .toc-item[style*="grid-column"],
+  .data-grid .data-point[style*="grid-column"] {
+    grid-column: auto !important;
+  }
+
+  #nav,
+  #nav-ui {
+    bottom: 10px !important;
+    width: calc(100% - 20px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    gap: 10px !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    justify-content: center !important;
+  }
+
+  #slideshow {
+    height: calc(100dvh - 30px) !important;
+  }
+
+  #nav button,
+  .nav-btn {
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  #slide-counter {
+    font-size: 13px !important;
+    letter-spacing: 2px !important;
+    min-width: 72px !important;
+  }
+
+  .si.ts {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .si.ts .card {
+    width: 100%;
+  }
+
+  #author {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    display: block !important;
+    width: 100%;
+    padding: 6px 10px;
+    text-align: center;
+    font-size: 10px !important;
+    letter-spacing: 0.08em !important;
+    color: rgba(0, 255, 65, 0.55);
+    background: rgba(0, 16, 0, 0.92);
+    border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+    z-index: auto !important;
+  }
+}
 </style>
 </head>
 <body>
 <canvas id="rain"></canvas>
 <div class="scanlines"></div>
 <div id="pb"></div>
-<div id="author">LinhNDM — Nguyễn Đình Mạnh Linh</div>
+<div id="author">LinhNDM &mdash; Nguyễn Đình Mạnh Linh</div>
 
 <!-- ============================================================
      SLIDE 01 — TITLE
@@ -226,7 +305,7 @@ p{font-size:1.1rem;line-height:1.7;color:#c8ffd4;margin-bottom:.6rem}
      ============================================================ -->
 <div class="slide" data-section="1">
 <div class="si">
-  <h2>AGENTS.md — "Agent Constitution"</h2>
+  <h2>4.1.1 — Giải phẫu một AGENTS.md hoàn chỉnh</h2>
   <blockquote class="bq">"AGENTS.md là bản hiến pháp của agent — định nghĩa danh tính, quyền hạn và giới hạn trong một file duy nhất."</blockquote>
   <div class="two-col" style="margin-top:.8rem">
     <div class="card">
@@ -261,21 +340,21 @@ p{font-size:1.1rem;line-height:1.7;color:#c8ffd4;margin-bottom:.6rem}
      ============================================================ -->
 <div class="slide" data-section="1">
 <div class="si">
-  <h2>Bảng 4.1 — Single Source of Truth Hierarchy</h2>
-  <p style="margin-bottom:.8rem;font-size:.85rem;color:#66ffaa">5-level priority — khi conflict, level thấp hơn thắng</p>
+  <h2>4.1.2 — Chiến lược "Single Source of Truth"</h2>
+  <p style="margin-bottom:.8rem;font-size:.85rem;color:#66ffaa">Thiết lập thứ bậc rõ ràng để tránh xung đột chỉ thị giữa nhiều công cụ AI.</p>
   <table class="mt">
     <thead><tr>
       <th>Level</th><th>Source</th><th>Scope</th><th>Override</th><th>Ví dụ</th>
     </tr></thead>
     <tbody>
-      <tr><td><span class="hl">L1 (cao nhất)</span></td><td>System Prompt (Hardcoded)</td><td>Global</td><td>Không thể override</td><td>Safety rules từ Anthropic</td></tr>
-      <tr><td>L2</td><td>AGENTS.md (repo root)</td><td>Toàn repo</td><td>Chỉ L1 override</td><td>Team conventions, security</td></tr>
-      <tr><td>L3</td><td>AGENTS.md (subfolder)</td><td>Thư mục con</td><td>L1, L2 override</td><td>Frontend-specific rules</td></tr>
-      <tr><td>L4</td><td>CLAUDE.md (project)</td><td>Project context</td><td>L1–L3 override</td><td>Architecture, tech stack</td></tr>
-      <tr><td><span class="hl-o">L5 (thấp nhất)</span></td><td>Runtime Instructions</td><td>Session</td><td>Tất cả override</td><td>User prompt trong session</td></tr>
+      <tr><td><span class="hl">1 (Cao nhất)</span></td><td>.cursorrules (trong thư mục)</td><td>Session cụ thể</td><td>Ưu tiên tuyệt đối trong Cursor</td><td>Override tức thời theo file đang mở</td></tr>
+      <tr><td>2</td><td>.clinerules / .windsurfrules</td><td>Tool-specific</td><td>Chỉ áp dụng cho từng tool</td><td>Thiết lập riêng cho Cline/Windsurf</td></tr>
+      <tr><td>3</td><td>CLAUDE.md (dự án)</td><td>Dự án hiện tại</td><td>Ngữ cảnh kiến trúc</td><td>Patterns, kiến trúc, quyết định kỹ thuật</td></tr>
+      <tr><td>4</td><td>AGENTS.md (dự án)</td><td>Mọi Agent</td><td>Quy tắc chung toàn dự án</td><td>Phạm vi làm việc, guardrails, checklist</td></tr>
+      <tr><td><span class="hl-o">5 (Thấp nhất)</span></td><td>System prompt mặc định</td><td>Toàn cục</td><td>Fallback baseline</td><td>Hành vi mặc định của model</td></tr>
     </tbody>
   </table>
-  <div class="ab warn" style="margin-top:.8rem"><strong>Conflict Resolution</strong> Level thấp hơn (L1) luôn thắng. L5 là flexible nhất nhưng có thể bị L1–L4 chặn lại nếu vi phạm security rules.</div>
+  <div class="ab warn" style="margin-top:.8rem"><strong>Conflict Resolution</strong> File càng gần ngữ cảnh hiện tại thì ưu tiên càng cao. Nếu tool không đọc file ưu tiên cao, fallback xuống cấp tiếp theo thay vì gộp tất cả.</div>
 </div>
 </div>
 
@@ -284,7 +363,7 @@ p{font-size:1.1rem;line-height:1.7;color:#c8ffd4;margin-bottom:.6rem}
      ============================================================ -->
 <div class="slide" data-section="1">
 <div class="si">
-  <h2>4.1.2 — Bảo mật & Secrets Filtering</h2>
+  <h2>4.1.3 — Security Filtering — Lọc thông tin nhạy cảm</h2>
   <div class="ab danger"><strong>Critical Rule</strong> AGENTS.md KHÔNG BAO GIỜ chứa secrets. File này commit vào Git — public repo = lộ secrets.</div>
   <h3 style="margin-top:.8rem">Bảng 4.2 — Secrets Categories</h3>
   <table class="mt">
@@ -314,7 +393,7 @@ fi</div>
      ============================================================ -->
 <div class="slide" data-section="1">
 <div class="si">
-  <h2>4.1.3 — Cấu trúc AGENTS.md mẫu</h2>
+  <h2>Mẫu AGENTS.md hoàn chỉnh</h2>
   <div class="cb"># AGENTS.md — Project Constitution
 
 ## Identity
@@ -350,7 +429,7 @@ Persona: precise, security-conscious, performance-focused.
      ============================================================ -->
 <div class="slide" data-section="1">
 <div class="si">
-  <h2>4.1.4 — Version Control cho Prompts</h2>
+  <h2>4.1.4 — Version Control cho Prompt</h2>
   <div class="two-col">
     <div class="card">
       <h3>Semantic Versioning cho AGENTS.md</h3>
@@ -391,7 +470,7 @@ Persona: precise, security-conscious, performance-focused.
      ============================================================ -->
 <div class="slide" data-section="1">
 <div class="si">
-  <h2>4.1 — Exercises</h2>
+  <h2>4.1.5 — Bài tập thực hành — AGENTS.md</h2>
   <div class="two-col">
     <div class="card">
       <h3>Exercise 4.1.A — Viết AGENTS.md</h3>
@@ -435,7 +514,7 @@ Persona: precise, security-conscious, performance-focused.
      ============================================================ -->
 <div class="slide" data-section="2">
 <div class="si">
-  <h2>CLAUDE.md — "Project Memory"</h2>
+  <h2>4.2.1 — Giải phẫu CLAUDE.md hiệu quả</h2>
   <blockquote class="bq">"CLAUDE.md là bộ nhớ dài hạn của agent về dự án — thay thế cho việc giải thích lại context mỗi lần bắt đầu session mới."</blockquote>
   <div class="two-col" style="margin-top:.8rem">
     <div class="card">
@@ -467,7 +546,7 @@ Persona: precise, security-conscious, performance-focused.
      ============================================================ -->
 <div class="slide" data-section="2">
 <div class="si">
-  <h2>Bảng 4.3 — CLAUDE.md Scopes & Locations</h2>
+  <h2>4.2.2 — Phân cấp ưu tiên — CLAUDE.md vs các file khác</h2>
   <table class="mt">
     <thead><tr>
       <th>Location</th><th>Scope</th><th>Priority</th><th>Use Case</th>
@@ -500,7 +579,7 @@ Persona: precise, security-conscious, performance-focused.
      ============================================================ -->
 <div class="slide" data-section="2">
 <div class="si">
-  <h2>Bảng 4.4 — Need-to-Know Security Model</h2>
+  <h2>4.2.3 — Security Filtering cho CLAUDE.md</h2>
   <p style="margin-bottom:.8rem;font-size:.85rem;color:#66ffaa">Nguyên tắc: chỉ đưa vào CLAUDE.md những gì agent THỰC SỰ cần để làm việc</p>
   <table class="mt">
     <thead><tr>
@@ -525,42 +604,35 @@ Persona: precise, security-conscious, performance-focused.
      ============================================================ -->
 <div class="slide" data-section="2">
 <div class="si">
-  <h2>4.2.4 — CLAUDE.md mẫu đầy đủ</h2>
-  <div class="cb"># CLAUDE.md — Acme E-Commerce Platform
+  <h2>4.2.4 — Version Control — Theo dõi sự tiến hóa của kiến thức</h2>
+  <div class="two-col">
+    <div class="card">
+      <h3>Semantic versioning cho kiến thức dự án</h3>
+      <div class="cb"># CLAUDE.md
+# Version: 1.8.0
+# Updated: 2025-02-01
+# Maintainers: platform-team
 
-## TL;DR
-- Next.js 14 + TypeScript monorepo (apps/web, apps/api)
-- PostgreSQL + Prisma ORM, Redis cache, Stripe payments
-- Deployed on Vercel (web) + Railway (api)
-- CI/CD: GitHub Actions → staging → production
-- Team: 4 devs, 2-week sprints
+## Changelog
+### v1.8.0
+- Thêm ADR cho Redis failover
+- Cập nhật flow deploy staging → production
 
-## Architecture
-```
-Browser → Next.js (Vercel) → API Routes → Railway API
-                                        ↓
-                              PostgreSQL (RDS) + Redis
-                                        ↓
-                              Stripe Webhooks
-```
-
-## ADR (Architectural Decision Records)
-### ADR-001: Chose Prisma over raw SQL
-WHY: Type safety, migration management, team velocity
-NOT CHOSEN: Drizzle (less mature), TypeORM (too ORM-heavy)
-
-### ADR-002: Redis for session + cache
-WHY: Sub-ms reads for cart/session data
-CAVEAT: Redis flush loses all sessions — see runbook/redis-flush.md
-
-## Patterns
-- Use `lib/db.ts` Prisma singleton — never `new PrismaClient()`
-- Error handling: always `Result<T, AppError>` type, never throw
-- API responses: `{ data, error, meta }` shape always
-
-## Known Issues
-- Stripe webhook timing: add 500ms delay before DB read (see #482)
-- Next.js Image: use `quality={85}` to avoid timeout on large images</div>
+### v1.7.2
+- Sửa runbook incident cho webhook timeout
+- Bổ sung giới hạn context cho module payments</div>
+    </div>
+    <div class="card">
+      <h3>Quy trình review thay đổi</h3>
+      <ol class="steps">
+        <li>Mọi thay đổi CLAUDE.md phải đi qua Pull Request</li>
+        <li>Gắn link ADR/issue liên quan cho từng chỉnh sửa</li>
+        <li>Đánh dấu rõ phần thêm mới, cập nhật, hoặc deprecate</li>
+        <li>Review định kỳ mỗi sprint để tránh stale context</li>
+      </ol>
+      <div class="ab tip" style="margin-top:.5rem"><strong>Audit</strong> Dùng <code>git log --follow CLAUDE.md</code> để truy vết vì sao agent đang hành xử theo một rule cụ thể.</div>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -569,36 +641,28 @@ CAVEAT: Redis flush loses all sessions — see runbook/redis-flush.md
      ============================================================ -->
 <div class="slide" data-section="2">
 <div class="si">
-  <h2>4.2.5 — Automated Sync & Maintenance</h2>
+  <h2>4.2.5 — Bài tập thực hành — CLAUDE.md</h2>
   <div class="two-col">
     <div class="card">
-      <h3>GitHub Action — Auto-update CLAUDE.md</h3>
-      <div class="cb" style="font-size:.72rem"># .github/workflows/claude-sync.yml
-name: Sync CLAUDE.md
-on:
-  push:
-    paths: ['package.json','prisma/schema.prisma']
-jobs:
-  sync:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update tech stack section
-        run: |
-          NODE_VER=$(node -e "console.log(process.version)")
-          sed -i "s/Node:.*/Node: $NODE_VER/" CLAUDE.md
-      - name: Commit if changed
-        run: |
-          git diff --quiet || (git add CLAUDE.md && \
-          git commit -m "chore: auto-sync CLAUDE.md")</div>
+      <h3>Exercise 4.2.A — Viết CLAUDE.md</h3>
+      <ul class="bl tight">
+        <li>Viết đủ 4 phần: TL;DR, Architecture, ADR, Patterns</li>
+        <li>Tạo tối thiểu 2 ADR có WHY và NOT CHOSEN</li>
+        <li>Liệt kê 3 anti-patterns team cần tránh</li>
+        <li>Thêm mục Known Issues và runbook tham chiếu</li>
+      </ul>
     </div>
     <div class="card">
-      <h3>Exercises 4.2</h3>
-      <div class="ab info" style="margin-bottom:.6rem"><strong>4.2.A — Viết CLAUDE.md</strong> Cho dự án của bạn hiện tại: viết đầy đủ 4 sections (TL;DR, Architecture, ADR, Patterns). Tối thiểu 2 ADR records.</div>
-      <div class="ab tip"><strong>4.2.B — Merge Conflict</strong> Tạo conflict giữa project CLAUDE.md và subfolder CLAUDE.md. Giải quyết theo đúng hierarchy. Document lý do.</div>
+      <h3>Exercise 4.2.B — Merge Conflict</h3>
+      <ul class="bl tight">
+        <li>Tạo conflict giữa `/project/CLAUDE.md` và `/project/src/CLAUDE.md`</li>
+        <li>Giải thích rõ rule nào được ưu tiên và vì sao</li>
+        <li>Document quyết định merge trong PR description</li>
+        <li>Đề xuất cách giảm conflict cho sprint tiếp theo</li>
+      </ul>
     </div>
   </div>
-  <div class="ab warn" style="margin-top:.6rem"><strong>Staleness Risk</strong> CLAUDE.md lỗi thời nguy hiểm hơn không có — agent sẽ làm theo thông tin sai. Review định kỳ mỗi sprint hoặc khi có major architecture change.</div>
+  <div class="ab warn" style="margin-top:.6rem"><strong>Staleness Risk</strong> CLAUDE.md lỗi thời nguy hiểm hơn không có. Chốt lịch review định kỳ mỗi sprint hoặc khi có thay đổi kiến trúc lớn.</div>
 </div>
 </div>
 
@@ -616,7 +680,7 @@ jobs:
      ============================================================ -->
 <div class="slide" data-section="3">
 <div class="si">
-  <h2>4.3.1 — MCP là gì?</h2>
+  <h2>4.3.1 — Kiến trúc MCP — Nguyên tắc cốt lõi</h2>
   <blockquote class="bq">"MCP (Model Context Protocol) là chuẩn mở cho phép AI model tương tác an toàn với tools, data sources và services bên ngoài."</blockquote>
   <div class="three-col" style="margin-top:.8rem">
     <div class="dp"><div class="dl">Giải quyết vấn đề</div><div class="dv">N×M Integration</div><div class="ds">N models × M tools = N×M custom integrations → MCP = N+M</div></div>
@@ -709,7 +773,7 @@ Server → Client: { "result": { "content": [{ "type": "text", "text": "file con
      ============================================================ -->
 <div class="slide" data-section="3">
 <div class="si">
-  <h2>Bảng 4.7 — MCP vs Plugin vs RAG</h2>
+  <h2>4.3.2 — So sánh kỹ thuật: MCP vs Plugin truyền thống</h2>
   <table class="mt">
     <thead><tr>
       <th>Tiêu chí</th><th>MCP</th><th>Plugin (OpenAI)</th><th>RAG</th>
@@ -733,7 +797,7 @@ Server → Client: { "result": { "content": [{ "type": "text", "text": "file con
      ============================================================ -->
 <div class="slide" data-section="3">
 <div class="si">
-  <h2>4.3.5 — 5-Layer MCP Sandboxing</h2>
+  <h2>4.3.3 — Cơ chế Sandboxing — Cô lập và kiểm soát MCP Server</h2>
   <div class="dg g3" style="margin-bottom:.8rem">
     <div class="dp"><div class="dl">Layer 1</div><div class="dv">OAuth Scopes</div><div class="ds">Chỉ grant quyền cần thiết</div></div>
     <div class="dp"><div class="dl">Layer 2</div><div class="dv">Docker Container</div><div class="ds">Process isolation, network limits</div></div>
@@ -771,48 +835,44 @@ Server → Client: { "result": { "content": [{ "type": "text", "text": "file con
 </div>
 
 <!-- ============================================================
-     SLIDE 23 — 4.3.6 Latency & Caching TABLE
+     SLIDE 23 — 4.3.4 Access Control
      ============================================================ -->
 <div class="slide" data-section="3">
 <div class="si">
-  <h2>Bảng 4.8 — MCP Latency Sources & Solutions</h2>
+  <h2>4.3.4 — Access Control — Phân quyền OAuth và Token Scopes</h2>
   <table class="mt">
     <thead><tr>
-      <th>Latency Source</th><th>Typical</th><th>Worst Case</th><th>Solution</th>
+      <th>Control</th><th>Mục tiêu</th><th>Triển khai</th><th>Rủi ro nếu thiếu</th>
     </tr></thead>
     <tbody>
-      <tr><td>Tool initialization</td><td>50–200ms</td><td>2s (cold start)</td><td>Pre-warm server, connection pool</td></tr>
-      <tr><td>Network round-trip</td><td>5–20ms (local)</td><td>200ms (remote)</td><td>stdio transport cho local tools</td></tr>
-      <tr><td>Token generation</td><td>100ms/100 tokens</td><td>5s (long response)</td><td>Streaming, parallel tool calls</td></tr>
-      <tr><td>DB query (no cache)</td><td>20–100ms</td><td>5s (complex join)</td><td>Redis cache L1, read replica L2</td></tr>
-      <tr><td>File I/O</td><td>1–5ms</td><td>500ms (large file)</td><td>Memory cache, lazy loading</td></tr>
+      <tr><td>OAuth 2.1</td><td>Ủy quyền theo user/app</td><td>Authorization code + PKCE</td><td>Token bị lạm dụng xuyên phiên</td></tr>
+      <tr><td>Token scopes</td><td>Least privilege</td><td><code>files:read</code>, <code>db:read</code> tách riêng</td><td>Agent có quyền vượt quá nhiệm vụ</td></tr>
+      <tr><td>Short TTL</td><td>Giảm blast radius</td><td>Access token 15-60 phút</td><td>Token rò rỉ dùng được quá lâu</td></tr>
+      <tr><td>Audience binding</td><td>Giới hạn nơi token hợp lệ</td><td><code>aud=mcp-server-x</code></td><td>Token tái sử dụng trên server khác</td></tr>
+      <tr><td>Token rotation</td><td>Thu hồi nhanh khi bất thường</td><td>Revoke + cấp token mới theo vòng đời</td><td>Khó cô lập sự cố bảo mật</td></tr>
     </tbody>
   </table>
   <div class="card" style="margin-top:.8rem">
-    <h3>Multi-tier Caching Pattern</h3>
-    <div class="cb" style="font-size:.75rem">class MCPCache:
-    def __init__(self):
-        self.l1 = {}            # in-memory, TTL 60s
-        self.l2 = redis.Redis() # Redis, TTL 300s
-
-    async def get(self, key: str):
-        if key in self.l1:
-            return self.l1[key]  # L1 hit: ~0ms
-        val = await self.l2.get(key)
-        if val:
-            self.l1[key] = val   # promote to L1
-            return val           # L2 hit: ~2ms
-        return None              # cache miss → DB</div>
+    <h3>Scope design mẫu</h3>
+    <div class="cb" style="font-size:.75rem">mcp_scopes:
+  readonly_analytics:
+    - db:read:analytics
+    - files:read:reports/*
+  ci_assistant:
+    - repo:read
+    - checks:write
+    # Không cấp repo:admin, secrets:read</div>
+    <div class="ab warn" style="margin-top:.5rem"><strong>Nguyên tắc</strong> Mỗi tool call phải map được về scope cụ thể. Không dùng wildcard quyền ghi ở production.</div>
   </div>
 </div>
 </div>
 
 <!-- ============================================================
-     SLIDE 24 — 4.3.7 Parallel Tool Calls
+     SLIDE 24 — 4.3.5 Latency & Caching
      ============================================================ -->
 <div class="slide" data-section="3">
 <div class="si">
-  <h2>4.3.7 — Parallel Tool Calls & Standards</h2>
+  <h2>4.3.5 — Xử lý độ trễ — Latency và Caching</h2>
   <div class="two-col">
     <div class="card">
       <h3>Parallel Tool Pattern</h3>
@@ -830,6 +890,33 @@ async def parallel_tools(mcp_client):
       <div class="ab tip" style="margin-top:.5rem"><strong>Rule</strong> Parallel khi tools KHÔNG phụ thuộc nhau. Sequential khi kết quả tool A làm input tool B.</div>
     </div>
     <div class="card">
+      <h3>Multi-tier Caching Pattern</h3>
+      <div class="cb" style="font-size:.75rem">class MCPCache:
+    def __init__(self):
+        self.l1 = {}            # in-memory, TTL 60s
+        self.l2 = redis.Redis() # Redis, TTL 300s
+
+    async def get(self, key: str):
+        if key in self.l1:
+            return self.l1[key]  # L1 hit: ~0ms
+        val = await self.l2.get(key)
+        if val:
+            self.l1[key] = val   # promote to L1
+            return val           # L2 hit: ~2ms
+        return None              # cache miss → DB</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================================================
+     SLIDE 25 — 4.3.6 RFC References
+     ============================================================ -->
+<div class="slide" data-section="3">
+<div class="si">
+  <h2>4.3.6 — Danh mục RFC và Tài liệu gốc</h2>
+  <div class="two-col">
+    <div class="card">
       <h3>RFC/Standards Reference</h3>
       <table class="mt" style="font-size:.75rem">
         <thead><tr><th>Standard</th><th>Dùng cho</th></tr></thead>
@@ -841,14 +928,49 @@ async def parallel_tools(mcp_client):
           <tr><td>OpenAPI 3.1</td><td>Tool schema definition</td></tr>
         </tbody>
       </table>
-      <div class="ab info" style="margin-top:.5rem"><strong>Exercise 4.3.A</strong> Implement MCP server đơn giản expose tool <code>read_csv</code> với sandbox đúng chuẩn.</div>
+    </div>
+    <div class="card">
+      <h3>Tài liệu nên đọc theo thứ tự</h3>
+      <ol class="steps">
+        <li>MCP core spec và transport spec</li>
+        <li>Security guidance cho sandbox + auth</li>
+        <li>JSON-RPC 2.0 để hiểu message envelope</li>
+        <li>OAuth/JWT RFC để thiết kế quyền truy cập</li>
+      </ol>
     </div>
   </div>
 </div>
 </div>
 
 <!-- ============================================================
-     SLIDE 25 — SECTION 4.4 HEADER
+     SLIDE 26 — 4.3.7 Exercises
+     ============================================================ -->
+<div class="slide" data-section="3">
+<div class="si">
+  <h2>4.3.7 — Bài tập thực hành — MCP</h2>
+  <div class="two-col">
+    <div class="card">
+      <h3>Exercise 4.3.A</h3>
+      <ul class="bl tight">
+        <li>Tạo MCP server đơn giản expose tool <code>read_csv</code></li>
+        <li>Giới hạn sandbox: read-only filesystem, network deny mặc định</li>
+        <li>Định nghĩa input schema rõ ràng bằng JSON Schema</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Exercise 4.3.B</h3>
+      <ul class="bl tight">
+        <li>Thêm OAuth scopes cho từng tool call</li>
+        <li>Đo latency trước/sau cache 2 tầng</li>
+        <li>Viết báo cáo ngắn: trade-off bảo mật vs hiệu năng</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================================================
+     SLIDE 27 — SECTION 4.4 HEADER
      ============================================================ -->
 <div class="slide sh" data-section="4">
   <div class="sh-bg">4.4</div>
@@ -861,7 +983,7 @@ async def parallel_tools(mcp_client):
      ============================================================ -->
 <div class="slide" data-section="4">
 <div class="si">
-  <h2>4.4.1 — A2A Communication Là Gì?</h2>
+  <h2>4.4.1 — Kiến trúc A2A — Tổng quan</h2>
   <blockquote class="bq">"Agent-to-Agent communication cho phép các AI agent phối hợp, phân công công việc, và kiểm tra lẫn nhau — tạo thành multi-agent systems phức tạp."</blockquote>
   <div class="two-col" style="margin-top:.8rem">
     <div class="card">
@@ -881,7 +1003,7 @@ async def parallel_tools(mcp_client):
         <li><span class="hl-r">Budget explosion</span> — token cost không kiểm soát</li>
         <li><span class="hl-r">Prompt injection</span> — agent B inject vào agent A</li>
         <li><span class="hl-r">Race conditions</span> — write conflict</li>
-        <li><span class="hl-r">Trust escalation</span> — agent tự cấp quyền cao hơn</span></li>
+        <li><span class="hl-r">Trust escalation</span> — agent tự cấp quyền cao hơn</li>
       </ul>
     </div>
   </div>
@@ -893,43 +1015,43 @@ async def parallel_tools(mcp_client):
      ============================================================ -->
 <div class="slide" data-section="4">
 <div class="si">
-  <h2>Bảng 4.9 — A2A Communication Models</h2>
+  <h2>4.4.2 — Service Discovery — Làm thế nào Agent biết Agent khác tồn tại?</h2>
   <table class="mt">
     <thead><tr>
-      <th>Model</th><th>Pattern</th><th>Ưu điểm</th><th>Nhược điểm</th><th>Dùng khi</th>
+      <th>Cách discovery</th><th>Cơ chế</th><th>Ưu điểm</th><th>Nhược điểm</th><th>Dùng khi</th>
     </tr></thead>
     <tbody>
       <tr>
-        <td><span class="hl">Orchestrator-Worker</span></td>
-        <td>1 orchestrator → N workers</td>
-        <td>Kiểm soát tốt, dễ debug</td>
-        <td>Orchestrator là bottleneck</td>
-        <td>Tasks có thứ tự rõ ràng</td>
+        <td><span class="hl">Static registry</span></td>
+        <td>File cấu hình cố định</td>
+        <td>Đơn giản, dễ kiểm soát</td>
+        <td>Không linh hoạt khi scale</td>
+        <td>Hệ thống nhỏ, ít thay đổi</td>
       </tr>
       <tr>
-        <td><span class="hl">Peer-to-Peer</span></td>
-        <td>Agents ngang hàng giao tiếp</td>
-        <td>Không có SPOF</td>
-        <td>Khó trace, loop risk cao</td>
-        <td>Distributed validation</td>
+        <td><span class="hl">Service registry</span></td>
+        <td>Consul/etcd + health checks</td>
+        <td>Cập nhật endpoint động</td>
+        <td>Vận hành phức tạp hơn</td>
+        <td>Multi-agent production</td>
       </tr>
       <tr>
-        <td><span class="hl">Publish-Subscribe</span></td>
-        <td>Agents subscribe events</td>
-        <td>Loose coupling, scalable</td>
-        <td>Async, khó debug timing</td>
-        <td>Event-driven workflows</td>
+        <td><span class="hl">DNS-based</span></td>
+        <td>SRV records / service mesh DNS</td>
+        <td>Tích hợp tốt với Kubernetes</td>
+        <td>Phụ thuộc hạ tầng DNS</td>
+        <td>Cloud-native deployments</td>
       </tr>
       <tr>
-        <td><span class="hl">Hierarchical</span></td>
-        <td>Tree: supervisor → manager → worker</td>
-        <td>Clear accountability</td>
-        <td>Rigid, overhead cao</td>
-        <td>Enterprise workflows</td>
+        <td><span class="hl">Capability matching</span></td>
+        <td>Lookup theo capability tags</td>
+        <td>Chọn đúng agent theo kỹ năng</td>
+        <td>Cần chuẩn hóa metadata</td>
+        <td>Task routing nâng cao</td>
       </tr>
     </tbody>
   </table>
-  <div class="ab info" style="margin-top:.6rem"><strong>Recommendation</strong> Bắt đầu với Orchestrator-Worker. Đơn giản nhất để implement, debug, và scale. Chuyển sang Pub-Sub khi cần loose coupling.</div>
+  <div class="ab info" style="margin-top:.6rem"><strong>Recommendation</strong> Khởi đầu bằng static registry + capability tags, sau đó nâng lên service registry khi hệ thống tăng số lượng agent.</div>
 </div>
 </div>
 
@@ -938,7 +1060,7 @@ async def parallel_tools(mcp_client):
      ============================================================ -->
 <div class="slide" data-section="4">
 <div class="si">
-  <h2>4.4.3 — Agent Card & Registry</h2>
+  <h2>4.4.2 — Service Discovery (tiếp) — Agent Card & Registry</h2>
   <div class="two-col">
     <div class="card">
       <h3>Agent Card (Identity Document)</h3>
@@ -995,7 +1117,7 @@ async def parallel_tools(mcp_client):
      ============================================================ -->
 <div class="slide" data-section="4">
 <div class="si">
-  <h2>4.4.4 — mTLS & JWT Authentication</h2>
+  <h2>4.4.3 — Giao thức xác thực — mTLS và JWT</h2>
   <div class="two-col">
     <div class="card">
       <h3>mTLS — Mutual TLS</h3>
@@ -1045,7 +1167,7 @@ def verify_agent_token(token: str) -> dict:
      ============================================================ -->
 <div class="slide" data-section="4">
 <div class="si">
-  <h2>4.4.5 — TTL Loop Prevention & BudgetGuard</h2>
+  <h2>4.4.4 — Vòng lặp vô tận — Thiết kế điểm dừng TTL</h2>
   <div class="two-col">
     <div class="card">
       <h3>A2AContext với TTL</h3>
@@ -1102,37 +1224,28 @@ class A2AContext:
      ============================================================ -->
 <div class="slide" data-section="4">
 <div class="si">
-  <h2>Orchestrator-Worker Pattern — Full Example</h2>
-  <div class="cb" style="font-size:.76rem">class OrchestratorAgent:
-    def __init__(self, registry: AgentRegistry):
-        self.registry = registry
-        self.budget = BudgetGuard(max_tokens=100_000)
-
-    async def execute_task(self, task: Task) -> Result:
-        ctx = A2AContext(task_id=task.id, ttl=5)
-
-        # Discover specialized agents
-        frontend_agents = self.registry.discover("react_component_generation")
-        test_agents = self.registry.discover("test_writing")
-
-        # Parallel execution with budget tracking
-        results = await asyncio.gather(
-            self._delegate(frontend_agents[0], task.frontend_subtask, ctx),
-            self._delegate(test_agents[0], task.test_subtask, ctx),
-        )
-        return self._merge_results(results)
-
-    async def _delegate(self, agent, subtask, ctx: A2AContext):
-        new_ctx = ctx.hop(agent.agent_id)      # decrement TTL
-        token = create_agent_token(agent.agent_id, ctx.task_id)
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                agent.endpoint + "/execute",
-                json={"task": subtask, "context": new_ctx.__dict__},
-                headers={"Authorization": f"Bearer {token}"}
-            )
-        self.budget.consume(resp.json()["tokens_used"])
-        return resp.json()["result"]</div>
+  <h2>4.4.5 — Bài tập thực hành — A2A</h2>
+  <div class="two-col">
+    <div class="card">
+      <h3>Exercise 4.4.A — Thiết kế discovery + auth</h3>
+      <ul class="bl tight">
+        <li>Tạo registry chứa ít nhất 3 agent card với capability khác nhau</li>
+        <li>Triển khai service discovery theo capability tags</li>
+        <li>Bảo vệ giao tiếp bằng mTLS + JWT có TTL 15 phút</li>
+        <li>Log đầy đủ chuỗi gọi agent để audit</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Exercise 4.4.B — Chặn vòng lặp vô tận</h3>
+      <ul class="bl tight">
+        <li>Thêm TTL hop-count cho toàn bộ A2A context</li>
+        <li>Thêm token budget guard cho mỗi task chain</li>
+        <li>Viết test mô phỏng cycle và vượt ngân sách token</li>
+        <li>Định nghĩa hành vi fail-secure khi vượt giới hạn</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ab info" style="margin-top:.7rem"><strong>Deliverable</strong> Nộp sơ đồ kiến trúc A2A, mã mẫu discovery/auth, và test report chứng minh không có infinite loop.</div>
 </div>
 </div>
 
@@ -1150,7 +1263,7 @@ class A2AContext:
      ============================================================ -->
 <div class="slide" data-section="5">
 <div class="si">
-  <h2>4.5.1 — Debugging MCP & CLAUDE.md</h2>
+  <h2>4.5.1 — Kỹ thuật Debugging</h2>
   <div class="two-col">
     <div class="card">
       <h3>MCP Debug Checklist</h3>
@@ -1184,7 +1297,7 @@ class A2AContext:
      ============================================================ -->
 <div class="slide" data-section="5">
 <div class="si">
-  <h2>4.5.2 — Token Cost Calculator</h2>
+  <h2>4.5.2 — Tối ưu hóa Token — Phân tích chi phí ngữ cảnh</h2>
   <div class="cb">def estimate_cost(
     input_tokens: int,
     output_tokens: int,
@@ -1246,7 +1359,7 @@ daily = estimate_cost(2000 * 10_000, 500 * 10_000, "claude-3-5-sonnet")
      ============================================================ -->
 <div class="slide" data-section="5">
 <div class="si">
-  <h2>4.5.4 — Token Optimization Techniques</h2>
+  <h2>Kỹ thuật tối ưu token thực chiến</h2>
   <div class="two-col">
     <div class="card">
       <h3>Prompt Engineering</h3>
@@ -1289,7 +1402,7 @@ daily = estimate_cost(2000 * 10_000, 500 * 10_000, "claude-3-5-sonnet")
      ============================================================ -->
 <div class="slide" data-section="5">
 <div class="si">
-  <h2>4.5.5 — Prompt Injection Defense</h2>
+  <h2>4.5.3 — Prompt Injection qua bên thứ ba — Indirect Injection</h2>
   <blockquote class="bq">"Prompt injection: attacker nhúng instructions vào data mà agent đọc, khiến agent thực thi lệnh ngoài ý muốn."</blockquote>
   <div class="ab danger"><strong>Definition</strong> Không phải lỗi của model — là lỗi kiến trúc. Mọi hệ thống đọc untrusted data đều phải có injection defense.</div>
   <h3 style="margin-top:.8rem">Bảng 4.11 — Attack Scenarios</h3>
@@ -1311,7 +1424,7 @@ daily = estimate_cost(2000 * 10_000, 500 * 10_000, "claude-3-5-sonnet")
      ============================================================ -->
 <div class="slide" data-section="5">
 <div class="si">
-  <h2>PromptInjectionGuard — Implementation</h2>
+  <h2>4.5.3 — Prompt Injection Guard (Implementation)</h2>
   <div class="cb">import re
 
 class PromptInjectionGuard:
@@ -1355,7 +1468,7 @@ class PromptInjectionGuard:
      ============================================================ -->
 <div class="slide" data-section="5">
 <div class="si">
-  <h2>4.5.6 — Cline + MCP Setup Guide</h2>
+  <h2>4.5.4 — Mua API qua Cline — Thiết lập môi trường hiệu quả</h2>
   <div class="two-col">
     <div class="card">
       <h3>Cline API Setup (VSCode)</h3>
@@ -1399,7 +1512,7 @@ class PromptInjectionGuard:
      ============================================================ -->
 <div class="slide" data-section="5">
 <div class="si">
-  <h2>4.5 Capstone — Build Your Agent System</h2>
+  <h2>4.5.5 — Bài tập tổng hợp — Chương 4</h2>
   <div class="ab warn" style="margin-bottom:1rem"><strong>Challenge</strong> Xây dựng multi-agent code review system với đầy đủ security controls trong 2 giờ.</div>
   <div class="two-col">
     <div class="card">
@@ -1482,7 +1595,7 @@ class PromptInjectionGuard:
   <div class="badge">Tiếp theo</div>
   <h1>Chương 5</h1>
   <p style="margin-top:1rem;color:#66ffaa;font-size:1rem;letter-spacing:.05em">Production AI Systems & Observability</p>
-  <div class="card" style="max-width:600px;margin:.1.2rem auto 0;text-align:left">
+  <div class="card" style="max-width:600px;margin:1.2rem auto 0;text-align:left">
     <h3>Preview nội dung</h3>
     <ul class="bl tight">
       <li>Monitoring &amp; tracing agent workflows (OpenTelemetry)</li>
@@ -1503,10 +1616,6 @@ class PromptInjectionGuard:
      ============================================================ -->
 <div id="nav">
   <button class="nb" onclick="prev()">← Prev</button>
-  <button class="nb" onclick="jmp(1)">§4.1</button>
-  <button class="nb" onclick="jmp(2)">§4.2</button>
-  <button class="nb" onclick="jmp(3)">§4.3</button>
-  <button class="nb" onclick="jmp(4)">§4.4</button>
   <button class="nb" onclick="next()">Next →</button>
 </div>
 <div id="sc">1 / 42</div>
@@ -1540,13 +1649,6 @@ const pb=document.getElementById('pb');
 const sc=document.getElementById('sc');
 let cur=0;
 
-// Build section map from data-section attributes
-const secMap={};
-slides.forEach((s,i)=>{
-  const sec=parseInt(s.dataset.section||0);
-  if(sec>0&&!secMap[sec])secMap[sec]=i;
-});
-
 function show(n){
   slides[cur].classList.remove('active');
   cur=Math.max(0,Math.min(n,slides.length-1));
@@ -1559,7 +1661,6 @@ function show(n){
 }
 function next(){show(cur+1);}
 function prev(){show(cur-1);}
-function jmp(sec){if(secMap[sec]!==undefined)show(secMap[sec]);}
 
 // Keyboard
 document.addEventListener('keydown',function(e){
@@ -1569,7 +1670,6 @@ document.addEventListener('keydown',function(e){
   else if(e.key==='ArrowDown'&&si){e.preventDefault();si.scrollBy(0,120);}
   else if(e.key==='ArrowUp'&&si){e.preventDefault();si.scrollBy(0,-120);}
   else if(e.key==='Escape'&&si){e.preventDefault();si.scrollTop=0;}
-  else if(e.key>='1'&&e.key<='4'){e.preventDefault();jmp(parseInt(e.key));}
 });
 
 // Touch / swipe
@@ -1594,5 +1694,7 @@ document.addEventListener('keydown',function(e){
   }
 },true);
 </script>
+<script src="../../shared-footer-ui.js"></script>
+<script src="../shared-slide-nav.js"></script>
 </body>
 </html>

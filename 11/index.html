@@ -375,18 +375,87 @@
       .controls { bottom: 12px; }
       .matrix-table { font-size: 12px; }
     }
-    /* Mobile scroll fix */
-  @media (max-width: 768px) {
-    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
-    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+/* responsive_1 safe mobile patch */
+@media (max-width: 800px) {
+  .slide {
+    padding: 52px 16px 96px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
   }
-</style>
+
+  .slide.active {
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+  }
+
+  .two-col,
+  .cols2,
+  .cols3,
+  .toc-grid,
+  .data-grid,
+  .card-grid.cols2,
+  .card-grid.cols3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .toc-grid .toc-item[style*="grid-column"],
+  .data-grid .data-point[style*="grid-column"] {
+    grid-column: auto !important;
+  }
+
+  #nav,
+  #nav-ui {
+    bottom: 10px !important;
+    width: calc(100% - 20px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    gap: 10px !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    justify-content: center !important;
+  }
+
+  #slideshow {
+    height: calc(100dvh - 30px) !important;
+  }
+
+  #nav button,
+  .nav-btn {
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  #slide-counter {
+    font-size: 13px !important;
+    letter-spacing: 2px !important;
+    min-width: 72px !important;
+  }
+
+  #author {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    display: block !important;
+    width: 100%;
+    padding: 6px 10px;
+    text-align: center;
+    font-size: 10px !important;
+    letter-spacing: 0.08em !important;
+    color: rgba(0, 255, 65, 0.55);
+    background: rgba(0, 16, 0, 0.92);
+    border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+    z-index: auto !important;
+  }
+}
+  </style>
 </head>
 <body>
   <canvas id="matrix"></canvas>
   <div class="scanlines"></div>
   <div class="progress-wrap"><div class="progress" id="progress"></div></div>
-  <div class="watermark">LinhNDM — Nguyễn Đình Mạnh Linh</div>
+  <div class="watermark">LinhNDM - Nguyễn Đình Mạnh Linh</div>
 
   <main class="deck" id="deck">
     <section class="slide active" data-section="0">
@@ -397,10 +466,10 @@
       </div>
       <div class="content-body">
         <div class="card">
-          <p><span class="hl">PLAYBOOK SDD ADD & CODEX</span> | Bản trình chiếu chuyên sâu cho chuyên gia công nghệ về kiến trúc multi-agent, skill system, hooks automation, MCP orchestration và chiến lược vận hành AI team ở mức production.</p>
+          <p><span class="hl">Playbook SDD + ADD</span> | Bản trình chiếu chuyên sâu cho chuyên gia công nghệ về kiến trúc multi-agent, skill system, hooks automation, MCP orchestration và chiến lược vận hành AI team ở mức production.</p>
         </div>
       </div>
-      <div class="footer"><span>© 2026 - PLAYBOOK SDD ADD & CODEX</span><span>Chapter 11</span></div>
+      <div class="footer"><span>© 2025 - Playbook SDD + ADD</span><span>Chapter 11</span></div>
     </section>
 
     <section class="slide" data-section="0">
@@ -535,6 +604,16 @@ Enterprise scale: 500K+ lines ~7.5M tokens - vẫn không fit kể cả context 
         <div class="card">
           <p><span class="hl">shared_context.md</span> phải là single source of truth: Lead cập nhật sau mỗi major decision; mọi sub-agent bắt buộc đọc trước khi bắt đầu và trước mỗi thay đổi liên quan API/shared files.</p>
         </div>
+        <pre># .sdd/shared_context.md (backbone)
+## LAST UPDATED: 2025-01-20 15:30 UTC
+## API CONTRACTS
+POST /auth/register -> { user_id, created_at }
+POST /auth/login -> { access_token, refresh_token }
+GET /orders -> { orders, meta }  # renamed from order_list
+
+## KNOWN BREAKING CHANGES
+2025-01-20: order_list -> orders
+Impact: Frontend parser must update</pre>
         <pre>POST /auth/register -> Response { user_id, created_at }
 GET /orders -> Response { orders, meta }
 Known breaking change: "order_list" -> "orders"
@@ -551,7 +630,7 @@ Impact: Frontend parser phải update ngay.</pre>
     </section>
 
     <section class="slide" data-section="2">
-      <div class="slide-header"><div class="slide-tag">Table</div><h2 class="content-title">Communication Patterns</h2></div>
+      <div class="slide-header"><div class="slide-tag">11.2.3</div><h2 class="content-title">Communication Patterns</h2></div>
       <table class="matrix-table">
         <thead><tr><th>Pattern</th><th>Cơ chế</th><th>Use case</th><th>Ví dụ</th></tr></thead>
         <tbody>
@@ -714,6 +793,14 @@ Anti-patterns:
         <pre>Flow chuẩn: gofmt/prettier -> golangci-lint -> go vet -> gitleaks -> go test -tags=unit
 Nếu bước nào fail: chặn commit ngay.
 Nếu auto-format có thay đổi: git add -u để re-stage.</pre>
+        <pre># .git/hooks/pre-commit (rút gọn)
+set -e
+gofmt -w $(find . -name "*.go" -not -path "./vendor/*")
+golangci-lint run --timeout=60s
+go vet ./...
+gitleaks detect --staged --no-banner || true
+go test ./... -tags=unit -timeout=30s
+git add -u</pre>
       </div>
     </section>
 
@@ -727,6 +814,15 @@ Nếu auto-format có thay đổi: git add -u để re-stage.</pre>
           <div class="data-point"><div class="k">FAIL</div><div class="v">Notify human, manual review</div></div>
         </div>
         <div class="alert-box warn">Boundary bắt buộc: chỉ auto-heal lỗi predictable, low-risk như format/lint/simple assertions. Security issues hoặc architecture violations phải để con người quyết định.</div>
+        <pre># scripts/self_heal.sh (rút gọn)
+MAX_ATTEMPTS=3
+ATTEMPT=1
+while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+  cline --no-interactive --task "Tests are failing. Fix implementation only."
+  go test ./... -tags=unit -timeout=30s && exit 0
+  ATTEMPT=$((ATTEMPT + 1))
+done
+echo "Manual review required" && exit 1</pre>
       </div>
     </section>
 
@@ -756,6 +852,12 @@ PostToolUse: Bash.*go test -> generate coverage.html</pre>
           <div class="card"><p><span class="hl">Lead Agent:</span> orchestration, conflict resolution, ownership `shared_context.md`.</p></div>
           <div class="card"><p><span class="hl">Agent A/B/C:</span> UI, Logic, Worker chạy ở các session riêng với context giới hạn đúng domain.</p></div>
         </div>
+        <pre># Lab setup — 4-agent team
+# LEAD: orchestrates, resolves conflicts, owns shared_context.md
+# AGENT A: UI (button/modal/loading/error)
+# AGENT B: Business logic (DB query, transform, validation)
+# AGENT C: Worker (PDF rendering, S3 upload, async processing)
+# Claude Code: claude --mode=multi-agent --agents=4 --orchestrator=lead</pre>
       </div>
     </section>
 
@@ -763,6 +865,14 @@ PostToolUse: Bash.*go test -> generate coverage.html</pre>
       <div class="slide-header"><div class="slide-tag">11.5.2</div><h2 class="content-title">Step 1: Interface Contract do Lead định nghĩa</h2></div>
       <div class="content-body">
         <p>Lead phải khóa contract trước khi giao việc để sub-agents có thể làm độc lập mà không tạo coupling ngầm. Contract gồm API giữa UI-Backend, job structure giữa Logic-Worker và shared types dùng chung TypeScript/Go.</p>
+        <pre># Lead Agent Prompt
+"Chúng ta implement Export Report to PDF.
+Define contracts cho 3 sub-agents:
+1) API contract
+2) Job contract
+3) Shared types
+Update .sdd/shared_context.md.
+Sub-agents bắt buộc đọc file này trước khi bắt đầu."</pre>
         <pre>POST /api/reports/export
 Request: { report_type, date_range, format:"pdf" }
 Response: { job_id, status_url }
@@ -778,6 +888,17 @@ ExportJob: { id, report_data, metadata, output_path }</pre>
       <div class="slide-header"><div class="slide-tag">11.5.3</div><h2 class="content-title">Step 2: Parallel Execution</h2></div>
       <div class="content-body">
         <p>Sau khi contract rõ, Agent A xây UI polling mỗi 3 giây và xử lý loading/error/success; Agent B dựng handlers + query DB + enqueue Kafka; Agent C dựng Kafka consumer, render PDF A4, upload S3 và cập nhật job status.</p>
+        <pre># Agent A Prompt (UI)
+Đọc .sdd/shared_context.md. Implement Export PDF button + polling 3s.
+DoD: render đúng, polling stop khi done/failed, no TS errors.
+
+# Agent B Prompt (Logic)
+Implement POST /api/reports/export + GET /api/reports/jobs/:id.
+Query DB, enqueue Kafka topic "export-jobs", update shared_context status.
+
+# Agent C Prompt (Worker)
+Consume "export-jobs", render PDF A4, upload S3 exports-{env},
+update status processing -> done/failed.</pre>
         <div class="alert-box tip">Mỗi agent chỉ cần biết contract và phạm vi domain của mình. Đây là chìa khóa để đạt parallelism thật mà không tạo đống merge conflict khó kiểm soát.</div>
       </div>
     </section>
@@ -786,6 +907,12 @@ ExportJob: { id, report_data, metadata, output_path }</pre>
       <div class="slide-header"><div class="slide-tag">11.5.4</div><h2 class="content-title">Step 3: Lead Orchestrates & Merges</h2></div>
       <div class="content-body">
         <p>Khi A/B/C báo DONE, lead làm integration check theo contract, chạy test tích hợp và xử lý mismatch tại điểm giao nhau. Conflict tiêu biểu trong lab là khác biệt naming convention giữa backend và worker (`report_data` vs `reportData`).</p>
+        <pre># Lead integration checks
+cat frontend/src/hooks/useExportReport.ts | grep "api/reports"
+cat backend/internal/handler/report_handler.go | grep "export"
+make test-integration
+
+# Nếu mismatch: assign fix task theo ownership, re-run tests.</pre>
         <div class="card">
           <p>Lead quyết định chuẩn thống nhất (<span class="hl">snake_case</span> theo Go convention), giao fix task đúng agent chịu trách nhiệm, rồi re-run integration tests đến khi pass toàn bộ.</p>
         </div>
@@ -814,6 +941,12 @@ ExportJob: { id, report_data, metadata, output_path }</pre>
     <section class="slide" data-section="6">
       <div class="slide-header"><div class="slide-tag">11.6.1</div><h2 class="content-title">Per-Agent Access Control</h2></div>
       <div class="content-body">
+        <pre># .sdd/mcp-config.yaml (rút gọn)
+agents:
+  lead-agent: { database: read_write, github: [repo:read, issues:write], fs: [".sdd/", "src/", "tests/"] }
+  frontend-agent: { database: read_only, fs: ["frontend/src/", ".sdd/shared_context.md"] }
+  backend-agent: { database: read_write, kafka: produce(export-jobs), fs: ["backend/", ".sdd/"] }
+  worker-agent: { database: read_write, kafka: consume(export-jobs), s3: write(exports-dev,exports-staging), fs: ["worker/", ".sdd/"] }</pre>
         <pre>lead-agent: database read_write, github repo:read/issues:write, filesystem .sdd+src+tests
 frontend-agent: database read_only (public), filesystem frontend/src + shared_context
 backend-agent: database read_write, kafka produce(export-jobs), filesystem backend + .sdd
@@ -862,7 +995,7 @@ một hệ sinh thái <span class="hl">AI agents</span> đáng tin cậy."</div>
           <p>Đi vào bối cảnh tổ chức lớn: governance, compliance, multi-team coordination và AI policy để bảo đảm consistency, security và accountability khi AI-driven development được triển khai ở quy mô enterprise.</p>
         </div>
       </div>
-      <div class="footer"><span>LinhNDM — Nguyễn Đình Mạnh Linh</span><span>End of Chapter 11</span></div>
+      <div class="footer"><span>LinhNDM - Nguyễn Đình Mạnh Linh</span><span>End of Chapter 11</span></div>
     </section>
   </main>
 
@@ -1029,5 +1162,7 @@ một hệ sinh thái <span class="hl">AI agents</span> đáng tin cậy."</div>
     setSlidePositions(current);
     showSlide(0, true);
   </script>
+<script src="../../shared-footer-ui.js"></script>
+<script src="../shared-slide-nav.js"></script>
 </body>
 </html>

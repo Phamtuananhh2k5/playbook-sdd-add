@@ -1,30 +1,17 @@
-# PLAYBOOK SDD ADD & CODEX
+# SDD + ADD Playbook (Menu + Responsive Chapters 1-14)
 
-Static site chứa slide theo từng chapter, deploy bằng GitHub Pages với domain `https://linhndm.io.vn`.
+## Cấu trúc
+- `index.html`: entry point (trùng nội dung `menu.html`)
+- `menu.html`: trang menu điều hướng
+- `1/responsive_1/index.html` ... `14/responsive_1/index.html`: bản responsive từng chương
 
-## Cấu trúc gọn hiện tại
+## Cách chạy
+- Mở trực tiếp `index.html` bằng trình duyệt
+- Hoặc dùng local server:
 
-- `index.html`: trang chủ, danh sách chapter.
-- `1/` ... `14/`: mỗi thư mục chapter chứa `index.html`.
-- `9_codex/`, `11_codex/`: phiên bản codex.
-- `CNAME`: custom domain cho GitHub Pages.
+```bash
+cd SDD-playbook-complete
+python3 -m http.server 8080
+```
 
-## Link chạy thật
-
-- Trang chủ: `https://linhndm.io.vn/`
-- Chapter: `https://linhndm.io.vn/1/` ... `https://linhndm.io.vn/14/`
-- Codex:
-  - `https://linhndm.io.vn/9_codex/`
-  - `https://linhndm.io.vn/11_codex/`
-
-## Cách cập nhật nội dung
-
-1. Sửa file `index.html` của chapter cần cập nhật.
-2. Nếu thêm chapter mới, tạo thư mục mới `<so_chapter>/index.html`.
-3. Cập nhật link ở `index.html` (trang chủ).
-4. Commit + push lên `main`.
-
-## Deploy
-
-- GitHub Pages tự build từ nhánh `main`.
-- Nếu chưa thấy thay đổi ngay trên web, chờ 1-5 phút rồi hard refresh (`Ctrl+F5`).
+Sau đó truy cập `http://localhost:8080`.

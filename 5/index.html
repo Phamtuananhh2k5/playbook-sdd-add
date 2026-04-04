@@ -115,29 +115,90 @@ p.lead{font-size:1.15rem;line-height:1.8;color:#d8ffe0}
 .cmp-good{background:rgba(0,255,85,.05);border:1px solid rgba(0,255,85,.2);border-radius:4px;padding:.7rem .9rem}
 .cmp-good .clabel{font-size:.68rem;color:#00ff55;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem}
 .cmp-bad p,.cmp-good p{font-size:.83rem;margin:0;line-height:1.6}
-/* NAV */
-#nav{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:200;display:flex;gap:.45rem}
+/* FOOTER UI */
+#footer-ui{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:200;
+  display:flex;align-items:center;gap:.55rem;pointer-events:none;
+  background:rgba(0,12,0,.5);border:1px solid rgba(0,255,85,.2);border-radius:8px;padding:6px 10px}
+#nav{display:flex;gap:.45rem;pointer-events:auto}
 .nb{background:rgba(0,255,85,.08);border:1px solid rgba(0,255,85,.25);color:#00ff55;
   font-family:'Josefin Sans',sans-serif;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
   padding:5px 14px;cursor:pointer;transition:.2s}
 .nb:hover{background:rgba(0,255,85,.18)}
-#sc{position:fixed;bottom:28px;right:30px;font-family:'Josefin Sans',sans-serif;
-  font-size:.66rem;color:rgba(0,255,85,.4);letter-spacing:.1em;z-index:200}
-#author{position:fixed;bottom:10px;left:20px;z-index:200;font-family:'Josefin Sans',sans-serif;
+#sc{font-family:'Josefin Sans',sans-serif;font-size:.66rem;color:rgba(0,255,85,.5);letter-spacing:.1em}
+#author{font-family:'Josefin Sans',sans-serif;
   font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(0,255,85,.35);
   pointer-events:none;user-select:none}
-  /* Mobile scroll fix */
-  @media (max-width: 768px) {
-    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
-    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+/* responsive_1 safe mobile patch */
+@media (max-width: 800px) {
+  .slide {
+    padding: 52px 16px 96px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
   }
+
+  .slide.active {
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+  }
+
+  .two-col,
+  .cols2,
+  .cols3,
+  .toc-grid,
+  .data-grid,
+  .card-grid.cols2,
+  .card-grid.cols3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .toc-grid .toc-item[style*="grid-column"],
+  .data-grid .data-point[style*="grid-column"] {
+    grid-column: auto !important;
+  }
+
+  #footer-ui {
+    width: calc(100% - 18px) !important;
+    bottom: 8px !important;
+    gap: 8px !important;
+    padding: 8px 10px !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+
+  #nav {
+    order: 1;
+  }
+
+  #nav .nb {
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  #sc {
+    order: 2;
+    font-size: 12px !important;
+    letter-spacing: .08em !important;
+    min-width: 72px !important;
+    text-align: center;
+  }
+
+  #author {
+    order: 3;
+    width: 100%;
+    padding: 2px 0 0;
+    text-align: center;
+    font-size: 10px !important;
+    letter-spacing: 0.08em !important;
+    color: rgba(0, 255, 65, 0.55);
+  }
+}
 </style>
 </head>
 <body>
 <canvas id="rain"></canvas>
 <div class="scanlines"></div>
 <div id="pb"></div>
-<div id="author">LinhNDM — Nguyễn Đình Mạnh Linh</div>
 
 <!-- ==== SLIDE 01 — TITLE ==== -->
 <div class="slide active" data-section="0">
@@ -199,7 +260,7 @@ p.lead{font-size:1.15rem;line-height:1.8;color:#d8ffe0}
       <div class="td">Risk × Complexity Matrix · Sketch / Detailed / Formal · State Diagram · Decision guide</div>
     </div>
   </div>
-  <div class="ab gold" style="margin-top:.8rem"><strong>5.5 + 5.6</strong> SDD Workflow 4 bước: Draft → AI Review → Lock → Generate · Hands-on Capstone: Shopping Cart từ ý tưởng đến production code</div>
+  <div class="ab gold" style="margin-top:.8rem"><strong>5.5 Workflow</strong> Draft → AI Review → Finalize Source of Truth → Generate Code/Test · kèm bài tập tổng hợp để luyện quy trình end-to-end.</div>
 </div>
 </div>
 
@@ -213,7 +274,7 @@ p.lead{font-size:1.15rem;line-height:1.8;color:#d8ffe0}
 <!-- ==== SLIDE 05 — 5.1 Interface Analogy ==== -->
 <div class="slide" data-section="1">
 <div class="si">
-  <h2>5.1 — Spec là "Giao diện"</h2>
+  <h2>5.1 Spec là "Giao diện" — Interface giữa Người và Máy</h2>
   <p>Trong lập trình hướng đối tượng, Interface là hợp đồng: nó định nghĩa những gì một thành phần phải làm mà không quan tâm đến cách nó làm. Hai bên — người gọi và người thực thi — đều chỉ cần biết Interface, không cần biết chi tiết bên trong của nhau. <span class="hl">Giao tiếp được tách biệt khỏi implementation.</span></p>
   <p>Executable Specification đóng vai trò y hệt trong giao tiếp giữa con người và AI Agent. Spec là hợp đồng giữa "ý định của con người" và "năng lực thực thi của AI". Con người không cần biết AI sẽ sinh code ra sao. AI không cần đọc tâm trí con người. Cả hai gặp nhau tại Spec — một văn bản đủ chính xác để không cần giải thích thêm.</p>
   <div class="dg g3" style="margin-top:.8rem">
@@ -262,7 +323,7 @@ p.lead{font-size:1.15rem;line-height:1.8;color:#d8ffe0}
 <!-- ==== SLIDE 07 — 5.1.2 Hallucination ==== -->
 <div class="slide" data-section="1">
 <div class="si">
-  <h2>5.1.2 — Precision và vấn đề Hallucination</h2>
+  <h2>5.1.2 Độ rõ ràng — Precision và vấn đề Hallucination</h2>
   <p>Đây là điểm mấu chốt mà nhiều kỹ sư bỏ qua khi lần đầu viết spec cho AI. Khi một developer con người gặp một yêu cầu mơ hồ, họ có ba lựa chọn: hỏi lại, suy luận từ context, hoặc tạm bỏ qua. Khi một AI Agent gặp yêu cầu mơ hồ, nó chỉ có một lựa chọn: <span class="hl-r">đoán</span> — và đưa đoán đó ra như thể nó là sự thật.</p>
   <p>Hiện tượng này gọi là <span class="hl">"confident hallucination"</span> — AI không nói "tôi không chắc", nó nói "đây là cách tôi hiểu và đây là code tôi viết". Kết quả: code chạy được, pass basic tests, nhưng implement sai logic. Lỗi này cực kỳ nguy hiểm vì <span class="hl-r">khó phát hiện hơn lỗi compile hay runtime</span>.</p>
   <div class="cmp" style="margin-top:.6rem">
@@ -284,7 +345,7 @@ p.lead{font-size:1.15rem;line-height:1.8;color:#d8ffe0}
 <!-- ==== SLIDE 08 — 5.1.3 What vs How ==== -->
 <div class="slide" data-section="1">
 <div class="si">
-  <h2>5.1.3 — Tách biệt "Cái gì" và "Như thế nào"</h2>
+  <h2>5.1.3 Spec như Interface — Tách biệt "Cái gì" và "Như thế nào"</h2>
   <p>Một trong những giá trị lớn nhất của Executable Spec là nó buộc bạn tách biệt hai câu hỏi hoàn toàn khác nhau: <span class="hl">"Hệ thống phải làm gì?"</span> (What) và <span class="hl-b">"Hệ thống sẽ làm điều đó như thế nào?"</span> (How). Spec chỉ trả lời câu hỏi What. How là trách nhiệm của AI implementation — và AI giỏi việc đó hơn bạn nghĩ, miễn là What đủ rõ ràng.</p>
   <p>Sự tách biệt này mang lại hai lợi ích quan trọng. Thứ nhất, nó cho phép bạn <span class="hl">thay đổi implementation mà không cần viết lại spec</span>. Thứ hai, nó cho phép bạn <span class="hl">test behavior thay vì test implementation</span> — test rằng "kết quả đúng" thay vì "code chạy theo đúng cách này".</p>
   <div class="two-col" style="margin-top:.7rem">
@@ -323,7 +384,7 @@ p.lead{font-size:1.15rem;line-height:1.8;color:#d8ffe0}
 <!-- ==== SLIDE 10 — 5.2 8 Components TABLE ==== -->
 <div class="slide" data-section="2">
 <div class="si">
-  <h2>5.2 — Cấu trúc Executable Spec — 8 Thành phần</h2>
+  <h2>5.2 Cấu trúc Executable Spec — 8 Thành phần Cốt lõi</h2>
   <p style="margin-bottom:.7rem">Một Executable Specification đầy đủ cần tám thành phần, mỗi thành phần giải quyết một khía cạnh riêng biệt của bài toán. Thiếu bất kỳ thành phần nào cũng tạo ra <span class="hl-r">"lỗ hổng context"</span> — những khoảng trống mà AI sẽ tự lấp đầy bằng các giả định không được kiểm soát.</p>
   <table class="mt">
     <thead><tr><th>#</th><th>Thành phần</th><th>Câu hỏi trả lời</th><th>Thiếu → AI làm gì?</th></tr></thead>
@@ -474,7 +535,7 @@ Auth hiện tại dùng JWT (RS256). Password hash: bcrypt cost=12.</span></div>
 <!-- ==== SLIDE 15 — 5.2.9 Anti-patterns 3+4+5 ==== -->
 <div class="slide" data-section="2">
 <div class="si">
-  <h2>5.2.9 — Anti-patterns 3, 4, 5</h2>
+  <h2>Anti-patterns 3, 4, 5 (tiếp)</h2>
   <div class="card" style="margin-bottom:.6rem">
     <h4>Anti-pattern 3 — "The Context Gap"</h4>
     <p style="font-size:.85rem">Quên không cung cấp thông tin về stack hiện tại, conventions đang dùng, hoặc constraints của môi trường. AI sẽ dùng default knowledge từ training — đôi khi đúng, thường là conflict với codebase thực tế.</p>
@@ -546,7 +607,7 @@ Auth hiện tại dùng JWT (RS256). Password hash: bcrypt cost=12.</span></div>
 <!-- ==== SLIDE 18 — 5.3 EARS Origin ==== -->
 <div class="slide" data-section="3">
 <div class="si">
-  <h2>5.3 — EARS Notation · Nguồn gốc &amp; Định nghĩa</h2>
+  <h2>5.3 EARS Notation — Vũ khí Tối thượng Chống Mơ hồ</h2>
   <p>Năm 2009, Alistair Mavin và nhóm kỹ sư tại <span class="hl">Rolls-Royce</span> (hàng không vũ trụ, không phải ô tô) đang đối mặt với một vấn đề sống còn: tài liệu yêu cầu cho hệ thống kiểm soát động cơ máy bay chứa hàng nghìn câu yêu cầu, và phần lớn trong số đó mơ hồ đến mức hai kỹ sư khác nhau đọc cùng một câu có thể implement theo hai cách hoàn toàn khác nhau.</p>
   <p>Hệ quả không phải là bug — là <span class="hl-r">thảm họa hàng không</span>. Họ cần một ngôn ngữ đặc tả có cấu trúc, dễ học, và buộc người viết phải tường minh về điều kiện, hành động, và hệ thống. <span class="hl">EARS ra đời từ nhu cầu đó: Easy Approach to Requirements Syntax.</span></p>
   <p>Mấy chục năm sau, EARS tìm được ứng dụng hoàn hảo thứ hai: viết Executable Spec cho AI Agent. Lý do giống hệt — AI không khoan nhượng với sự mơ hồ, giống như một máy bay không khoan nhượng với lỗi kỹ thuật. Nếu câu yêu cầu không rõ ràng, AI sẽ chọn một cách diễn giải tùy ý — và bạn không biết nó đã chọn cái gì.</p>
@@ -783,7 +844,7 @@ chỉ chỉ ra vấn đề.</div>
 <!-- ==== SLIDE 27 — SECTION 5.4 HEADER ==== -->
 <div class="slide sh" data-section="4">
   <div class="sh-bg">5.4</div>
-  <h1>Levels of Spec Depth</h1>
+  <h1>Levels of Specification Depth</h1>
   <div class="sub">Đúng mức · Đúng chỗ · Risk × Complexity</div>
 </div>
 
@@ -827,7 +888,7 @@ chỉ chỉ ra vấn đề.</div>
 <!-- ==== SLIDE 29 — 5.4.2 Sketch + 5.4.3 Detailed ==== -->
 <div class="slide" data-section="4">
 <div class="si">
-  <h2>5.4.2 Mức 1 — Sketch &amp; 5.4.3 Mức 2 — Detailed</h2>
+  <h2>5.4.2 Mức 1 — Sketch (Phác thảo) &amp; 5.4.3 Mức 2 — Detailed (Chi tiết đầy đủ)</h2>
   <div class="two-col">
     <div class="card">
       <h3>Mức 1 — Sketch (Phác thảo)</h3>
@@ -932,7 +993,7 @@ THE hệ thống SHALL: (1) Tổng tiền order KHÔNG đổi sau created
 <!-- ==== SLIDE 32 — SECTION 5.5 HEADER ==== -->
 <div class="slide sh" data-section="5">
   <div class="sh-bg">5.5</div>
-  <h1>SDD Workflow</h1>
+  <h1>The Spec-Driven Development Workflow</h1>
   <div class="sub">Lập trình ở tầng ý định · 4 bước thực tế</div>
 </div>
 
@@ -1204,7 +1265,7 @@ async def create_review(self, buyer_id,
 <!-- ==== SLIDE 38 — 5.5.5 Review Checklist TABLE ==== -->
 <div class="slide" data-section="5">
 <div class="si">
-  <h2>5.5.5 — Kiểm tra chất lượng generate · Review Checklist</h2>
+  <h2>Review Checklist sau khi AI generate</h2>
   <p style="margin-bottom:.6rem">Trước khi approve code do AI generate, reviewer cần verify đầy đủ những điểm sau. Đây là trách nhiệm con người — không thể outsource cho AI tự review chính nó.</p>
   <table class="mt">
     <thead><tr><th>Kiểm tra</th><th>Cách verify</th><th>Fail nếu...</th></tr></thead>
@@ -1221,17 +1282,17 @@ async def create_review(self, buyer_id,
 </div>
 </div>
 
-<!-- ==== SLIDE 39 — SECTION 5.6 HEADER ==== -->
-<div class="slide sh" data-section="5">
-  <div class="sh-bg">5.6</div>
-  <h1>Hands-on Capstone</h1>
-  <div class="sub">Shopping Cart · Từ Ý tưởng đến Production Code</div>
+<!-- ==== SLIDE 39 — SECTION 5.4.6 PRACTICE ==== -->
+<div class="slide sh" data-section="4">
+  <div class="sh-bg">5.4</div>
+  <h1>Bài Tập Calibrating Spec Depth</h1>
+  <div class="sub">Risk × Complexity · Shopping Cart Case</div>
 </div>
 
 <!-- ==== SLIDE 40 — 5.6.1 Shopping Cart Phase 1-3 ==== -->
-<div class="slide" data-section="5">
+<div class="slide" data-section="4">
 <div class="si">
-  <h2>5.6.1 — Capstone: "Shopping Cart" · Phases 1–3</h2>
+  <h2>5.4.6 Bài tập — Calibrating Spec Depth</h2>
   <p style="margin-bottom:.6rem">Đây là bài tập tổng hợp kết thúc chương. Tính năng <span class="hl">Giỏ hàng cho e-commerce app</span> — tính năng phổ biến nhưng có đủ độ phức tạp để thực hành đầy đủ: nhiều actors, nhiều state, edge cases thú vị, và non-trivial business rules.</p>
   <div class="ab warn" style="margin-bottom:.6rem"><strong>Context để bắt đầu</strong> User type: Guest (chưa đăng nhập) và Authenticated user · Cart items: product_id, variant_id (optional), quantity, unit_price · Inventory: có thể hết hàng bất cứ lúc nào · Price: có thể thay đổi sau khi đã add vào cart · Promotion: coupon code có thể apply vào cart · Guest cart: cần merge với user cart khi đăng nhập.</div>
   <div class="two-col">
@@ -1266,7 +1327,7 @@ async def create_review(self, buyer_id,
 <!-- ==== SLIDE 41 — 5.6.1 Phase 4-5 + Evaluation TABLE ==== -->
 <div class="slide" data-section="5">
 <div class="si">
-  <h2>5.6.1 — Phase 4–5: Generate Code &amp; Evaluation</h2>
+  <h2>Ví dụ triển khai end-to-end (tham khảo)</h2>
   <div class="card" style="margin-bottom:.7rem">
     <h3>Phase 4 — Generate Code + Tests (với Cline)</h3>
     <p style="font-size:.85rem">Dùng prompt từ Section 5.5.5 để yêu cầu Cline generate đầy đủ:</p>
@@ -1295,10 +1356,10 @@ async def create_review(self, buyer_id,
 <!-- ==== SLIDE 42 — 5.6.2 Reflection + 5.6.3 Summary ==== -->
 <div class="slide" data-section="5">
 <div class="si">
-  <h2>5.6.2 Reflection &amp; 5.6.3 Tổng kết chương 5</h2>
+  <h2>Tổng kết Chương 5</h2>
   <div class="two-col" style="margin-bottom:.7rem">
     <div class="card">
-      <h3>5.6.2 — Reflection questions</h3>
+      <h3>Reflection questions</h3>
       <ol class="steps">
         <li>Spec sơ thảo của bạn thiếu bao nhiêu edge cases trước khi AI review? "Blind spots" nói lên điều gì?</li>
         <li>Chất lượng code AI generate khi có spec đầy đủ so với khi chỉ có mô tả ngắn khác nhau như thế nào?</li>
@@ -1307,7 +1368,7 @@ async def create_review(self, buyer_id,
       </ol>
     </div>
     <div class="card">
-      <h3>5.6.3 — Tổng kết — Tools &amp; Concepts</h3>
+      <h3>Tổng kết — Tools &amp; Concepts</h3>
       <table class="mt" style="font-size:.78rem">
         <thead><tr><th>Khái niệm</th><th>Điểm cốt lõi</th><th>Công cụ</th></tr></thead>
         <tbody>
@@ -1348,16 +1409,14 @@ async def create_review(self, buyer_id,
 </div>
 
 <!-- ==== NAV ==== -->
-<div id="nav">
-  <button class="nb" onclick="prev()">← Prev</button>
-  <button class="nb" onclick="jmp(1)">§5.1</button>
-  <button class="nb" onclick="jmp(2)">§5.2</button>
-  <button class="nb" onclick="jmp(3)">§5.3</button>
-  <button class="nb" onclick="jmp(4)">§5.4</button>
-  <button class="nb" onclick="jmp(5)">§5.5</button>
-  <button class="nb" onclick="next()">Next →</button>
+<div id="footer-ui">
+  <div id="author">LinhNDM &mdash; Nguyễn Đình Mạnh Linh</div>
+  <div id="nav">
+    <button class="nb" onclick="prev()">← Prev</button>
+    <button class="nb" onclick="next()">Next →</button>
+  </div>
+  <div id="sc">1 / 43</div>
 </div>
-<div id="sc">1 / 43</div>
 
 <script>
 // ── Matrix rain ──────────────────────────────────────────────────────
@@ -1388,12 +1447,6 @@ const pb=document.getElementById('pb');
 const sc=document.getElementById('sc');
 let cur=0;
 
-const secMap={};
-slides.forEach((s,i)=>{
-  const sec=parseInt(s.dataset.section||0);
-  if(sec>0&&!secMap[sec])secMap[sec]=i;
-});
-
 function show(n){
   slides[cur].classList.remove('active');
   cur=Math.max(0,Math.min(n,slides.length-1));
@@ -1405,7 +1458,6 @@ function show(n){
 }
 function next(){show(cur+1);}
 function prev(){show(cur-1);}
-function jmp(sec){if(secMap[sec]!==undefined)show(secMap[sec]);}
 
 document.addEventListener('keydown',function(e){
   const si=slides[cur].querySelector('.si');
@@ -1414,7 +1466,6 @@ document.addEventListener('keydown',function(e){
   else if(e.key==='ArrowDown'&&si){e.preventDefault();si.scrollBy(0,130);}
   else if(e.key==='ArrowUp'&&si){e.preventDefault();si.scrollBy(0,-130);}
   else if(e.key==='Escape'&&si){e.preventDefault();si.scrollTop=0;}
-  else if(e.key>='1'&&e.key<='5'){e.preventDefault();jmp(parseInt(e.key));}
 });
 
 let tx=0;
@@ -1438,5 +1489,7 @@ document.addEventListener('keydown',function(e){
   }
 },true);
 </script>
+<script src="../../shared-footer-ui.js"></script>
+<script src="../shared-slide-nav.js"></script>
 </body>
 </html>

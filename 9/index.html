@@ -124,18 +124,24 @@ pre.code-block{background:rgba(0,0,0,0.55);border:1px solid rgba(0,255,85,0.15);
 .phase-box{background:rgba(0,0,0,0.4);border:1px solid rgba(0,255,85,0.2);border-radius:6px;padding:14px 18px;margin:8px 0;}
 .phase-label{font-size:clamp(9px,.9vw,11px);letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:700;}
 
-/* WATERMARK */
-#watermark{position:fixed;bottom:14px;left:80px;font-size:11px;color:rgba(0,255,85,0.22);letter-spacing:.15em;z-index:10;font-family:var(--font-body);}
+/* FOOTER UI */
+#footer-ui{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:200;
+  display:flex;align-items:center;gap:.55rem;pointer-events:none;
+  background:rgba(0,12,0,.5);border:1px solid rgba(0,255,85,.2);border-radius:8px;padding:6px 10px}
+#author{font-family:'Josefin Sans',sans-serif;
+  font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(0,255,85,.35);
+  pointer-events:none;user-select:none}
 /* PROGRESS */
 #bar-wrap{position:fixed;top:0;left:0;width:100%;height:2px;background:rgba(0,255,85,0.1);z-index:20;}
 #progress{height:100%;background:var(--accent);transition:width .3s ease;}
 /* COUNTER */
-#counter{position:fixed;top:14px;right:80px;font-size:12px;color:var(--muted);letter-spacing:.2em;z-index:20;font-family:var(--font-body);}
-/* NAV ARROWS */
-.nav-arrow{position:fixed;top:50%;transform:translateY(-50%);z-index:20;background:transparent;border:1px solid rgba(0,255,85,0.2);color:var(--muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-.nav-arrow:hover{background:rgba(0,255,85,0.1);color:var(--accent);border-color:var(--accent);}
-#nav-prev{left:18px;}
-#nav-next{right:18px;}
+#sc{font-family:'Josefin Sans',sans-serif;font-size:.66rem;color:rgba(0,255,85,.5);letter-spacing:.1em}
+/* NAV */
+#nav{display:flex;gap:.45rem;pointer-events:auto}
+.nb{background:rgba(0,255,85,.08);border:1px solid rgba(0,255,85,.25);color:#00ff55;
+  font-family:'Josefin Sans',sans-serif;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:5px 14px;cursor:pointer;transition:.2s}
+.nb:hover{background:rgba(0,255,85,.18)}
 
 /* UTILITY */
 .accent{color:var(--accent);}
@@ -155,28 +161,139 @@ pre.code-block{background:rgba(0,0,0,0.55);border:1px solid rgba(0,255,85,0.15);
 .tier-label.t2{color:#00ff55;}
 .tier-label.t3{color:#ffcc00;}
 .tier-desc{font-size:clamp(10px,1vw,13px);color:var(--sub);line-height:1.6;}
-  /* Mobile scroll fix */
-  @media (max-width: 768px) {
-    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
-    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+/* responsive_1 safe mobile patch */
+@media (max-width: 800px) {
+  .slide {
+    padding: 52px 14px 118px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
   }
+
+  .slide.active {
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+  }
+
+  .two-col,
+  .three-col,
+  .cols2,
+  .cols3,
+  .toc-grid,
+  .data-grid,
+  .card-grid.cols2,
+  .card-grid.cols3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .data-grid {
+    display: grid !important;
+    gap: 10px !important;
+  }
+
+  .data-point {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .card {
+    padding: 14px 14px !important;
+  }
+
+  table.matrix-table {
+    font-size: 11px !important;
+  }
+
+  table.matrix-table th,
+  table.matrix-table td {
+    padding: 6px 8px !important;
+    line-height: 1.45 !important;
+  }
+
+  .toc-grid .toc-item[style*="grid-column"],
+  .data-grid .data-point[style*="grid-column"] {
+    grid-column: auto !important;
+  }
+
+  #footer-ui {
+    width: calc(100% - 18px) !important;
+    bottom: 8px !important;
+    gap: 8px !important;
+    padding: 8px 10px !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+
+  #nav {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+  }
+
+  #nav .nb {
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  #sc {
+    order: 2;
+    width: 100%;
+    font-size: 12px !important;
+    letter-spacing: .08em !important;
+    min-width: 72px !important;
+    text-align: center;
+  }
+
+  #author {
+    order: 3;
+    width: 100%;
+    padding: 2px 0 0;
+    text-align: center;
+    font-size: 10px !important;
+    letter-spacing: 0.08em !important;
+    color: rgba(0, 255, 65, 0.55);
+  }
+}
+
+@media (max-width: 480px) {
+  .slide {
+    padding: 48px 10px 124px !important;
+  }
+
+  h1.title { font-size: clamp(30px, 10vw, 44px); }
+  h2.section-title { font-size: clamp(22px, 7vw, 30px); }
+  h3.slide-title { font-size: clamp(18px, 5.8vw, 24px); }
+
+  .toc-item { padding: 12px 12px !important; }
+  .bullet-list li { padding-left: 18px !important; }
+
+  #footer-ui {
+    width: calc(100% - 12px) !important;
+    padding: 7px 8px !important;
+    gap: 6px !important;
+  }
+}
 </style>
 </head>
 <body>
 <canvas id="matrix"></canvas>
 <div class="scanlines"></div>
 <div id="bar-wrap"><div id="progress"></div></div>
-<div id="counter">1 / 39</div>
-<div id="watermark">LinhNDM — Nguyễn Đình Mạnh Linh</div>
-<button class="nav-arrow" id="nav-prev" onclick="prevSlide()">&#8592;</button>
-<button class="nav-arrow" id="nav-next" onclick="nextSlide()">&#8594;</button>
+<div id="footer-ui">
+  <div id="author">LinhNDM &mdash; Nguyễn Đình Mạnh Linh</div>
+  <div id="nav">
+    <button class="nb" onclick="prevSlide()">← Prev</button>
+    <button class="nb" onclick="nextSlide()">Next →</button>
+  </div>
+  <div id="sc">1 / 39</div>
+</div>
 
 <div id="deck">
 
 <!-- s0: TITLE -->
 <div class="slide active" id="s0">
   <div class="title-slide-wrap">
-    <div class="title-badge">PLAYBOOK SDD ADD & CODEX</div>
+    <div class="title-badge">Playbook SDD + ADD</div>
     <div class="chap-label">Chương 9</div>
     <h1 class="title">AI Agent<br>Thực Sự Là Gì?</h1>
     <div class="title-divider"></div>
@@ -209,7 +326,7 @@ pre.code-block{background:rgba(0,0,0,0.55);border:1px solid rgba(0,255,85,0.15);
   <div class="toc-grid">
     <div class="toc-item">
       <div class="toc-num">9.1</div>
-      <div class="toc-name">Định nghĩa Agent</div>
+      <div class="toc-name">Định nghĩa Agent: Perception → Reasoning → Action</div>
       <div class="toc-sub">Perception → Reasoning → Action<br>Vòng lặp, Inference-time, So sánh</div>
     </div>
     <div class="toc-item">
@@ -224,12 +341,12 @@ pre.code-block{background:rgba(0,0,0,0.55);border:1px solid rgba(0,255,85,0.15);
     </div>
     <div class="toc-item">
       <div class="toc-num">9.4</div>
-      <div class="toc-name">Demo: Xem Agent Làm Việc</div>
+      <div class="toc-name">Demo: Xem Agent Làm Việc Thực Tế</div>
       <div class="toc-sub">Session walkthrough, Log Analysis<br>Internal Monologue</div>
     </div>
     <div class="toc-item" style="grid-column:span 2;">
       <div class="toc-num">9.5</div>
-      <div class="toc-name">Giới hạn của Agent Hiện tại</div>
+      <div class="toc-name">Giới hạn của Agent Hiện tại — Đừng Kỳ Vọng Quá</div>
       <div class="toc-sub">Token Burn, Loop Trapping, Model Dependency, Context Cliff, API Hallucination</div>
     </div>
   </div>
@@ -240,7 +357,7 @@ pre.code-block{background:rgba(0,0,0,0.55);border:1px solid rgba(0,255,85,0.15);
   <div class="sec-header">
     <div class="sec-num">9.1</div>
     <div class="sec-label">Phần Một</div>
-    <h2 class="section-title">Định Nghĩa Agent</h2>
+    <h2 class="section-title">Định Nghĩa Agent: Perception → Reasoning → Action</h2>
     <div class="subtitle">Perception → Reasoning → Action</div>
     <div class="title-divider" style="margin-top:18px;"></div>
     <ul class="bullet-list" style="text-align:left;max-width:500px;margin:18px auto 0;">
@@ -560,7 +677,7 @@ AGENT: "Test vẫn fail sau 2 lần sửa. Rollback về checkpoint
 
 <!-- s17: COMPARISON TABLE -->
 <div class="slide scrollable" id="s17">
-  <h3 class="slide-title">Bảng So Sánh Chi Tiết</h3>
+  <h3 class="slide-title">Bảng So Sánh Chi Tiết + Error Recovery</h3>
   <table class="matrix-table">
     <tr><th>Tiêu chí</th><th>Conversational</th><th>Agentic</th><th>Autonomous</th></tr>
     <tr><td>Human input</td><td>Mỗi bước</td><td><span class="accent">Chỉ tại approval gates</span></td><td>Chỉ high-level goal</td></tr>
@@ -576,7 +693,7 @@ AGENT: "Test vẫn fail sau 2 lần sửa. Rollback về checkpoint
 
 <!-- s18: APPROVAL GATE TABLE -->
 <div class="slide scrollable" id="s18">
-  <h3 class="slide-title">Approval Gate Design — Khi Nào Cần Human?</h3>
+  <h3 class="slide-title">Human-in-the-Loop — Con Người Là Gatekeeper</h3>
   <p style="margin-bottom:12px;">Human-in-the-loop không phải bottleneck — đó là thiết kế cố ý. Agent làm 90% công việc nặng; con người chỉ can thiệp tại những điểm có rủi ro cao nhất.</p>
   <table class="matrix-table" style="margin-bottom:12px;">
     <tr><th>Action</th><th>Risk level</th><th>Gate type</th><th>Lý do cần human</th></tr>
@@ -642,7 +759,7 @@ AGENT: "Test vẫn fail sau 2 lần sửa. Rollback về checkpoint
 
 <!-- s21: PHASE 1+2 PERCEPTION + REASONING -->
 <div class="slide scrollable" id="s21">
-  <h3 class="slide-title">Phase 1 &amp; 2: Perception + Reasoning</h3>
+  <h3 class="slide-title">Session Walkthrough — Từ Prompt Đến Green Tests (Phase 1 &amp; 2)</h3>
   <p style="margin-bottom:10px;font-size:clamp(11px,1.1vw,13px);">Task: Implement CartMergeService cho EcoShop (Case Study Ch.7). Spec đã approved. Agent yêu cầu implement + tests, không có additional guidance.</p>
   <pre class="code-block"># === USER INPUT ===
 Implement CartMergeService theo SPEC.md §3 merge rule.
@@ -897,7 +1014,7 @@ for block in response.content:
   <div class="sec-header">
     <div class="sec-num">9.5</div>
     <div class="sec-label">Phần Năm</div>
-    <h2 class="section-title">Giới Hạn Của Agent Hiện Tại</h2>
+    <h2 class="section-title">Giới Hạn Của Agent Hiện Tại — Đừng Kỳ Vọng Quá</h2>
     <div class="subtitle">Đừng Kỳ Vọng Quá Mức — Hiểu để Design Đúng</div>
     <div class="title-divider" style="margin-top:18px;"></div>
     <ul class="bullet-list" style="text-align:left;max-width:500px;margin:18px auto 0;">
@@ -1200,7 +1317,7 @@ function showSlide(n){
   current=((n%TOTAL)+TOTAL)%TOTAL;
   const el=document.getElementById('s'+current);
   if(el){el.classList.add('active');el.scrollTop=0;}
-  document.getElementById('counter').textContent=(current+1)+' / '+TOTAL;
+  document.getElementById('sc').textContent=(current+1)+' / '+TOTAL;
   document.getElementById('progress').style.width=((current+1)/TOTAL*100)+'%';
 }
 function nextSlide(){showSlide(current+1);}
@@ -1227,5 +1344,6 @@ document.addEventListener('touchend',e=>{
 
 showSlide(0);
 </script>
+<script src="../shared-slide-nav.js"></script>
 </body>
 </html>

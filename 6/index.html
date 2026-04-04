@@ -336,11 +336,80 @@ table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,.04)}
   h2.section-title{font-size:28px}
   h2.content-title{font-size:24px}
 }
-  /* Mobile scroll fix */
-  @media (max-width: 768px) {
-    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
-    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+/* responsive_1 safe mobile patch */
+@media (max-width: 800px) {
+  .slide {
+    padding: 52px 16px 96px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
   }
+
+  .slide.active {
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+  }
+
+  .two-col,
+  .cols2,
+  .cols3,
+  .toc-grid,
+  .data-grid,
+  .card-grid.cols2,
+  .card-grid.cols3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .toc-grid .toc-item[style*="grid-column"],
+  .data-grid .data-point[style*="grid-column"] {
+    grid-column: auto !important;
+  }
+
+  #nav,
+  #nav-ui {
+    bottom: 10px !important;
+    width: calc(100% - 20px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    gap: 10px !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    justify-content: center !important;
+  }
+
+  #slideshow {
+    height: calc(100dvh - 30px) !important;
+  }
+
+  #nav button,
+  .nav-btn {
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  #slide-counter {
+    font-size: 13px !important;
+    letter-spacing: 2px !important;
+    min-width: 72px !important;
+  }
+
+  #author {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    display: block !important;
+    width: 100%;
+    padding: 6px 10px;
+    text-align: center;
+    font-size: 10px !important;
+    letter-spacing: 0.08em !important;
+    color: rgba(0, 255, 65, 0.55);
+    background: rgba(0, 16, 0, 0.92);
+    border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+    z-index: auto !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -348,7 +417,7 @@ table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,.04)}
 <canvas id="matrix-canvas"></canvas>
 <div class="scanlines"></div>
 <div id="progress-bar"></div>
-<div id="author">LinhNDM — Nguyễn Đình Mạnh Linh</div>
+<div id="author">LinhNDM &mdash; Nguyễn Đình Mạnh Linh</div>
 
 <div id="slides">
 
@@ -356,7 +425,7 @@ table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,.04)}
      SLIDE 1: TITLE
 ══════════════════════════════════════ -->
 <div class="slide slide-title active">
-  <div class="title-badge">PLAYBOOK SDD ADD & CODEX &nbsp;|&nbsp; 2026</div>
+  <div class="title-badge">Playbook SDD + ADD &nbsp;|&nbsp; 2025</div>
   <h1 class="main-title">SDD Workflow<br/>Từ Spec Đến Code</h1>
   <p class="subtitle">5 pha · 1 triết lý · Không còn đoán mò</p>
   <div class="title-footer">Chương 6 &nbsp;·&nbsp; Spec-Driven Development</div>
@@ -747,7 +816,7 @@ table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,.04)}
       Nếu AI không đặt câu hỏi sau khi đọc PLAN.md — hãy chủ động hỏi nó:
       <span class="hl">"Bạn đã assume điều gì trong quá trình tạo plan này?"</span>
     </p>
-    <div class="big-quote-src">PLAYBOOK SDD ADD & CODEX — Chương 6</div>
+    <div class="big-quote-src">Playbook SDD + ADD — Chương 6</div>
   </div>
 </div>
 
@@ -930,7 +999,7 @@ table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,.04)}
 <div class="slide slide-section">
   <div class="section-num-bg">6.2</div>
   <div class="section-tag">Section 6.2</div>
-  <h2 class="section-title">GitHub Spec Kit</h2>
+  <h2 class="section-title">GitHub Spec Kit — Workflow thực tế với Slash Commands</h2>
   <p class="section-desc">
     Workflow thực tế với Slash Commands — đưa SDD pipeline trực tiếp
     vào GitHub Issues và Pull Requests. 5 Slash Commands, 5 Touchpoints,
@@ -942,6 +1011,43 @@ table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,.04)}
      SLIDE 21: GITHUB SPEC KIT INTRO
 ══════════════════════════════════════ -->
 <div class="slide">
+  <div class="slide-tag">6.2.1 — Cài đặt và cấu hình</div>
+  <h2 class="content-title">GitHub Spec Kit — Cài Đặt Và Cấu Hình</h2>
+  <p class="body-text">
+    Trước khi dùng slash commands, team cần chuẩn hóa môi trường repository.
+    Mục tiêu của bước này là đảm bảo mọi thành viên chạy chung một workflow:
+    cùng templates, cùng actions, cùng cấu hình model và guardrails.
+  </p>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Checklist cài đặt</div>
+      <ul class="bullet-list">
+        <li>Thêm thư mục <span class="hl">.github/ISSUE_TEMPLATE/</span> cho feature spec template</li>
+        <li>Thêm workflows <span class="hl">.github/workflows/speckit-*.yml</span></li>
+        <li>Thêm prompts trong <span class="hl">.github/speckit/prompts/</span> theo từng pha</li>
+        <li>Thiết lập quyền cho GitHub Actions: tạo comment, tạo PR, đọc issue</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Cấu hình bắt buộc</div>
+      <ul class="bullet-list">
+        <li><span class="hl">.github/speckit/constitution.md</span> — AGENTS.md của project</li>
+        <li><span class="hl">.github/speckit/config.yml</span> — model, token limits, retries</li>
+        <li>Secrets cho CI (API keys) lưu ở GitHub Secrets, không hardcode</li>
+        <li>Quy định nhãn issue: <span class="hl">spec:draft</span>, <span class="hl">spec:approved</span>, <span class="hl">plan:approved</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="alert-box info" style="margin-top:14px">
+    <strong>Nguyên tắc setup</strong>
+    Cài đặt một lần, dùng lâu dài. Khi cấu hình chưa chuẩn, slash commands sẽ tạo output không đồng nhất giữa các project.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 21B: SPEC KIT DESIGN PHILOSOPHY
+══════════════════════════════════════ -->
+<div class="slide">
   <div class="slide-tag">6.2 — GitHub Spec Kit</div>
   <h2 class="content-title">GitHub Spec Kit — Triết Lý Thiết Kế</h2>
   <p class="body-text">
@@ -950,25 +1056,13 @@ table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,.04)}
     Thay vì quản lý SPEC.md, PLAN.md, TASKS.md thủ công, Spec Kit cung cấp các
     <span class="hl">slash commands</span> — những điểm chạm (touchpoints) chuẩn hóa giữa người và AI.
   </p>
-  <div class="two-col">
-    <div class="card">
+  <div class="card">
       <div class="card-title">Triết lý thiết kế</div>
       <p style="font-size:clamp(14px,1.4vw,18px);color:var(--muted);line-height:1.65">
         Mỗi slash command là một "handoff point" — nơi con người chuyển giao quyền kiểm soát
         cho AI một cách <span class="hl">có chủ đích</span>, với context được chuẩn bị sẵn.
         Không có gì xảy ra mà không có ý chí của người dùng.
       </p>
-    </div>
-    <div class="card">
-      <div class="card-title">Cấu trúc thư mục</div>
-      <ul class="bullet-list">
-        <li><span class="hl">.github/ISSUE_TEMPLATE/</span> — feature spec template</li>
-        <li><span class="hl">.github/workflows/</span> — speckit-*.yml actions</li>
-        <li><span class="hl">.github/speckit/prompts/</span> — prompt templates mỗi pha</li>
-        <li><span class="hl">.github/speckit/constitution.md</span> — AGENTS.md của project</li>
-        <li><span class="hl">.github/speckit/config.yml</span> — model, token limits</li>
-      </ul>
-    </div>
   </div>
 </div>
 
@@ -1122,7 +1216,7 @@ table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,.04)}
 <div class="slide slide-section">
   <div class="section-num-bg">6.3</div>
   <div class="section-tag">Section 6.3</div>
-  <h2 class="section-title">Cline (Roo Code)</h2>
+  <h2 class="section-title">Cline (Roo Code) — Sức mạnh của Open Agentic IDE</h2>
   <p class="section-desc">
     Open Agentic IDE — đối cực của Spec Kit. Chạy ngay trong VSCode,
     đọc file, chạy terminal, gọi MCP servers, thực thi kế hoạch multi-step
@@ -1244,6 +1338,38 @@ table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,.04)}
     Không có MCP → Cline chỉ là AI code editor thông minh. Với MCP → Cline thực hiện multi-step workflow hoàn chỉnh.
     Đây chính là tầm nhìn của SDD: <strong>con người design ý định, AI thực thi toàn bộ.</strong>
   </blockquote>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 30B: 6.3.5 EXERCISE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-tag">6.3.5 — Bài tập</div>
+  <h2 class="content-title">Bài Tập — Cline Agentic Workflow</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Bài tập 6.3.A — Single-task agent run</div>
+      <ul class="bullet-list">
+        <li>Chọn 1 task từ TASKS.md (không quá 2h)</li>
+        <li>Dùng Cline đọc SPEC.md + PLAN.md + task definition</li>
+        <li>Yêu cầu Cline implement + viết test + chạy test tự động</li>
+        <li>Ghi lại trace: command nào chạy, lỗi nào gặp, cách self-fix</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Bài tập 6.3.B — MCP-enhanced workflow</div>
+      <ul class="bullet-list">
+        <li>Kết nối Cline với MCP GitHub hoặc filesystem server</li>
+        <li>Chạy kịch bản: đọc issue → implement task → tạo PR description</li>
+        <li>Đánh giá output theo 3 tiêu chí: traceability, test coverage, out-of-scope compliance</li>
+        <li>Viết reflection ngắn: điểm mạnh/yếu khi để agent tự chạy multi-step</li>
+      </ul>
+    </div>
+  </div>
+  <div class="alert-box tip" style="margin-top:14px">
+    <strong>Mục tiêu</strong>
+    Không phải "ra code nhanh nhất", mà là kiểm soát được hành vi agent qua spec artifacts và approval points.
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════
@@ -1664,7 +1790,7 @@ table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,.04)}
      SLIDE 46: CHAPTER SUMMARY TABLE
 ══════════════════════════════════════ -->
 <div class="slide">
-  <div class="slide-tag">Tổng kết Chương 6</div>
+  <div class="slide-tag">6.5.5 — Tổng kết Chương 6</div>
   <h2 class="content-title">Tổng Kết — Ba Con Đường SDD</h2>
   <div class="table-wrap">
     <table class="matrix-table">
@@ -1731,7 +1857,7 @@ table.matrix-table tr:nth-child(even) td{background:rgba(0,255,65,.04)}
     <div class="data-point"><span class="num">2</span><div class="label">Hands-on Labs</div></div>
     <div class="data-point"><span class="num">∞</span><div class="label">Spec First</div></div>
   </div>
-  <div class="title-footer" style="margin-top:28px">PLAYBOOK SDD ADD & CODEX &nbsp;·&nbsp; © 2026 &nbsp;·&nbsp; LinhNDM</div>
+  <div class="title-footer" style="margin-top:28px">Playbook SDD + ADD &nbsp;·&nbsp; © 2025 &nbsp;·&nbsp; LinhNDM</div>
 </div>
 
 </div><!-- #slides -->
@@ -1825,5 +1951,7 @@ document.addEventListener('touchend',e=>{
 // Init
 goTo(0);
 </script>
+<script src="../../shared-footer-ui.js"></script>
+<script src="../shared-slide-nav.js"></script>
 </body>
 </html>

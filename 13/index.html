@@ -21,13 +21,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 body{background:radial-gradient(ellipse at 50% 0%, #022800, #011500, #010f00)}
 #matrix-canvas{position:fixed;top:0;left:0;width:100%;height:100%;opacity:0.09;pointer-events:none;z-index:0}
 .scanlines{position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg, transparent 2px, rgba(0,0,0,0.07) 2px 4px);pointer-events:none;z-index:1}
-#progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg, #00ff55, #00cc44);width:0;transition:width 0.3s ease;z-index:100}
-#slide-counter{position:fixed;top:18px;right:28px;font-size:13px;color:var(--text-mute);letter-spacing:2px;z-index:100}
-.watermark{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(0,255,85,0.35);letter-spacing:3px;text-transform:uppercase;z-index:99;pointer-events:none;white-space:nowrap}
-.nav-buttons{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:16px;z-index:100}
-.nav-btn{background:rgba(0,255,65,0.12);border:1px solid var(--card-border);color:var(--accent);padding:10px 28px;font-size:13px;letter-spacing:2px;cursor:pointer;transition:all .2s;text-transform:uppercase}
-.nav-btn:hover{background:rgba(0,255,65,0.25);box-shadow:0 0 18px rgba(0,255,65,0.3)}
-.nav-btn:disabled{opacity:0.25;cursor:not-allowed}
+#bar-wrap{position:fixed;top:0;left:0;width:100%;height:2px;background:rgba(0,255,85,.1);z-index:100}
+#progress{height:100%;background:linear-gradient(90deg,#00ff55,#00cc44);transition:width .3s ease;width:0}
+#footer-ui{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:130;display:flex;align-items:center;gap:.55rem;pointer-events:none;background:rgba(0,12,0,.5);border:1px solid rgba(0,255,85,.2);border-radius:8px;padding:6px 10px}
+#author{font-family:'Josefin Sans',sans-serif;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(0,255,85,.35);pointer-events:none;user-select:none}
+#sc{font-family:'Josefin Sans',sans-serif;font-size:.66rem;color:rgba(0,255,85,.5);letter-spacing:.1em}
+#nav{display:flex;gap:.45rem;pointer-events:auto}
+.nb{background:rgba(0,255,85,.08);border:1px solid rgba(0,255,85,.25);color:#00ff55;font-family:'Josefin Sans',sans-serif;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:5px 14px;cursor:pointer;transition:.2s}
+.nb:hover{background:rgba(0,255,85,.18)}
+.nb:disabled{opacity:.25;cursor:not-allowed}
 #slideshow{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2}
 .slide{position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;padding:60px 80px 80px 80px}
 .slide.active{display:flex;animation:fadeIn 0.45s ease}
@@ -74,7 +76,6 @@ table.matrix-table td{border:1px solid rgba(0,255,65,0.25);padding:10px 12px;ver
 .slide-body::-webkit-scrollbar{width:4px}
 .slide-body::-webkit-scrollbar-thumb{background:rgba(0,255,65,0.35)}
 .slide-title-main{justify-content:center;align-items:center;text-align:center}
-.title-footer{position:absolute;bottom:30px;left:0;right:0;text-align:center;color:var(--text-mute);font-size:12px;letter-spacing:2px}
 .badge{display:inline-block;background:rgba(0,255,65,0.14);border:1px solid var(--card-border);padding:6px 14px;color:var(--accent);font-size:12px;letter-spacing:2px;text-transform:uppercase}
 .hl{color:#00ff55;font-weight:600}
 .hl-r{color:#ff7070}
@@ -85,27 +86,91 @@ table.matrix-table td{border:1px solid rgba(0,255,65,0.25);padding:10px 12px;ver
   .two-col{grid-template-columns:1fr}
   .toc-grid{grid-template-columns:1fr}
   .section-num-bg{font-size:130px;right:-10px}
-  .nav-btn{padding:8px 18px;font-size:11px}
 }
-  /* Mobile scroll fix */
-  @media (max-width: 768px) {
-    .slide { overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
-    .slide-body, .si { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+/* responsive_1 safe mobile patch */
+@media (max-width: 800px) {
+  .slide {
+    padding: 52px 16px 96px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
   }
+
+  .slide.active {
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+  }
+
+  .two-col,
+  .cols2,
+  .cols3,
+  .toc-grid,
+  .data-grid,
+  .card-grid.cols2,
+  .card-grid.cols3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .toc-grid .toc-item[style*="grid-column"],
+  .data-grid .data-point[style*="grid-column"] {
+    grid-column: auto !important;
+  }
+
+  #footer-ui {
+    width: calc(100% - 20px) !important;
+    bottom: 8px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+
+  #nav {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+  }
+
+  #nav .nb {
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  #sc {
+    order: 2;
+    width: 100%;
+    font-size: 13px !important;
+    letter-spacing: .08em !important;
+    min-width: 72px !important;
+    text-align: center;
+  }
+
+  #author {
+    order: 3;
+    display: block !important;
+    width: 100%;
+    padding: 2px 0 0;
+    text-align: center;
+    font-size: 10px !important;
+    letter-spacing: 0.08em !important;
+    color: rgba(0, 255, 65, 0.55);
+  }
+}
 </style>
 </head>
 <body>
 <canvas id="matrix-canvas"></canvas>
 <div class="scanlines"></div>
-<div id="progress-bar"></div>
-<div id="slide-counter">1 / 1</div>
-<div class="watermark">LinhNDM — Nguyễn Đình Mạnh Linh</div>
+<div id="bar-wrap"><div id="progress"></div></div>
 
 <div id="slideshow">
 
 <div class="slide slide-title-main active" data-section="0">
   <div style="max-width:1000px;position:relative;z-index:2">
-    <div class="badge">PLAYBOOK SDD ADD & CODEX | Chương 13</div>
+    <div class="badge">Playbook SDD + ADD | Chương 13</div>
     <h1 class="main-title" style="margin:18px 0 12px">Hybrid Framework</h1>
     <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(22px,2.8vw,34px);color:var(--text-sub)">Khi nào Spec, Khi nào Agent - Nghệ thuật phối hợp SDD + ADD</p>
     <div class="data-grid" style="margin-top:28px">
@@ -115,7 +180,6 @@ table.matrix-table td{border:1px solid rgba(0,255,65,0.25);padding:10px 12px;ver
       <div class="data-point"><div class="data-num">22</div><div class="data-label">Trang tài liệu</div></div>
     </div>
   </div>
-  <div class="title-footer">© 2026 — PLAYBOOK SDD ADD & CODEX | LinhNDM | Nguyễn Đình Mạnh Linh</div>
 </div>
 
 <div class="slide" data-section="0">
@@ -895,20 +959,21 @@ Root cause: thiếu cập nhật memory artifact cùng commit quyết định.</
 
 <div class="slide slide-title-main" data-section="0">
   <div style="max-width:980px;position:relative;z-index:2">
-    <p style="font-size:13px;letter-spacing:4px;color:var(--text-mute);text-transform:uppercase">PLAYBOOK SDD ADD & CODEX - Closing</p>
+    <p style="font-size:13px;letter-spacing:4px;color:var(--text-mute);text-transform:uppercase">Playbook SDD + ADD - Closing</p>
     <h1 class="main-title" style="margin:10px 0 8px">Hybrid Framework</h1>
     <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(20px,2.4vw,30px);color:var(--text-sub)">Chương 13 - Khi nào Spec, Khi nào Agent</p>
     <div style="width:70px;height:1px;background:var(--accent);margin:28px auto;box-shadow:0 0 14px var(--accent)"></div>
-    <p style="font-family:'Cormorant Garamond',serif;font-size:clamp(36px,5vw,72px);color:var(--accent);text-shadow:0 0 30px rgba(0,255,85,0.5),0 0 60px rgba(0,255,85,0.2)">LinhNDM</p>
-    <p style="font-size:clamp(16px,1.8vw,24px);letter-spacing:3px;color:var(--text-sub);margin-top:6px">Nguyễn Đình Mạnh Linh</p>
   </div>
 </div>
 
 </div>
-
-<div class="nav-buttons">
-  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>&larr; Prev</button>
-  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Next &rarr;</button>
+<div id="footer-ui">
+  <div id="author">LinhNDM &mdash; Nguyễn Đình Mạnh Linh</div>
+  <div id="nav">
+    <button class="nb" id="prev" onclick="changeSlide(-1)">&larr; Prev</button>
+    <button class="nb" id="next" onclick="changeSlide(1)">Next &rarr;</button>
+  </div>
+  <div id="sc">1 / 1</div>
 </div>
 
 <script>
@@ -970,10 +1035,12 @@ function goToSlide(n) {
 }
 
 function updateUI() {
-  document.getElementById('slide-counter').textContent = (current+1)+' / '+total;
-  document.getElementById('btn-prev').disabled = current === 0;
-  document.getElementById('btn-next').disabled = current === total-1;
-  document.getElementById('progress-bar').style.width = ((current+1)/total*100).toFixed(1)+'%';
+  document.getElementById('sc').textContent = (current+1)+' / '+total;
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  if(prevBtn) prevBtn.disabled = current === 0;
+  if(nextBtn) nextBtn.disabled = current === total-1;
+  document.getElementById('progress').style.width = ((current+1)/total*100).toFixed(1)+'%';
 }
 
 function changeSlide(d){ goToSlide(current+d); }
@@ -999,5 +1066,6 @@ document.addEventListener('touchend', e => {
 
 updateUI();
 </script>
+<script src="../shared-slide-nav.js"></script>
 </body>
 </html>
